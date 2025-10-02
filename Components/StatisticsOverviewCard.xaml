@@ -1,0 +1,349 @@
+<UserControl x:Class="StoDamageMeter.Components.StatisticsOverviewCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    
+    <Border Style="{StaticResource ModernCardStyle}">
+        <StackPanel Margin="24">
+            <!-- Header -->
+            <TextBlock Text="Statistik-Übersicht" 
+                       Style="{StaticResource ModernTitle}"
+                       Margin="0,0,0,8"/>
+            <TextBlock Text="Vollständige Analyse der Combatlog-Daten" 
+                       Style="{StaticResource ModernMutedText}"
+                       Margin="0,0,0,24"/>
+            
+            <!-- Player Statistics Card -->
+            <Border Background="{StaticResource CardBackground}" 
+                    BorderBrush="{StaticResource AccentBlue}"
+                    BorderThickness="0,0,0,2"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,20">
+                <StackPanel>
+                    <!-- Player Header -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="🎯" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Spieler Statistik für " 
+                                           Style="{StaticResource ModernText}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Van Khaos" 
+                                           Style="{StaticResource ModernText}"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBlue}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Detaillierte Combat Statistiken deiner Waffen und Fähigkeiten" 
+                                       Style="{StaticResource ModernMutedText}"/>
+                        </StackPanel>
+                        
+                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <Button Content="Wechseln"
+                                    Background="{StaticResource AccentBlue}"
+                                    Foreground="{StaticResource TextPrimary}"
+                                    BorderThickness="0"
+                                    Padding="16,8"
+                                    FontWeight="Medium"
+                                    FontSize="12"
+                                    VerticalAlignment="Center"
+                                    Margin="16,0,0,0"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" 
+                                                CornerRadius="6"
+                                                BorderThickness="0">
+                                            <StackPanel Orientation="Horizontal" 
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Margin="{TemplateBinding Padding}">
+                                                <TextBlock Text="👥" FontSize="12" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{TemplateBinding Content}" 
+                                                           Foreground="{TemplateBinding Foreground}"
+                                                           FontWeight="{TemplateBinding FontWeight}"
+                                                           FontSize="{TemplateBinding FontSize}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#0284C7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <TextBlock Text="Letzte 10 Kämpfe" 
+                                       Style="{StaticResource ModernMutedText}"
+                                       HorizontalAlignment="Right"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Combat Selection -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <TextBlock Text="Kampf auswählen:" 
+                                   Style="{StaticResource ModernText}"
+                                   Foreground="{StaticResource WarningOrange}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,16,0"/>
+                        
+                        <StackPanel Orientation="Horizontal">
+                            <!-- Fight Buttons 1-10 -->
+                            <Button Content="1" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="2" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="3" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="4" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="5" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="6" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="7" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="8" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="9" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            <Button Content="10" Style="{StaticResource ToggleButton}" Margin="0,0,8,0"/>
+                            
+                            <!-- All Fights Button (Active) -->
+                            <Button Content="Alle Kämpfe" Style="{StaticResource ActiveToggleButton}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Summary Cards -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Kampfdauer Card -->
+                        <Border Grid.Column="0" 
+                                Background="{StaticResource DarkBackground}" 
+                                BorderBrush="{StaticResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="🕐" FontSize="24" Margin="0,0,0,8" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Kampfdauer" 
+                                           Style="{StaticResource ModernSecondaryText}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Text="6:50" 
+                                           Style="{StaticResource ModernTitle}"
+                                           Foreground="{StaticResource WarningOrange}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Gesamtschaden Card -->
+                        <Border Grid.Column="1" 
+                                Background="{StaticResource DarkBackground}" 
+                                BorderBrush="{StaticResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                Margin="10,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="⚡" FontSize="24" Margin="0,0,0,8" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Gesamtschaden" 
+                                           Style="{StaticResource ModernSecondaryText}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Text="104.48K" 
+                                           Style="{StaticResource ModernTitle}"
+                                           Foreground="{StaticResource WarningOrange}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    
+                    <!-- Detailed Statistics Table -->
+                    <Border Background="{StaticResource DarkBackground}" 
+                            BorderBrush="{StaticResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Detaillierte Statistiken" 
+                                       Style="{StaticResource ModernText}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,16"/>
+                            
+                            <!-- Table Headers -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" Text="#" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1" Text="Waffe/Fähigkeit" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="2" Text="DPS" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="3" Text="Schaden" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="4" Text="Ø Schaden" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="5" Text="Crits" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="6" Text="Crit-Rate" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="7" Text="Anteil" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="8" Text="⚡" Style="{StaticResource ModernSecondaryText}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                            </Grid>
+                            
+                            <!-- Sample Table Rows -->
+                            <StackPanel>
+                                <!-- Row 1 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="40"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="1" Style="{StaticResource ModernText}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="⚔️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Chronitontorpedo der Temporalen Verteidigung" 
+                                                   Style="{StaticResource ModernText}"
+                                                   Foreground="{StaticResource WarningOrange}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="194.50" Style="{StaticResource ModernText}" Foreground="{StaticResource ErrorRed}"/>
+                                    <TextBlock Grid.Column="3" Text="79.93K" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="4" Text="3.33K" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="5" Text="2" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="6" Text="8.3%" Style="{StaticResource ModernText}"/>
+                                    <StackPanel Grid.Column="7">
+                                        <Border Background="{StaticResource CardBorder}" Height="8" CornerRadius="4" Margin="0,0,0,4">
+                                            <Border Background="{StaticResource AccentBlue}" Width="76.5" Height="8" CornerRadius="4"/>
+                                        </Border>
+                                        <TextBlock Text="76.5%" Style="{StaticResource ModernMutedText}" FontSize="10"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="8" Text="24" Style="{StaticResource ModernText}" HorizontalAlignment="Center"/>
+                                </Grid>
+                                
+                                <!-- Row 2 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="40"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="2" Style="{StaticResource ModernText}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="⚔️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Antiprotonenstrahlenbank" 
+                                                   Style="{StaticResource ModernText}"
+                                                   Foreground="{StaticResource WarningOrange}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="34.35" Style="{StaticResource ModernText}" Foreground="{StaticResource ErrorRed}"/>
+                                    <TextBlock Grid.Column="3" Text="14.12K" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="4" Text="213.88" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="5" Text="0" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="6" Text="0.0%" Style="{StaticResource ModernText}"/>
+                                    <StackPanel Grid.Column="7">
+                                        <Border Background="{StaticResource CardBorder}" Height="8" CornerRadius="4" Margin="0,0,0,4">
+                                            <Border Background="{StaticResource AccentBlue}" Width="13.5" Height="8" CornerRadius="4"/>
+                                        </Border>
+                                        <TextBlock Text="13.5%" Style="{StaticResource ModernMutedText}" FontSize="10"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="8" Text="66" Style="{StaticResource ModernText}" HorizontalAlignment="Center"/>
+                                </Grid>
+                                
+                                <!-- Row 3 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="40"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="3" Style="{StaticResource ModernText}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="⚔️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Antiprotonen-Impulskanone" 
+                                                   Style="{StaticResource ModernText}"
+                                                   Foreground="{StaticResource WarningOrange}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="18.85" Style="{StaticResource ModernText}" Foreground="{StaticResource ErrorRed}"/>
+                                    <TextBlock Grid.Column="3" Text="7.75K" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="4" Text="117.42" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="5" Text="0" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="6" Text="0.0%" Style="{StaticResource ModernText}"/>
+                                    <StackPanel Grid.Column="7">
+                                        <Border Background="{StaticResource CardBorder}" Height="8" CornerRadius="4" Margin="0,0,0,4">
+                                            <Border Background="{StaticResource AccentBlue}" Width="7.4" Height="8" CornerRadius="4"/>
+                                        </Border>
+                                        <TextBlock Text="7.4%" Style="{StaticResource ModernMutedText}" FontSize="10"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="8" Text="66" Style="{StaticResource ModernText}" HorizontalAlignment="Center"/>
+                                </Grid>
+                                
+                                <!-- Row 4 -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="40"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="4" Style="{StaticResource ModernText}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="⚔️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Plasmageschützturm" 
+                                                   Style="{StaticResource ModernText}"
+                                                   Foreground="{StaticResource WarningOrange}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="6.53" Style="{StaticResource ModernText}" Foreground="{StaticResource ErrorRed}"/>
+                                    <TextBlock Grid.Column="3" Text="2.68K" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="4" Text="40.61" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="5" Text="0" Style="{StaticResource ModernText}"/>
+                                    <TextBlock Grid.Column="6" Text="0.0%" Style="{StaticResource ModernText}"/>
+                                    <StackPanel Grid.Column="7">
+                                        <Border Background="{StaticResource CardBorder}" Height="8" CornerRadius="4" Margin="0,0,0,4">
+                                            <Border Background="{StaticResource AccentBlue}" Width="2.6" Height="8" CornerRadius="4"/>
+                                        </Border>
+                                        <TextBlock Text="2.6%" Style="{StaticResource ModernMutedText}" FontSize="10"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="8" Text="66" Style="{StaticResource ModernText}" HorizontalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>
+
