@@ -46,6 +46,12 @@ namespace StoDamageMeter.ViewModels
         [ObservableProperty]
         private string _loadingTime = string.Empty;
 
+        [ObservableProperty]
+        private string _currentPageTitle = "Dashboard";
+
+        [ObservableProperty]
+        private string _currentPageIcon = "DataUsage24";
+
         public MainViewModel(
             ICombatLogService combatLogService,
             ILogger<MainViewModel> logger)
@@ -178,6 +184,29 @@ namespace StoDamageMeter.ViewModels
             {
                 _logger.LogError(ex, "Fehler beim Verarbeiten des Live-Updates");
             }
+        }
+
+        public void UpdatePageTitle(string pageTag)
+        {
+            CurrentPageTitle = pageTag switch
+            {
+                "Dashboard" => "Dashboard",
+                "LiveTracking" => "Live Tracking",
+                "Statistics" => "Statistiken",
+                "Configuration" => "Konfiguration",
+                "About" => "Über",
+                _ => "Dashboard"
+            };
+
+            CurrentPageIcon = pageTag switch
+            {
+                "Dashboard" => "Home24",
+                "LiveTracking" => "DataUsage24",
+                "Statistics" => "ChartMultiple24",
+                "Configuration" => "Settings24",
+                "About" => "Info24",
+                _ => "Home24"
+            };
         }
 
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)

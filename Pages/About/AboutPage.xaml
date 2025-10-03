@@ -1,0 +1,23 @@
+<Page x:Class="StoDamageMeter.Pages.About.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
+    Title="About">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ModernStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled"
+        Padding="24">
+        <StackPanel>
+            <!-- Hier wird der Inhalt für die About-Seite hinzugefügt -->
+        </StackPanel>
+    </ScrollViewer>
+</Page>

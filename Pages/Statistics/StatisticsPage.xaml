@@ -1,0 +1,25 @@
+<Page x:Class="StoDamageMeter.Pages.Statistics.StatisticsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:statistics="clr-namespace:StoDamageMeter.Components.PageSpecific.Statistics"
+    xmlns:converters="clr-namespace:StoDamageMeter.Converters"
+    Title="Statistics">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ModernStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled"
+        Padding="24">
+        <StackPanel>
+            <!-- Hier wird der neue Inhalt für die Statistik-Seite hinzugefügt -->
+        </StackPanel>
+    </ScrollViewer>
+</Page>

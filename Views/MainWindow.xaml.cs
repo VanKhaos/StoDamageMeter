@@ -30,7 +30,6 @@ namespace StoDamageMeter.Views
             StatisticsButton.Click += OnNavigationButtonClick;
             ConfigurationButton.Click += OnNavigationButtonClick;
             AboutButton.Click += OnNavigationButtonClick;
-            ThemeButton.Click += OnNavigationButtonClick;
 
             // Set initial page
             NavigateToPage("Dashboard");
@@ -46,22 +45,25 @@ namespace StoDamageMeter.Views
 
         private void NavigateToPage(string pageTag)
         {
+            // Update page title and icon
+            _viewModel.UpdatePageTitle(pageTag);
+
             switch (pageTag)
             {
                 case "Dashboard":
-                    ContentFrame.Navigate(new Pages.DashboardPage(_viewModel));
+                    ContentFrame.Navigate(new Pages.Dashboard.DashboardPage(_viewModel));
                     break;
                 case "LiveTracking":
-                    ContentFrame.Navigate(new Pages.LiveTrackingPage(_viewModel));
+                    ContentFrame.Navigate(new Pages.LiveTracking.LiveTrackingPage(_viewModel));
                     break;
                 case "Statistics":
-                    ContentFrame.Navigate(new Pages.StatisticsPage(_viewModel));
+                    ContentFrame.Navigate(new Pages.Statistics.StatisticsPage(_viewModel));
                     break;
                 case "Configuration":
-                    ContentFrame.Navigate(new Pages.ConfigurationPage(_viewModel));
+                    ContentFrame.Navigate(new Pages.Configuration.ConfigurationPage(_viewModel));
                     break;
                 case "About":
-                    ContentFrame.Navigate(new Pages.AboutPage());
+                    ContentFrame.Navigate(new Pages.About.AboutPage(_viewModel));
                     break;
                 case "Theme":
                     // Toggle theme logic here

@@ -1,0 +1,68 @@
+<UserControl x:Class="StoDamageMeter.Components.PageSpecific.Dashboard.FileSelectionCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+    mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400">
+
+    <Border Style="{StaticResource ModernCardStyle}">
+        <StackPanel Margin="24">
+            <TextBlock Text="Log Datei"
+                Style="{StaticResource ModernSubtitle}"
+                Margin="0,0,0,8" />
+            <TextBlock Text="Wähle eine STO Combat Log Datei aus"
+                Style="{StaticResource ModernMutedText}"
+                Margin="0,0,0,24" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <Button Content="Log-Datei auswählen"
+                    Command="{Binding SelectLogFileCommand}"
+                    Style="{StaticResource ModernButton}"
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InvertBooleanConverter}}" />
+
+                <Button Content="Überwachung starten"
+                    Command="{Binding StartWatchingCommand}"
+                    Style="{StaticResource ModernButton}"
+                    Margin="12,0,0,0"
+                    IsEnabled="{Binding IsWatching, Converter={StaticResource InvertBooleanConverter}}"
+                    Visibility="{Binding SelectedLogFile, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                <Button Content="Überwachung stoppen"
+                    Command="{Binding StopWatchingCommand}"
+                    Style="{StaticResource ModernButton}"
+                    Margin="12,0,0,0"
+                    IsEnabled="{Binding IsWatching}"
+                    Visibility="{Binding IsWatching, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </StackPanel>
+
+            <!-- Status-Anzeige -->
+            <Border Background="{StaticResource CardBackground}"
+                CornerRadius="8"
+                Padding="12"
+                Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Status"
+                        Style="{StaticResource ModernSecondaryText}"
+                        FontWeight="SemiBold"
+                        Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                        Style="{StaticResource ModernMutedText}" />
+                    <TextBlock Text="{Binding LastUpdate, StringFormat='Letztes Update: {0}'}"
+                        Style="{StaticResource ModernMutedText}"
+                        Margin="0,4,0,0"
+                        Visibility="{Binding LastUpdate, Converter={StaticResource StringToVisibilityConverter}}" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Unterstützte Formate: .log, .txt (max. 100MB)"
+                Style="{StaticResource ModernMutedText}" />
+
+            <TextBlock Text="{Binding SelectedLogFile}"
+                Style="{StaticResource ModernSecondaryText}"
+                Margin="0,16,0,0"
+                TextWrapping="Wrap"
+                Visibility="{Binding SelectedLogFile, Converter={StaticResource StringToVisibilityConverter}}" />
+        </StackPanel>
+    </Border>
+</UserControl>
