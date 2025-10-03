@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:configuration="clr-namespace:StoDamageMeter.Components.PageSpecific.Configuration"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
     Title="Configuration">
 
     <Page.Resources>
@@ -21,20 +22,13 @@
             <configuration:ConfigurationCard Margin="0,0,0,24" />
 
             <!-- Advanced Settings -->
-            <ui:CardControl Background="{StaticResource CardBackground}"
-                BorderBrush="{StaticResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="12"
-                Padding="24">
+            <Border Style="{StaticResource StarfleetCardStyle}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                        <ui:SymbolIcon Symbol="Settings24"
-                            Foreground="{StaticResource AccentBlue}"
-                            Width="24" Height="24"
-                            Margin="0,0,12,0" />
+                        <shared:StarfleetIcon Icon="Settings" Size="20"
+                            Color="{StaticResource StarfleetGold}" Margin="0,0,8,0" />
                         <TextBlock Text="Erweiterte Einstellungen"
-                            Style="{StaticResource ModernSubtitle}"
-                            FontWeight="SemiBold" />
+                            Style="{StaticResource StarfleetSubtitle}" />
                     </StackPanel>
 
                     <!-- Settings Grid -->
@@ -143,7 +137,7 @@
                         </Grid>
                     </Grid>
                 </StackPanel>
-            </ui:CardControl>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

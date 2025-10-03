@@ -193,32 +193,19 @@ namespace StoDamageMeter.Services
         {
             try
             {
-                // Format: DD:MM:YY:HH:MM:SS.mmm (3 Nachkommastellen)
-                if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.fff",
+                // Format: YY:MM:DD:HH:mm:ss.m (Jahr:Monat:Tag:Stunde:Minute:Sekunde.Millisekunde)
+                // Beispiel: 25:10:02:16:38:01.9 = 2025-10-02 16:38:01.900
+                if (DateTime.TryParseExact(timestampData, "yy:MM:dd:HH:mm:ss.f",
                     CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
                 {
+                    // Korrigiere 2-stellige Jahre zu 4-stelligen
+                    if (result.Year < 2000)
+                    {
+                        return result.AddYears(2000);
+                    }
                     return result;
                 }
 
-                // Format: DD:MM:YY:HH:MM:SS.m (1 Nachkommastelle)
-                if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.f",
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
-                {
-                    return result;
-                }
-
-                // Format: DD:MM:YY:HH:MM:SS.mm (2 Nachkommastellen)
-                if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.ff",
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
-                {
-                    return result;
-                }
-
-                // Fallback für andere Formate
-                if (DateTime.TryParse(timestampData, out result))
-                {
-                    return result;
-                }
 
                 return DateTime.MinValue;
             }

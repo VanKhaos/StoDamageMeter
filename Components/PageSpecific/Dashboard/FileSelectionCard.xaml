@@ -3,63 +3,85 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400">
 
-    <Border Style="{StaticResource ModernCardStyle}">
-        <StackPanel Margin="24">
-            <TextBlock Text="Log Datei"
-                Style="{StaticResource ModernSubtitle}"
-                Margin="0,0,0,8" />
+    <Border Style="{StaticResource StarfleetCardStyle}">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <shared:StarfleetIcon Icon="FileText" Size="20"
+                    Color="{StaticResource StarfleetGold}" Margin="0,0,8,0" />
+                <TextBlock Text="Log Datei"
+                    Style="{StaticResource StarfleetSubtitle}" />
+            </StackPanel>
             <TextBlock Text="Wähle eine STO Combat Log Datei aus"
-                Style="{StaticResource ModernMutedText}"
+                Style="{StaticResource StarfleetMutedText}"
                 Margin="0,0,0,24" />
 
             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                <Button Content="Log-Datei auswählen"
-                    Command="{Binding SelectLogFileCommand}"
-                    Style="{StaticResource ModernButton}"
-                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InvertBooleanConverter}}" />
+                <Button Command="{Binding CombatLog.SelectLogFileCommand}"
+                    Style="{StaticResource StarfleetButton}"
+                    IsEnabled="{Binding CombatLog.IsProcessing, Converter={StaticResource InvertBooleanConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <shared:StarfleetIcon Icon="Upload" Size="16"
+                            Color="{StaticResource PrimaryForeground}" Margin="0,0,8,0" />
+                        <TextBlock Text="Log-Datei auswählen" Style="{StaticResource StarfleetText}" />
+                    </StackPanel>
+                </Button>
 
-                <Button Content="Überwachung starten"
-                    Command="{Binding StartWatchingCommand}"
-                    Style="{StaticResource ModernButton}"
+                <Button Command="{Binding CombatLog.StartWatchingCommand}"
+                    Style="{StaticResource StarfleetButton}"
                     Margin="12,0,0,0"
-                    IsEnabled="{Binding IsWatching, Converter={StaticResource InvertBooleanConverter}}"
-                    Visibility="{Binding SelectedLogFile, Converter={StaticResource StringToVisibilityConverter}}" />
+                    IsEnabled="{Binding CombatLog.IsWatching, Converter={StaticResource InvertBooleanConverter}}"
+                    Visibility="{Binding CombatLog.SelectedLogFile, Converter={StaticResource StringToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <shared:StarfleetIcon Icon="Play" Size="16"
+                            Color="{StaticResource PrimaryForeground}" Margin="0,0,8,0" />
+                        <TextBlock Text="Überwachung starten" Style="{StaticResource StarfleetText}" />
+                    </StackPanel>
+                </Button>
 
-                <Button Content="Überwachung stoppen"
-                    Command="{Binding StopWatchingCommand}"
-                    Style="{StaticResource ModernButton}"
+                <Button Command="{Binding CombatLog.StopWatchingCommand}"
+                    Style="{StaticResource StarfleetButton}"
                     Margin="12,0,0,0"
-                    IsEnabled="{Binding IsWatching}"
-                    Visibility="{Binding IsWatching, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    IsEnabled="{Binding CombatLog.IsWatching}"
+                    Visibility="{Binding CombatLog.IsWatching, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <shared:StarfleetIcon Icon="Stop" Size="16"
+                            Color="{StaticResource PrimaryForeground}" Margin="0,0,8,0" />
+                        <TextBlock Text="Überwachung stoppen" Style="{StaticResource StarfleetText}" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <!-- Status-Anzeige -->
-            <Border Background="{StaticResource CardBackground}"
+            <Border Background="{StaticResource Secondary}"
                 CornerRadius="8"
                 Padding="12"
                 Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Status"
-                        Style="{StaticResource ModernSecondaryText}"
-                        FontWeight="SemiBold"
-                        Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <shared:StarfleetIcon Icon="Info" Size="14"
+                            Color="{StaticResource StarfleetSilver}" Margin="0,0,4,0" />
+                        <TextBlock Text="Status"
+                            Style="{StaticResource StarfleetMutedText}"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
                     <TextBlock Text="{Binding StatusMessage}"
-                        Style="{StaticResource ModernMutedText}" />
+                        Style="{StaticResource StarfleetText}" />
                     <TextBlock Text="{Binding LastUpdate, StringFormat='Letztes Update: {0}'}"
-                        Style="{StaticResource ModernMutedText}"
+                        Style="{StaticResource StarfleetMutedText}"
                         Margin="0,4,0,0"
                         Visibility="{Binding LastUpdate, Converter={StaticResource StringToVisibilityConverter}}" />
                 </StackPanel>
             </Border>
 
             <TextBlock Text="Unterstützte Formate: .log, .txt (max. 100MB)"
-                Style="{StaticResource ModernMutedText}" />
+                Style="{StaticResource StarfleetMutedText}" />
 
             <TextBlock Text="{Binding SelectedLogFile}"
-                Style="{StaticResource ModernSecondaryText}"
+                Style="{StaticResource StarfleetMutedText}"
                 Margin="0,16,0,0"
                 TextWrapping="Wrap"
                 Visibility="{Binding SelectedLogFile, Converter={StaticResource StringToVisibilityConverter}}" />

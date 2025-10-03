@@ -42,9 +42,13 @@ public partial class App : Application
 
         // Services registrieren
         services.AddSingleton<ICombatLogParser, CombatLogParser>();
+        services.AddSingleton<CombatPeriodService>();
         services.AddSingleton<ICombatLogService, CombatLogService>();
 
         // ViewModels registrieren
+        services.AddTransient<CombatLogViewModel>();
+        services.AddTransient<StatisticsViewModel>();
+        services.AddTransient<NavigationViewModel>();
         services.AddTransient<MainViewModel>();
 
         // Views registrieren

@@ -13,7 +13,7 @@
         BorderThickness="1"
         CornerRadius="12"
         Padding="24"
-        Visibility="{Binding Statistics, Converter={StaticResource NotNullToVisibilityConverter}}">
+        Visibility="{Binding CombatLog.Statistics, Converter={StaticResource NotNullToVisibilityConverter}}">
         <StackPanel>
             <!-- Header -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
@@ -43,7 +43,7 @@
                     <TextBlock Text="Gefundene Spieler"
                         Style="{StaticResource ModernMutedText}"
                         FontSize="12" />
-                    <TextBlock Text="{Binding PlayerCount}"
+                    <TextBlock Text="{Binding CombatLog.PlayerCount}"
                         Style="{StaticResource ModernText}"
                         FontSize="18"
                         FontWeight="Bold"
@@ -68,7 +68,7 @@
                     <TextBlock Text="Gesamt Einträge"
                         Style="{StaticResource ModernMutedText}"
                         FontSize="12" />
-                    <TextBlock Text="{Binding Statistics.TotalEntries}"
+                    <TextBlock Text="{Binding CombatLog.Statistics.TotalEntries}"
                         Style="{StaticResource ModernText}"
                         FontSize="16"
                         FontWeight="SemiBold" />
@@ -79,7 +79,7 @@
                     <TextBlock Text="Relevante Einträge"
                         Style="{StaticResource ModernMutedText}"
                         FontSize="12" />
-                    <TextBlock Text="{Binding Statistics.RelevantEntries}"
+                    <TextBlock Text="{Binding CombatLog.Statistics.RelevantEntries}"
                         Style="{StaticResource ModernText}"
                         FontSize="16"
                         FontWeight="SemiBold"
@@ -91,7 +91,7 @@
                     <TextBlock Text="Kritische Treffer"
                         Style="{StaticResource ModernMutedText}"
                         FontSize="12" />
-                    <TextBlock Text="{Binding Statistics.CriticalHits}"
+                    <TextBlock Text="{Binding CombatLog.Statistics.CriticalHits}"
                         Style="{StaticResource ModernText}"
                         FontSize="16"
                         FontWeight="SemiBold"
@@ -103,7 +103,7 @@
                     <TextBlock Text="DoT Events"
                         Style="{StaticResource ModernMutedText}"
                         FontSize="12" />
-                    <TextBlock Text="{Binding Statistics.DoTEvents}"
+                    <TextBlock Text="{Binding CombatLog.Statistics.DoTEvents}"
                         Style="{StaticResource ModernText}"
                         FontSize="16"
                         FontWeight="SemiBold"
@@ -128,7 +128,8 @@
                         <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}" />
                         <TextBlock Text="Durchschnittlicher Schaden: "
                             Style="{StaticResource ModernSecondaryText}" />
-                        <TextBlock Text="{Binding Statistics.AverageDamage, StringFormat={}{0:N0}}"
+                        <TextBlock
+                            Text="{Binding CombatLog.Statistics.AverageDamage, StringFormat={}{0:N0}}"
                             Style="{StaticResource ModernSecondaryText}"
                             FontWeight="SemiBold" />
                     </StackPanel>
@@ -136,7 +137,8 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                         <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}" />
                         <TextBlock Text="Crit-Rate: " Style="{StaticResource ModernSecondaryText}" />
-                        <TextBlock Text="{Binding Statistics.CriticalRate, StringFormat={}{0:F1}%}"
+                        <TextBlock
+                            Text="{Binding CombatLog.Statistics.CriticalRate, StringFormat={}{0:F1}%}"
                             Style="{StaticResource ModernSecondaryText}"
                             FontWeight="SemiBold" />
                     </StackPanel>
@@ -144,7 +146,7 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}" />
                         <TextBlock Text="DPS: " Style="{StaticResource ModernSecondaryText}" />
-                        <TextBlock Text="{Binding Statistics.DPS, StringFormat={}{0:N0}}"
+                        <TextBlock Text="{Binding CombatLog.Statistics.DPS, StringFormat={}{0:N0}}"
                             Style="{StaticResource ModernSecondaryText}"
                             FontWeight="SemiBold" />
                     </StackPanel>

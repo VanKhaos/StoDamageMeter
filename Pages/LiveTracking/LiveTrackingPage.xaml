@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:livetracking="clr-namespace:StoDamageMeter.Components.PageSpecific.LiveTracking"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
     Title="Live Tracking">
 
     <Page.Resources>
@@ -24,33 +25,26 @@
             <livetracking:LiveDamageStatisticsCard Margin="0,0,0,24" />
 
             <!-- Real-time Events -->
-            <ui:CardControl Background="{StaticResource CardBackground}"
-                BorderBrush="{StaticResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="12"
-                Padding="24">
+            <Border Style="{StaticResource StarfleetCardStyle}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <ui:SymbolIcon Symbol="DataUsage24"
-                            Foreground="{StaticResource SuccessGreen}"
-                            Width="24" Height="24"
-                            Margin="0,0,12,0" />
+                        <shared:StarfleetIcon Icon="LiveTracking" Size="20"
+                            Color="{StaticResource StarfleetGreen}" Margin="0,0,8,0" />
                         <TextBlock Text="Echtzeit-Events"
-                            Style="{StaticResource ModernSubtitle}"
-                            FontWeight="SemiBold" />
+                            Style="{StaticResource StarfleetSubtitle}" />
 
                         <ui:ToggleSwitch IsChecked="{Binding IsWatching}"
                             Margin="16,0,0,0"
                             VerticalAlignment="Center" />
                         <TextBlock Text="Live-Tracking"
-                            Style="{StaticResource ModernSecondaryText}"
+                            Style="{StaticResource StarfleetMutedText}"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center" />
                     </StackPanel>
 
                     <!-- Events List -->
-                    <Border Background="{StaticResource DarkBackground}"
-                        BorderBrush="{StaticResource CardBorder}"
+                    <Border Background="{StaticResource Secondary}"
+                        BorderBrush="{StaticResource Border}"
                         BorderThickness="1"
                         CornerRadius="8"
                         MinHeight="200"
@@ -61,17 +55,15 @@
                                 <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Margin="0,50,0,50">
-                                    <ui:SymbolIcon Symbol="DataUsage24"
-                                        Foreground="{StaticResource TextMuted}"
-                                        Width="48" Height="48"
-                                        Margin="0,0,0,16" />
+                                    <shared:StarfleetIcon Icon="LiveTracking" Size="48"
+                                        Color="{StaticResource StarfleetSilver}" Margin="0,0,0,16" />
                                     <TextBlock Text="Keine Live-Events"
-                                        Style="{StaticResource ModernSecondaryText}"
+                                        Style="{StaticResource StarfleetMutedText}"
                                         HorizontalAlignment="Center"
                                         Margin="0,0,0,8" />
                                     <TextBlock
                                         Text="Starte die Überwachung um Echtzeit-Events zu sehen"
-                                        Style="{StaticResource ModernMutedText}"
+                                        Style="{StaticResource StarfleetMutedText}"
                                         HorizontalAlignment="Center"
                                         FontSize="12" />
                                 </StackPanel>
@@ -79,7 +71,7 @@
                         </ScrollViewer>
                     </Border>
                 </StackPanel>
-            </ui:CardControl>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

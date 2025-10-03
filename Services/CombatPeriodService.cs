@@ -1,0 +1,135 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.Logging;
+using StoDamageMeter.Models;
+
+namespace StoDamageMeter.Services
+{
+    /// <summary>
+    /// Service für die Erkennung von Kampf-Zeiträumen für spezifische Spieler
+    /// </summary>
+    public class CombatPeriodService
+    {
+        private readonly ILogger<CombatPeriodService> _logger;
+
+        public CombatPeriodService(ILogger<CombatPeriodService> logger)
+        {
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Erkennt Kampf-Zeiträume für einen spezifischen Spieler
+        /// </summary>
+        /// <param name="allEntries">Alle Combat Log Einträge</param>
+        /// <param name="playerName">Name des Spielers</param>
+        /// <param name="combatBreakThresholdSeconds">Schwellenwert in Sekunden für Kampfende (Standard: 10)</param>
+        /// <returns>Liste der erkannten Kampf-Zeiträume</returns>
+        public List<CombatPeriod> GetCombatPeriodsForPlayer(
+            List<CombatLogEntry> allEntries,
+            string playerName,
+            int combatBreakThresholdSeconds = 10)
+        {
+            _logger.LogInformation("=== GetCombatPeriodsForPlayer() gestartet ===");
+            _logger.LogInformation("Spieler: '{PlayerName}'", playerName);
+            _logger.LogInformation("Gesamtanzahl Einträge: {TotalEntries}", allEntries.Count);
+            _logger.LogInformation("Kampf-Pause-Schwellenwert: {Threshold}s", combatBreakThresholdSeconds);
+
+            if (string.IsNullOrEmpty(playerName) || !allEntries.Any())
+            {
+                _logger.LogInformation("Keine Daten - Spieler leer oder keine Einträge");
+                return new List<CombatPeriod>();
+            }
+
+            // Filtere Einträge für den spezifischen Spieler
+            var playerEntries = allEntries
+                .Where(e => e.PlayerInfo.CharName == playerName && e.IsRelevant)
+                .OrderBy(e => e.Timestamp)
+                .ToList();
+
+            _logger.LogInformation("Gefilterte Einträge für Spieler: {PlayerEntryCount}", playerEntries.Count);
+
+            if (!playerEntries.Any())
+            {
+                _logger.LogInformation("Keine Einträge für Spieler '{PlayerName}' gefunden", playerName);
+                return new List<CombatPeriod>();
+            }
+
+            _logger.LogInformation("Erster Eintrag: {FirstTime} - {FirstDamage} Schaden",
+                playerEntries.First().Timestamp, playerEntries.First().RawDamage);
+            _logger.LogInformation("Letzter Eintrag: {LastTime} - {LastDamage} Schaden",
+                playerEntries.Last().Timestamp, playerEntries.Last().RawDamage);
+
+            var periods = new List<CombatPeriod>();
+            CombatPeriod? currentPeriod = null;
+            DateTime lastEventTime = DateTime.MinValue;
+
+            foreach (var entry in playerEntries)
+            {
+                // Prüfe ob ein neuer Kampf beginnen muss
+                if (currentPeriod == null ||
+                    (entry.Timestamp - lastEventTime).TotalSeconds > combatBreakThresholdSeconds)
+                {
+                    // Beende vorherige Periode falls vorhanden
+                    if (currentPeriod != null)
+                    {
+                        periods.Add(currentPeriod);
+                        _logger.LogDebug("Kampf-Periode beendet: {StartTime} - {EndTime} ({Duration}s) - {Damage:F0} Schaden",
+                            currentPeriod.StartTime, currentPeriod.EndTime, currentPeriod.Duration.TotalSeconds, currentPeriod.TotalDamage);
+                    }
+
+                    // Starte neue Periode
+                    currentPeriod = new CombatPeriod
+                    {
+                        StartTime = entry.Timestamp
+                    };
+
+                    _logger.LogDebug("Neue Kampf-Periode erkannt: {StartTime}", currentPeriod.StartTime);
+                }
+
+                // Füge Eintrag zur aktuellen Periode hinzu
+                currentPeriod.AddEntry(entry);
+                lastEventTime = entry.Timestamp;
+            }
+
+            // Füge die letzte Periode hinzu
+            if (currentPeriod != null)
+            {
+                periods.Add(currentPeriod);
+                _logger.LogDebug("Letzte Kampf-Periode beendet: {StartTime} - {EndTime} ({Duration}s) - {Damage:F0} Schaden",
+                    currentPeriod.StartTime, currentPeriod.EndTime, currentPeriod.Duration.TotalSeconds, currentPeriod.TotalDamage);
+            }
+
+            _logger.LogInformation("Kampf-Erkennung abgeschlossen für '{PlayerName}': {PeriodCount} Zeiträume erkannt",
+                playerName, periods.Count);
+
+            // Zeige Details der letzten 10 Zeiträume (falls vorhanden)
+            var lastPeriods = periods.TakeLast(10).ToList();
+            for (int i = 0; i < lastPeriods.Count; i++)
+            {
+                var period = lastPeriods[i];
+                _logger.LogInformation("Zeitraum {Index}: {StartTime} - {EndTime} ({Duration:F1}s) - {EntryCount} Einträge - {TotalDamage:F0} Schaden",
+                    i + 1, period.StartTime, period.EndTime, period.Duration.TotalSeconds, period.EntryCount, period.TotalDamage);
+            }
+
+            _logger.LogInformation("=== GetCombatPeriodsForPlayer() beendet ===");
+
+            return periods;
+        }
+
+        /// <summary>
+        /// Gibt alle verfügbaren Spieler aus den Einträgen zurück
+        /// </summary>
+        /// <param name="allEntries">Alle Combat Log Einträge</param>
+        /// <returns>Liste der Spielernamen</returns>
+        public List<string> GetAvailablePlayers(List<CombatLogEntry> allEntries)
+        {
+            return allEntries
+                .Where(e => e.PlayerInfo.IsPlayer && !string.IsNullOrEmpty(e.PlayerInfo.CharName))
+                .Select(e => e.PlayerInfo.CharName)
+                .Distinct()
+                .OrderBy(name => name)
+                .ToList();
+        }
+    }
+}

@@ -8,7 +8,7 @@
         BorderThickness="1"
         CornerRadius="12"
         Padding="24"
-        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+        Visibility="{Binding CombatLog.IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- Spinner -->
             <Border Width="40" Height="40"
@@ -35,14 +35,14 @@
             </Border>
 
             <!-- Loading Message -->
-            <TextBlock Text="{Binding LoadingMessage}"
+            <TextBlock Text="{Binding CombatLog.LoadingMessage}"
                 Style="{StaticResource ModernText}"
                 FontWeight="SemiBold"
                 HorizontalAlignment="Center"
                 Margin="0,0,0,8" />
 
             <!-- Loading Time -->
-            <TextBlock Text="{Binding LoadingTime}"
+            <TextBlock Text="{Binding CombatLog.LoadingTime}"
                 Style="{StaticResource ModernMutedText}"
                 FontSize="14"
                 HorizontalAlignment="Center" />

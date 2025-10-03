@@ -147,11 +147,11 @@
 
                         <!-- Page Title -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="{Binding CurrentPageIcon}"
+                            <ui:SymbolIcon Symbol="{Binding Navigation.CurrentPageIcon}"
                                 Foreground="{StaticResource PrimaryBlue}"
                                 Width="24" Height="24"
                                 Margin="0,0,12,0" />
-                            <TextBlock Text="{Binding CurrentPageTitle}"
+                            <TextBlock Text="{Binding Navigation.CurrentPageTitle}"
                                 Style="{StaticResource ModernSubtitle}"
                                 VerticalAlignment="Center" />
                         </StackPanel>
