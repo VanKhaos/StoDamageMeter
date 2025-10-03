@@ -1,0 +1,153 @@
+<UserControl x:Class="StoDamageMeter.Components.CombatLogInfoCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:converters="clr-namespace:StoDamageMeter.Converters">
+    
+    <UserControl.Resources>
+        <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <ui:CardControl Background="{StaticResource CardBackground}"
+                   BorderBrush="{StaticResource CardBorder}"
+                   BorderThickness="1"
+                   CornerRadius="12"
+                   Padding="24"
+                   Visibility="{Binding Statistics, Converter={StaticResource NotNullToVisibilityConverter}}">
+        <StackPanel>
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <ui:SymbolIcon Symbol="Info24" 
+                              Foreground="{StaticResource PrimaryBlue}"
+                              Width="24" Height="24"
+                              Margin="0,0,12,0"/>
+                <TextBlock Text="Combatlog-Informationen" 
+                           Style="{StaticResource ModernSubtitle}"
+                           FontWeight="SemiBold"/>
+            </StackPanel>
+            
+            <!-- Info Grid -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Spieleranzahl -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,16">
+                    <TextBlock Text="Gefundene Spieler" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding PlayerCount}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource SuccessGreen}"/>
+                </StackPanel>
+                
+                <!-- Kampfdauer -->
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,16">
+                    <TextBlock Text="Kampfdauer" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding Statistics.CombatDuration, StringFormat={}{0:hh\\:mm\\:ss}}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource PrimaryBlue}"/>
+                </StackPanel>
+                
+                <!-- Gesamt Einträge -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,16">
+                    <TextBlock Text="Gesamt Einträge" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding Statistics.TotalEntries}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+                
+                <!-- Relevante Einträge -->
+                <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,16">
+                    <TextBlock Text="Relevante Einträge" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding Statistics.RelevantEntries}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessGreen}"/>
+                </StackPanel>
+                
+                <!-- Kritische Treffer -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,0">
+                    <TextBlock Text="Kritische Treffer" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding Statistics.CriticalHits}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource WarningOrange}"/>
+                </StackPanel>
+                
+                <!-- DoT Events -->
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,0">
+                    <TextBlock Text="DoT Events" 
+                               Style="{StaticResource ModernMutedText}"
+                               FontSize="12"/>
+                    <TextBlock Text="{Binding Statistics.DoTEvents}" 
+                               Style="{StaticResource ModernText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBlue}"/>
+                </StackPanel>
+            </Grid>
+            
+            <!-- Zusätzliche Informationen -->
+            <Border Background="{StaticResource DarkBackground}"
+                    BorderBrush="{StaticResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="📊 Zusätzliche Details" 
+                               Style="{StaticResource ModernText}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="Durchschnittlicher Schaden: " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="{Binding Statistics.AverageDamage, StringFormat={}{0:N0}}" 
+                                   Style="{StaticResource ModernSecondaryText}"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="Crit-Rate: " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="{Binding Statistics.CriticalRate, StringFormat={}{0:F1}%}" 
+                                   Style="{StaticResource ModernSecondaryText}"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="• " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="DPS: " Style="{StaticResource ModernSecondaryText}"/>
+                        <TextBlock Text="{Binding Statistics.DPS, StringFormat={}{0:N0}}" 
+                                   Style="{StaticResource ModernSecondaryText}"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ui:CardControl>
+</UserControl>

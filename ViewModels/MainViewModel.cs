@@ -11,7 +11,6 @@ namespace StoDamageMeter.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly ICombatLogService _combatLogService;
-        private readonly IDebugLogger _debugLogger;
         private readonly ILogger<MainViewModel> _logger;
 
         [ObservableProperty]
@@ -35,13 +34,23 @@ namespace StoDamageMeter.ViewModels
         [ObservableProperty]
         private CombatLogStatistics? _statistics;
 
+        [ObservableProperty]
+        private int _playerCount = 0;
+
+        [ObservableProperty]
+        private bool _isLoading = false;
+
+        [ObservableProperty]
+        private string _loadingMessage = string.Empty;
+
+        [ObservableProperty]
+        private string _loadingTime = string.Empty;
+
         public MainViewModel(
             ICombatLogService combatLogService,
-            IDebugLogger debugLogger,
             ILogger<MainViewModel> logger)
         {
             _combatLogService = combatLogService;
-            _debugLogger = debugLogger;
             _logger = logger;
 
             // Event-Handler für Live-Updates
@@ -55,31 +64,35 @@ namespace StoDamageMeter.ViewModels
             {
                 var openFileDialog = new OpenFileDialog
                 {
-                    Title = "Combatlog auswählen",
-                    Filter = "Log-Dateien (*.log)|*.log|Text-Dateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*",
-                    Multiselect = false
+                    Title = "Combatlog-Datei auswählen",
+                    Filter = "Log-Dateien (*.log)|*.log|Alle Dateien (*.*)|*.*",
+                    DefaultExt = "log"
                 };
 
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    await ProcessCombatLogFile(openFileDialog.FileName);
+                    SelectedLogFile = openFileDialog.FileName;
+                    await ProcessCombatLogFile(SelectedLogFile);
                 }
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError("Fehler beim Auswählen der Log-Datei", ex);
                 StatusMessage = $"Fehler: {ex.Message}";
+                _logger.LogError(ex, "Fehler beim Auswählen der Log-Datei");
             }
         }
 
         [RelayCommand]
         public async Task ProcessCombatLogFile(string filePath)
         {
+            if (string.IsNullOrEmpty(filePath) || IsProcessing)
+                return;
+
             try
             {
                 IsProcessing = true;
-                StatusMessage = "Verarbeite Combatlog...";
-                _debugLogger.LogInfo($"Verarbeite Combatlog-Datei: {filePath}");
+                IsLoading = true;
+                LoadingMessage = "📖 Lade Datei...";
 
                 // Stoppe vorherige Überwachung
                 if (IsWatching)
@@ -92,53 +105,46 @@ namespace StoDamageMeter.ViewModels
 
                 if (result.Success)
                 {
-                    SelectedLogFile = filePath;
                     CurrentResult = result;
                     Statistics = result.Statistics;
-                    LastUpdate = result.ProcessedAt.ToString("HH:mm:ss");
-                    StatusMessage = $"Verarbeitet: {result.Statistics.RelevantEntries} Einträge";
-
-                    _debugLogger.LogInfo($"Combatlog erfolgreich verarbeitet: {result.Statistics.RelevantEntries} relevante Einträge");
+                    PlayerCount = result.Statistics.PlayerCount;
+                    StatusMessage = $"Verarbeitet: {result.Statistics.RelevantEntries} Einträge, {result.Statistics.PlayerCount} Spieler";
                 }
                 else
                 {
                     StatusMessage = $"Fehler: {result.ErrorMessage}";
-                    _debugLogger.LogError($"Fehler beim Verarbeiten: {result.ErrorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError("Fehler beim Verarbeiten der Combatlog-Datei", ex);
                 StatusMessage = $"Fehler: {ex.Message}";
+                _logger.LogError(ex, "Fehler beim Verarbeiten der Combatlog-Datei");
             }
             finally
             {
                 IsProcessing = false;
+                IsLoading = false;
+                LoadingMessage = string.Empty;
+                LoadingTime = string.Empty;
             }
         }
 
         [RelayCommand]
         public async Task StartWatching()
         {
+            if (string.IsNullOrEmpty(SelectedLogFile))
+                return;
+
             try
             {
-                if (string.IsNullOrEmpty(SelectedLogFile))
-                {
-                    StatusMessage = "Keine Datei ausgewählt";
-                    return;
-                }
-
-                StatusMessage = "Starte Überwachung...";
-                _debugLogger.LogInfo($"Starte Überwachung für: {SelectedLogFile}");
-
                 await _combatLogService.StartWatchingAsync(SelectedLogFile);
                 IsWatching = true;
-                StatusMessage = "Überwachung aktiv";
+                StatusMessage = "Live-Überwachung aktiv";
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError("Fehler beim Starten der Überwachung", ex);
                 StatusMessage = $"Fehler: {ex.Message}";
+                _logger.LogError(ex, "Fehler beim Starten der Überwachung");
             }
         }
 
@@ -149,13 +155,12 @@ namespace StoDamageMeter.ViewModels
             {
                 _combatLogService.StopWatching();
                 IsWatching = false;
-                StatusMessage = "Überwachung gestoppt";
-                _debugLogger.LogInfo("Überwachung gestoppt");
+                StatusMessage = "Live-Überwachung gestoppt";
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError("Fehler beim Stoppen der Überwachung", ex);
                 StatusMessage = $"Fehler: {ex.Message}";
+                _logger.LogError(ex, "Fehler beim Stoppen der Überwachung");
             }
         }
 
@@ -163,36 +168,21 @@ namespace StoDamageMeter.ViewModels
         {
             try
             {
-                // UI-Thread verwenden für Updates
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    CurrentResult = e.Result;
-                    Statistics = e.Result.Statistics;
-                    LastUpdate = DateTime.Now.ToString("HH:mm:ss");
-                    StatusMessage = $"Live: {e.NewEntries.Count} neue Einträge";
-                });
-
-                _debugLogger.LogInfo($"Live-Update: {e.NewEntries.Count} neue Einträge verarbeitet");
+                // Update Statistics und PlayerCount
+                Statistics = e.Result.Statistics;
+                PlayerCount = e.Result.Statistics.PlayerCount;
+                LastUpdate = DateTime.Now.ToString("HH:mm:ss");
+                StatusMessage = $"Live-Update: {e.NewEntries.Count} neue Einträge";
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError("Fehler beim Verarbeiten des Live-Updates", ex);
+                _logger.LogError(ex, "Fehler beim Verarbeiten des Live-Updates");
             }
         }
 
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
-
-            // Debug-Logging für wichtige Property-Änderungen
-            if (e.PropertyName == nameof(IsWatching))
-            {
-                _debugLogger.LogDebug($"IsWatching geändert: {IsWatching}");
-            }
-            else if (e.PropertyName == nameof(Statistics))
-            {
-                _debugLogger.LogDebug($"Statistics aktualisiert: {Statistics?.RelevantEntries} Einträge");
-            }
         }
     }
 }

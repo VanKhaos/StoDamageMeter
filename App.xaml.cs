@@ -41,7 +41,6 @@ public partial class App : Application
         });
 
         // Services registrieren
-        services.AddSingleton<IDebugLogger, DebugLogger>();
         services.AddSingleton<ICombatLogParser, CombatLogParser>();
         services.AddSingleton<ICombatLogService, CombatLogService>();
 

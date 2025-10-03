@@ -11,11 +11,10 @@ using StoDamageMeter.Models;
 namespace StoDamageMeter.Services
 {
     /// <summary>
-    /// Combatlog-Parser Service mit modularen Funktionen
+    /// Combatlog-Parser Service
     /// </summary>
     public class CombatLogParser : ICombatLogParser
     {
-        private readonly IDebugLogger _debugLogger;
         private readonly ILogger<CombatLogParser> _logger;
 
         // Regex-Pattern für verschiedene ID-Tags
@@ -23,187 +22,153 @@ namespace StoDamageMeter.Services
         private static readonly Regex EntityIdPattern = new(@"C\[(\d+)\s+([^\]]+)\]", RegexOptions.Compiled);
         private static readonly Regex CompanionIdPattern = new(@"S\[(\d+)\]", RegexOptions.Compiled);
 
-        public CombatLogParser(IDebugLogger debugLogger, ILogger<CombatLogParser> logger)
+        public CombatLogParser(ILogger<CombatLogParser> logger)
         {
-            _debugLogger = debugLogger;
             _logger = logger;
         }
 
         public async Task<List<CombatLogEntry>> ParseCombatLogFileAsync(string filePath)
         {
-            _debugLogger.LogInfo($"Starte Parsing der Combatlog-Datei: {filePath}");
-
             var entries = new List<CombatLogEntry>();
 
             try
             {
                 if (!File.Exists(filePath))
                 {
-                    _debugLogger.LogError($"Combatlog-Datei nicht gefunden: {filePath}");
                     return entries;
                 }
 
                 var lines = await File.ReadAllLinesAsync(filePath);
-                _debugLogger.LogInfo($"Datei gelesen: {lines.Length} Zeilen gefunden");
 
-                for (int i = 0; i < lines.Length; i++)
+                foreach (var line in lines)
                 {
-                    var line = lines[i].Trim();
-                    if (string.IsNullOrEmpty(line) || !IsValidCombatLogLine(line))
-                    {
-                        continue;
-                    }
-
-                    var entry = ParseCombatLogLine(line, i + 1);
-                    if (entry != null && entry.IsRelevant)
+                    var entry = ParseCombatLogLine(line);
+                    if (entry != null)
                     {
                         entries.Add(entry);
-                        _debugLogger.LogCombatLine(i + 1, line, $"Parsed: {entry.AttackName} -> {entry.RawDamage} {entry.DamageType}");
                     }
                 }
-
-                _debugLogger.LogInfo($"Parsing abgeschlossen: {entries.Count} relevante Einträge gefunden");
-                _debugLogger.LogObject("Parsing-Statistiken", new
-                {
-                    TotalLines = lines.Length,
-                    RelevantEntries = entries.Count,
-                    CriticalHits = entries.Count(e => e.IsCritical),
-                    DoTEvents = entries.Count(e => e.IsDoT),
-                    TotalDamage = entries.Sum(e => e.RawDamage)
-                });
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError($"Fehler beim Parsing der Combatlog-Datei: {filePath}", ex);
                 _logger.LogError(ex, "Fehler beim Parsing der Combatlog-Datei");
             }
 
             return entries;
         }
 
-        public CombatLogEntry? ParseCombatLogLine(string line, int lineNumber)
+        public CombatLogEntry? ParseCombatLogLine(string line)
         {
             try
             {
-                var parts = line.Split(',');
-                if (parts.Length != 11)
+                // Teile zuerst nach :: (Timestamp + Separator)
+                var timestampAndRest = line.Split(new[] { "::" }, 2, StringSplitOptions.None);
+                if (timestampAndRest.Length != 2)
                 {
-                    _debugLogger.LogWarning($"Zeile {lineNumber}: Ungültige Anzahl von Teilen ({parts.Length} statt 11)");
                     return null;
                 }
 
+                var timestamp = timestampAndRest[0].Trim();
+                var restOfLine = timestampAndRest[1];
+
+                // Teile den Rest nach Komma
+                var parts = restOfLine.Split(',');
+
+                // Parse Schadenswerte
+                var rawDamage = ParseDouble(parts[10]);
+
+                // Ignoriere negative Schadenswerte (Heilung)
+                if (rawDamage <= 0)
+                {
+                    return null;
+                }
+
+                // Erstelle CombatLogEntry
                 var entry = new CombatLogEntry
                 {
-                    Timestamp = ParseTimestamp(parts[0]),
-                    PlayerInfo = ParsePlayerInfo(parts[2]),
-                    SourceEntity = ParseEntityInfo(parts[3]),
-                    TargetEntity = ParseEntityInfo(parts[4]),
-                    AttackName = parts[5].Trim(),
-                    AbilityId = parts[6].Trim(),
-                    DamageType = parts[7].Trim(),
-                    EventType = ParseEventType(parts[8]),
-                    RawDamage = ParseDouble(parts[9]),
-                    DamageWithResistance = ParseDouble(parts[10])
+                    Timestamp = ParseTimestamp(timestamp),
+                    PlayerInfo = ParsePlayerInfo(parts[0], parts[1]),
+                    SourceEntity = ParseEntityInfo(parts[2], parts[3]),
+                    TargetEntity = ParseEntityInfo(parts[4], parts[5]),
+                    AttackName = parts[6].Trim(),
+                    AbilityId = parts[7].Trim(),
+                    DamageType = parts[8].Trim(),
+                    EventType = ParseEventType(parts[9]),
+                    RawDamage = rawDamage,
+                    DamageWithResistance = ParseDouble(parts[11])
                 };
-
-                // Player-Name aus PlayerInfo extrahieren
-                entry.PlayerName = entry.PlayerInfo.CharName;
 
                 return entry;
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError($"Fehler beim Parsen der Zeile {lineNumber}: {line}", ex);
+                _logger.LogError(ex, "Fehler beim Parsen der Zeile: {Line}", line);
                 return null;
             }
         }
 
-        public bool IsValidCombatLogLine(string line)
+        public PlayerInfo ParsePlayerInfo(string playerName, string playerTag)
         {
-            if (string.IsNullOrWhiteSpace(line))
-                return false;
-
-            // Mindestanforderungen: Doppelpunkt-Separator und Komma-Trennung
-            return line.Contains("::") && line.Split(',').Length == 11;
-        }
-
-        public PlayerInfo ParsePlayerInfo(string playerData)
-        {
-            var playerInfo = new PlayerInfo();
-
-            try
+            var playerInfo = new PlayerInfo
             {
-                var match = PlayerIdPattern.Match(playerData);
+                CharName = playerName.Trim(),
+                PlayerTag = playerTag.Trim()
+            };
+
+            // Extrahiere Player-ID-Informationen wenn P-Tag vorhanden
+            if (playerTag.StartsWith("P["))
+            {
+                var match = PlayerIdPattern.Match(playerTag);
                 if (match.Success)
                 {
                     playerInfo.CharId = match.Groups[1].Value;
                     playerInfo.AccountId = match.Groups[2].Value;
-                    playerInfo.CharName = match.Groups[3].Value.Trim();
                     playerInfo.Handle = match.Groups[4].Value.Trim();
                     playerInfo.Discriminator = match.Groups[5].Value;
                 }
-                else
-                {
-                    // Fallback: Nur Spielername ohne ID-Tag
-                    playerInfo.CharName = playerData.Split(',')[0].Trim();
-                }
-            }
-            catch (Exception ex)
-            {
-                _debugLogger.LogError($"Fehler beim Parsen der Player-Info: {playerData}", ex);
             }
 
             return playerInfo;
         }
 
-        public EntityInfo ParseEntityInfo(string entityData)
+        public EntityInfo ParseEntityInfo(string entityName, string entityTag)
         {
-            var entityInfo = new EntityInfo();
-
-            try
+            var entityInfo = new EntityInfo
             {
-                if (string.IsNullOrWhiteSpace(entityData))
-                {
-                    return entityInfo;
-                }
+                Name = entityName.Trim(),
+                EntityTag = entityTag.Trim()
+            };
 
-                // Companion (S[ID])
-                var companionMatch = CompanionIdPattern.Match(entityData);
-                if (companionMatch.Success)
-                {
-                    entityInfo.Type = EntityType.Companion;
-                    entityInfo.EntityId = companionMatch.Groups[1].Value;
-                    entityInfo.Name = entityData.Split(',')[0].Trim();
-                    return entityInfo;
-                }
+            // Bestimme Entity-Typ basierend auf Tag
+            if (entityTag.StartsWith("P["))
+            {
+                entityInfo.Type = EntityType.Player;
+            }
+            else if (entityTag.StartsWith("S["))
+            {
+                entityInfo.Type = EntityType.Companion;
+            }
+            else if (entityTag.StartsWith("C["))
+            {
+                entityInfo.Type = EntityType.Enemy;
 
-                // Creature/Entity (C[ID])
-                var entityMatch = EntityIdPattern.Match(entityData);
-                if (entityMatch.Success)
+                // Extrahiere Entity-ID und Name
+                var match = EntityIdPattern.Match(entityTag);
+                if (match.Success)
                 {
-                    entityInfo.Type = EntityType.Creature;
-                    entityInfo.EntityId = entityMatch.Groups[1].Value;
-                    entityInfo.Name = entityMatch.Groups[2].Value.Trim();
+                    entityInfo.EntityId = match.Groups[1].Value;
+                    entityInfo.EntityName = match.Groups[2].Value;
 
-                    // Environment bestimmen
-                    if (entityInfo.Name.StartsWith("Ground_"))
+                    // Bestimme Kampfumgebung basierend auf Entity-Name
+                    if (entityInfo.EntityName.Contains("Ground_"))
                     {
                         entityInfo.Environment = CombatEnvironment.Ground;
                     }
-                    else if (entityInfo.Name.StartsWith("Space_"))
+                    else if (entityInfo.EntityName.Contains("Space_"))
                     {
                         entityInfo.Environment = CombatEnvironment.Space;
                     }
                 }
-                else
-                {
-                    // Fallback: Nur Name ohne ID-Tag
-                    entityInfo.Name = entityData.Split(',')[0].Trim();
-                }
-            }
-            catch (Exception ex)
-            {
-                _debugLogger.LogError($"Fehler beim Parsen der Entity-Info: {entityData}", ex);
             }
 
             return entityInfo;
@@ -228,9 +193,23 @@ namespace StoDamageMeter.Services
         {
             try
             {
-                // Format: DD:MM:YY:HH:MM:SS.mmm
+                // Format: DD:MM:YY:HH:MM:SS.mmm (3 Nachkommastellen)
                 if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.fff",
                     CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+                {
+                    return result;
+                }
+
+                // Format: DD:MM:YY:HH:MM:SS.m (1 Nachkommastelle)
+                if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.f",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+                {
+                    return result;
+                }
+
+                // Format: DD:MM:YY:HH:MM:SS.mm (2 Nachkommastellen)
+                if (DateTime.TryParseExact(timestampData, "dd:MM:yy:HH:mm:ss.ff",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
                 {
                     return result;
                 }
@@ -241,17 +220,16 @@ namespace StoDamageMeter.Services
                     return result;
                 }
 
-                _debugLogger.LogWarning($"Ungültiges Timestamp-Format: {timestampData}");
                 return DateTime.MinValue;
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError($"Fehler beim Parsen des Timestamps: {timestampData}", ex);
+                _logger.LogError(ex, "Fehler beim Parsen des Timestamps: {Timestamp}", timestampData);
                 return DateTime.MinValue;
             }
         }
 
-        private static double ParseDouble(string value)
+        private double ParseDouble(string value)
         {
             if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
             {

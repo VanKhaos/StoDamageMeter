@@ -1,141 +1,275 @@
 <Page x:Class="StoDamageMeter.Pages.StatisticsPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      xmlns:components="clr-namespace:StoDamageMeter.Components"
-      Title="Statistics">
-    
-    <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                  HorizontalScrollBarVisibility="Disabled"
-                  Padding="24">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:components="clr-namespace:StoDamageMeter.Components"
+    xmlns:converters="clr-namespace:StoDamageMeter.Converters"
+    Title="Statistics">
+
+    <Page.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled"
+        Padding="24">
         <StackPanel>
             <!-- Statistics Overview Card -->
-            <components:StatisticsOverviewCard Margin="0,0,0,24"/>
-            
+            <components:StatisticsOverviewCard Margin="0,0,0,24" />
+
             <!-- Detailed Statistics Grid -->
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
+
                 <!-- Damage by Type -->
-                <ui:CardControl Grid.Column="0" 
-                               Background="{StaticResource CardBackground}"
-                               BorderBrush="{StaticResource CardBorder}"
-                               BorderThickness="1"
-                               CornerRadius="12"
-                               Padding="24"
-                               Margin="0,0,12,0">
+                <ui:CardControl Grid.Column="0"
+                    Background="{StaticResource CardBackground}"
+                    BorderBrush="{StaticResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="0,0,12,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <ui:SymbolIcon Symbol="ChartMultiple24" 
-                                          Foreground="{StaticResource WarningOrange}"
-                                          Width="24" Height="24"
-                                          Margin="0,0,12,0"/>
-                            <TextBlock Text="Schaden nach Typ" 
-                                       Style="{StaticResource ModernSubtitle}"
-                                       FontWeight="SemiBold"/>
+                            <ui:SymbolIcon Symbol="ChartMultiple24"
+                                Foreground="{StaticResource WarningOrange}"
+                                Width="24" Height="24"
+                                Margin="0,0,12,0" />
+                            <TextBlock Text="Schaden nach Typ"
+                                Style="{StaticResource ModernSubtitle}"
+                                FontWeight="SemiBold" />
                         </StackPanel>
-                        
+
                         <!-- Damage Types List -->
                         <ItemsControl ItemsSource="{Binding Statistics.DamageByType}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        
-                                        <TextBlock Grid.Column="0" 
-                                                   Text="{Binding Key}" 
-                                                   Style="{StaticResource ModernSecondaryText}"/>
-                                        <TextBlock Grid.Column="1" 
-                                                   Text="{Binding Value, StringFormat={}{0:N0}}" 
-                                                   Style="{StaticResource ModernText}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{StaticResource SuccessGreen}"/>
+
+                                        <TextBlock Grid.Column="0"
+                                            Text="{Binding Key}"
+                                            Style="{StaticResource ModernSecondaryText}" />
+                                        <TextBlock Grid.Column="1"
+                                            Text="{Binding Value, StringFormat={}{0:N0}}"
+                                            Style="{StaticResource ModernText}"
+                                            FontWeight="SemiBold"
+                                            Foreground="{StaticResource SuccessGreen}" />
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        
+
                         <!-- Empty State -->
-                        <StackPanel HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center"
-                                   Margin="0,20,0,0"
-                                   Visibility="{Binding Statistics.DamageByType, Converter={StaticResource NullToVisibilityConverter}}">
-                            <ui:SymbolIcon Symbol="ChartMultiple24" 
-                                          Foreground="{StaticResource TextMuted}"
-                                          Width="32" Height="32"
-                                          Margin="0,0,0,8"/>
-                            <TextBlock Text="Keine Daten" 
-                                       Style="{StaticResource ModernMutedText}"
-                                       HorizontalAlignment="Center"/>
+                        <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Margin="0,20,0,0"
+                            Visibility="{Binding Statistics.DamageByType, Converter={StaticResource NullToVisibilityConverter}}">
+                            <ui:SymbolIcon Symbol="ChartMultiple24"
+                                Foreground="{StaticResource TextMuted}"
+                                Width="32" Height="32"
+                                Margin="0,0,0,8" />
+                            <TextBlock Text="Keine Daten"
+                                Style="{StaticResource ModernMutedText}"
+                                HorizontalAlignment="Center" />
                         </StackPanel>
                     </StackPanel>
                 </ui:CardControl>
-                
+
                 <!-- Top Attacks -->
-                <ui:CardControl Grid.Column="1" 
-                               Background="{StaticResource CardBackground}"
-                               BorderBrush="{StaticResource CardBorder}"
-                               BorderThickness="1"
-                               CornerRadius="12"
-                               Padding="24"
-                               Margin="12,0,0,0">
+                <ui:CardControl Grid.Column="1"
+                    Background="{StaticResource CardBackground}"
+                    BorderBrush="{StaticResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="12,0,0,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <ui:SymbolIcon Symbol="Target24" 
-                                          Foreground="{StaticResource PrimaryBlue}"
-                                          Width="24" Height="24"
-                                          Margin="0,0,12,0"/>
-                            <TextBlock Text="Top Angriffe" 
-                                       Style="{StaticResource ModernSubtitle}"
-                                       FontWeight="SemiBold"/>
+                            <ui:SymbolIcon Symbol="Target24"
+                                Foreground="{StaticResource PrimaryBlue}"
+                                Width="24" Height="24"
+                                Margin="0,0,12,0" />
+                            <TextBlock Text="Top Angriffe"
+                                Style="{StaticResource ModernSubtitle}"
+                                FontWeight="SemiBold" />
                         </StackPanel>
-                        
+
                         <!-- Top Attacks List -->
                         <ItemsControl ItemsSource="{Binding Statistics.DamageByAttack}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        
-                                        <TextBlock Grid.Column="0" 
-                                                   Text="{Binding Key}" 
-                                                   Style="{StaticResource ModernSecondaryText}"
-                                                   TextWrapping="Wrap"/>
-                                        <TextBlock Grid.Column="1" 
-                                                   Text="{Binding Value, StringFormat={}{0:N0}}" 
-                                                   Style="{StaticResource ModernText}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{StaticResource PrimaryBlue}"/>
+
+                                        <TextBlock Grid.Column="0"
+                                            Text="{Binding Key}"
+                                            Style="{StaticResource ModernSecondaryText}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="1"
+                                            Text="{Binding Value, StringFormat={}{0:N0}}"
+                                            Style="{StaticResource ModernText}"
+                                            FontWeight="SemiBold"
+                                            Foreground="{StaticResource PrimaryBlue}" />
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        
+
                         <!-- Empty State -->
-                        <StackPanel HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center"
-                                   Margin="0,20,0,0"
-                                   Visibility="{Binding Statistics.DamageByAttack, Converter={StaticResource NullToVisibilityConverter}}">
-                            <ui:SymbolIcon Symbol="Target24" 
-                                          Foreground="{StaticResource TextMuted}"
-                                          Width="32" Height="32"
-                                          Margin="0,0,0,8"/>
-                            <TextBlock Text="Keine Daten" 
-                                       Style="{StaticResource ModernMutedText}"
-                                       HorizontalAlignment="Center"/>
+                        <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Margin="0,20,0,0"
+                            Visibility="{Binding Statistics.DamageByAttack, Converter={StaticResource NullToVisibilityConverter}}">
+                            <ui:SymbolIcon Symbol="Target24"
+                                Foreground="{StaticResource TextMuted}"
+                                Width="32" Height="32"
+                                Margin="0,0,0,8" />
+                            <TextBlock Text="Keine Daten"
+                                Style="{StaticResource ModernMutedText}"
+                                HorizontalAlignment="Center" />
                         </StackPanel>
                     </StackPanel>
                 </ui:CardControl>
             </Grid>
+
+            <!-- Combatlog Entries Table -->
+            <ui:CardControl Background="{StaticResource CardBackground}"
+                BorderBrush="{StaticResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="24"
+                Margin="0,24,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <ui:SymbolIcon Symbol="Table24"
+                            Foreground="{StaticResource AccentBlue}"
+                            Width="24" Height="24"
+                            Margin="0,0,12,0" />
+                        <TextBlock Text="Combatlog-Einträge"
+                            Style="{StaticResource ModernSubtitle}"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <!-- DataGrid für Combatlog-Einträge -->
+                    <DataGrid ItemsSource="{Binding CurrentResult.Entries}"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="True"
+                        CanUserResizeColumns="True"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        AlternatingRowBackground="{StaticResource DarkBackground}"
+                        Background="{StaticResource CardBackground}"
+                        BorderBrush="{StaticResource CardBorder}"
+                        BorderThickness="1"
+                        RowHeaderWidth="0"
+                        MaxHeight="400"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto">
+
+                        <DataGrid.Columns>
+                            <!-- Timestamp -->
+                            <DataGridTextColumn Header="Zeit"
+                                Binding="{Binding Timestamp, StringFormat={}{0:HH:mm:ss.fff}}"
+                                Width="80"
+                                CanUserSort="True" />
+
+                            <!-- Spieler -->
+                            <DataGridTextColumn Header="Spieler"
+                                Binding="{Binding PlayerInfo.CharName}"
+                                Width="120"
+                                CanUserSort="True" />
+
+                            <!-- Angriff -->
+                            <DataGridTextColumn Header="Angriff"
+                                Binding="{Binding AttackName}"
+                                Width="200"
+                                CanUserSort="True" />
+
+                            <!-- Schaden -->
+                            <DataGridTextColumn Header="Schaden"
+                                Binding="{Binding RawDamage, StringFormat={}{0:N0}}"
+                                Width="80"
+                                CanUserSort="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground"
+                                            Value="{StaticResource SuccessGreen}" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Event Typ -->
+                            <DataGridTextColumn Header="Typ"
+                                Binding="{Binding EventType}"
+                                Width="80"
+                                CanUserSort="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCritical}" Value="True">
+                                                <Setter Property="Foreground"
+                                                    Value="{StaticResource WarningOrange}" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsDoT}" Value="True">
+                                                <Setter Property="Foreground"
+                                                    Value="{StaticResource AccentBlue}" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Schadensart -->
+                            <DataGridTextColumn Header="Schadensart"
+                                Binding="{Binding DamageType}"
+                                Width="120"
+                                CanUserSort="True" />
+
+                            <!-- Ziel -->
+                            <DataGridTextColumn Header="Ziel"
+                                Binding="{Binding TargetEntity.Name}"
+                                Width="150"
+                                CanUserSort="True" />
+
+                            <!-- Ability ID -->
+                            <DataGridTextColumn Header="Ability ID"
+                                Binding="{Binding AbilityId}"
+                                Width="100"
+                                CanUserSort="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Empty State -->
+                    <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Margin="0,20,0,0"
+                        Visibility="{Binding CurrentResult.Entries, Converter={StaticResource NullToVisibilityConverter}}">
+                        <ui:SymbolIcon Symbol="Table24"
+                            Foreground="{StaticResource TextMuted}"
+                            Width="32" Height="32"
+                            Margin="0,0,0,8" />
+                        <TextBlock Text="Keine Combatlog-Daten"
+                            Style="{StaticResource ModernMutedText}"
+                            HorizontalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:CardControl>
         </StackPanel>
     </ScrollViewer>
 </Page>

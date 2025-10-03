@@ -14,7 +14,6 @@ namespace StoDamageMeter.Services
     public class CombatLogService : ICombatLogService, IDisposable
     {
         private readonly ICombatLogParser _parser;
-        private readonly IDebugLogger _debugLogger;
         private readonly ILogger<CombatLogService> _logger;
         private FileSystemWatcher? _fileWatcher;
         private string _currentFilePath = string.Empty;
@@ -25,18 +24,14 @@ namespace StoDamageMeter.Services
 
         public CombatLogService(
             ICombatLogParser parser,
-            IDebugLogger debugLogger,
             ILogger<CombatLogService> logger)
         {
             _parser = parser;
-            _debugLogger = debugLogger;
             _logger = logger;
         }
 
         public async Task<CombatLogResult> ProcessCombatLogFileAsync(string filePath)
         {
-            _debugLogger.LogInfo($"Verarbeite Combatlog-Datei: {filePath}");
-
             var result = new CombatLogResult
             {
                 FilePath = filePath,
@@ -48,7 +43,6 @@ namespace StoDamageMeter.Services
                 if (!File.Exists(filePath))
                 {
                     result.ErrorMessage = "Datei nicht gefunden";
-                    _debugLogger.LogError($"Combatlog-Datei nicht gefunden: {filePath}");
                     return result;
                 }
 
@@ -59,14 +53,10 @@ namespace StoDamageMeter.Services
 
                 // Berechne Statistiken
                 result.Statistics = CalculateStatistics(entries);
-
-                _debugLogger.LogInfo($"Combatlog erfolgreich verarbeitet: {entries.Count} Einträge");
-                _debugLogger.LogObject("Combatlog-Statistiken", result.Statistics);
             }
             catch (Exception ex)
             {
                 result.ErrorMessage = ex.Message;
-                _debugLogger.LogError($"Fehler beim Verarbeiten der Combatlog-Datei: {filePath}", ex);
                 _logger.LogError(ex, "Fehler beim Verarbeiten der Combatlog-Datei");
             }
 
@@ -81,7 +71,6 @@ namespace StoDamageMeter.Services
 
                 if (!File.Exists(filePath))
                 {
-                    _debugLogger.LogError($"Combatlog-Datei für Überwachung nicht gefunden: {filePath}");
                     return;
                 }
 
@@ -98,14 +87,11 @@ namespace StoDamageMeter.Services
                 _fileWatcher.Changed += OnFileChanged;
                 _fileWatcher.EnableRaisingEvents = true;
 
-                _debugLogger.LogInfo($"Überwachung gestartet für: {filePath}");
-
                 // Initiale Verarbeitung
                 await ProcessAndNotifyAsync();
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError($"Fehler beim Starten der Überwachung: {filePath}", ex);
                 _logger.LogError(ex, "Fehler beim Starten der Überwachung");
             }
         }
@@ -118,8 +104,6 @@ namespace StoDamageMeter.Services
                 _fileWatcher.Changed -= OnFileChanged;
                 _fileWatcher.Dispose();
                 _fileWatcher = null;
-
-                _debugLogger.LogInfo("Überwachung gestoppt");
             }
         }
 
@@ -137,9 +121,9 @@ namespace StoDamageMeter.Services
                     await ProcessAndNotifyAsync();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _debugLogger.LogError("Fehler beim Verarbeiten der Datei-Änderung", ex);
+                // Ignoriere Fehler bei Live-Updates
             }
         }
 
@@ -159,9 +143,9 @@ namespace StoDamageMeter.Services
                     DataUpdated?.Invoke(this, eventArgs);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _debugLogger.LogError("Fehler beim Verarbeiten und Benachrichtigen", ex);
+                // Ignoriere Fehler bei Live-Updates
             }
         }
 
@@ -170,11 +154,18 @@ namespace StoDamageMeter.Services
             var stats = new CombatLogStatistics
             {
                 TotalEntries = entries.Count,
-                RelevantEntries = entries.Count(e => e.IsRelevant),
+                RelevantEntries = entries.Count, // Alle Einträge sind relevant (negative bereits gefiltert)
                 CriticalHits = entries.Count(e => e.IsCritical),
                 DoTEvents = entries.Count(e => e.IsDoT),
-                TotalDamage = entries.Where(e => e.IsRelevant).Sum(e => e.RawDamage)
+                TotalDamage = entries.Sum(e => e.RawDamage)
             };
+
+            // Spieler zählen (nur echte Spieler mit P-Tag)
+            stats.PlayerCount = entries
+                .Where(e => e.PlayerInfo.IsPlayer)
+                .Select(e => e.PlayerInfo.CharName)
+                .Distinct()
+                .Count();
 
             if (stats.RelevantEntries > 0)
             {
@@ -199,18 +190,15 @@ namespace StoDamageMeter.Services
 
             // Schadensarten gruppieren
             stats.DamageByType = entries
-                .Where(e => e.IsRelevant)
                 .GroupBy(e => e.DamageType)
                 .ToDictionary(g => g.Key, g => g.Sum(e => e.RawDamage));
 
             // Angriffe gruppieren
             stats.DamageByAttack = entries
-                .Where(e => e.IsRelevant)
                 .GroupBy(e => e.AttackName)
                 .ToDictionary(g => g.Key, g => g.Sum(e => e.RawDamage));
 
             stats.AttackCounts = entries
-                .Where(e => e.IsRelevant)
                 .GroupBy(e => e.AttackName)
                 .ToDictionary(g => g.Key, g => g.Count());
 

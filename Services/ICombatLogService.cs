@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StoDamageMeter.Models;
@@ -65,6 +66,7 @@ namespace StoDamageMeter.Services
         public Dictionary<string, double> DamageByAttack { get; set; } = new();
         public Dictionary<string, int> AttackCounts { get; set; } = new();
         public double CriticalRate { get; set; }
+        public int PlayerCount { get; set; }
     }
 
     /// <summary>

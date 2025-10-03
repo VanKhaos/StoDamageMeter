@@ -1,261 +1,34 @@
 <Page x:Class="StoDamageMeter.Pages.DashboardPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      xmlns:components="clr-namespace:StoDamageMeter.Components"
-      Title="Dashboard">
-    
-    <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                  HorizontalScrollBarVisibility="Disabled"
-                  Padding="24">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:components="clr-namespace:StoDamageMeter.Components"
+    Title="Dashboard">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled"
+        Padding="24">
         <StackPanel>
-            <!-- Welcome Section -->
-            <ui:CardControl Margin="0,0,0,24" 
-                           Background="{StaticResource CardBackground}"
-                           BorderBrush="{StaticResource CardBorder}"
-                           BorderThickness="1"
-                           CornerRadius="12"
-                           Padding="32">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <ui:SymbolIcon Symbol="DataUsage24" 
-                                      Foreground="{StaticResource PrimaryBlue}"
-                                      Width="32" Height="32"
-                                      Margin="0,0,16,0"/>
-                        <StackPanel>
-                            <TextBlock Text="Willkommen beim STO Damage Meter" 
-                                       Style="{StaticResource ModernSubtitle}"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="Analysiere deine Combatlog-Daten in Echtzeit" 
-                                       Style="{StaticResource ModernMutedText}"
-                                       FontSize="16"/>
-                        </StackPanel>
-                    </StackPanel>
-                    
-                    <TextBlock Text="Wähle eine Combatlog-Datei aus, um mit der Analyse zu beginnen. Das System unterstützt Live-Tracking und detaillierte Statistiken." 
-                               Style="{StaticResource ModernSecondaryText}"
-                               TextWrapping="Wrap"
-                               LineHeight="20"
-                               Margin="0,0,0,16"/>
-                    
-                    <!-- Quick Start Guide -->
-                    <Border Background="{StaticResource DarkBackground}"
-                            BorderBrush="{StaticResource CardBorder}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="🚀 Schnellstart" 
-                                       Style="{StaticResource ModernText}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,8"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="1." Style="{StaticResource ModernSecondaryText}" Margin="0,0,8,0"/>
-                                <TextBlock Text="Klicke auf 'Log-Datei auswählen'" Style="{StaticResource ModernSecondaryText}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="2." Style="{StaticResource ModernSecondaryText}" Margin="0,0,8,0"/>
-                                <TextBlock Text="Wähle deine combatlog.log Datei aus" Style="{StaticResource ModernSecondaryText}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="3." Style="{StaticResource ModernSecondaryText}" Margin="0,0,8,0"/>
-                                <TextBlock Text="Starte die Überwachung für Live-Updates" Style="{StaticResource ModernSecondaryText}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ui:CardControl>
-            
+
             <!-- Quick Actions Grid -->
             <Grid Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
+
                 <!-- File Selection Card -->
-                <components:FileSelectionCard Grid.Column="0" 
-                                              Margin="0,0,12,0"/>
-                
-                <!-- Quick Stats Card -->
-                <ui:CardControl Grid.Column="1" 
-                               Background="{StaticResource CardBackground}"
-                               BorderBrush="{StaticResource CardBorder}"
-                               BorderThickness="1"
-                               CornerRadius="12"
-                               Padding="24"
-                               Margin="12,0,0,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <ui:SymbolIcon Symbol="ChartMultiple24" 
-                                          Foreground="{StaticResource SuccessGreen}"
-                                          Width="24" Height="24"
-                                          Margin="0,0,12,0"/>
-                            <TextBlock Text="Schnellstatistiken" 
-                                       Style="{StaticResource ModernSubtitle}"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
-                        
-                        <!-- Stats Grid -->
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <!-- Total Damage -->
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,16">
-                                <TextBlock Text="Gesamtschaden" 
-                                           Style="{StaticResource ModernMutedText}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding Statistics.TotalDamage, StringFormat={}{0:N0}}" 
-                                           Style="{StaticResource ModernText}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource SuccessGreen}"/>
-                            </StackPanel>
-                            
-                            <!-- DPS -->
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,16">
-                                <TextBlock Text="DPS" 
-                                           Style="{StaticResource ModernMutedText}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding Statistics.DPS, StringFormat={}{0:N0}}" 
-                                           Style="{StaticResource ModernText}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource PrimaryBlue}"/>
-                            </StackPanel>
-                            
-                            <!-- Critical Rate -->
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,16">
-                                <TextBlock Text="Crit-Rate" 
-                                           Style="{StaticResource ModernMutedText}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding Statistics.CriticalRate, StringFormat={}{0:F1}%}" 
-                                           Style="{StaticResource ModernText}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource WarningOrange}"/>
-                            </StackPanel>
-                            
-                            <!-- Total Hits -->
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,16">
-                                <TextBlock Text="Treffer" 
-                                           Style="{StaticResource ModernMutedText}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding Statistics.RelevantEntries}" 
-                                           Style="{StaticResource ModernText}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource AccentBlue}"/>
-                            </StackPanel>
-                            
-                            <!-- Combat Duration -->
-                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
-                                <TextBlock Text="Kampfdauer" 
-                                           Style="{StaticResource ModernMutedText}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding Statistics.CombatDuration, StringFormat={}{0:hh\\:mm\\:ss}}" 
-                                           Style="{StaticResource ModernText}"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Grid>
-                        
-                        <!-- Empty State -->
-                        <StackPanel HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center"
-                                   Margin="0,20,0,0"
-                                   Visibility="{Binding Statistics, Converter={StaticResource NullToVisibilityConverter}}">
-                            <Border Background="{StaticResource DarkBackground}"
-                                    BorderBrush="{StaticResource CardBorder}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="24">
-                                <StackPanel>
-                                    <ui:SymbolIcon Symbol="ChartMultiple24" 
-                                                  Foreground="{StaticResource PrimaryBlue}"
-                                                  Width="32" Height="32"
-                                                  Margin="0,0,0,12"
-                                                  HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Bereit für Daten" 
-                                               Style="{StaticResource ModernText}"
-                                               FontWeight="SemiBold"
-                                               HorizontalAlignment="Center"
-                                               Margin="0,0,0,4"/>
-                                    <TextBlock Text="Wähle eine Combatlog-Datei aus" 
-                                               Style="{StaticResource ModernMutedText}"
-                                               FontSize="12"
-                                               HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </ui:CardControl>
+                <components:FileSelectionCard Grid.Column="0"
+                    Margin="0,0,12,0" />
+
             </Grid>
-            
-            <!-- Recent Activity -->
-            <ui:CardControl Background="{StaticResource CardBackground}"
-                           BorderBrush="{StaticResource CardBorder}"
-                           BorderThickness="1"
-                           CornerRadius="12"
-                           Padding="24">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <ui:SymbolIcon Symbol="History24" 
-                                      Foreground="{StaticResource AccentBlue}"
-                                      Width="24" Height="24"
-                                      Margin="0,0,12,0"/>
-                        <TextBlock Text="Letzte Aktivität" 
-                                   Style="{StaticResource ModernSubtitle}"
-                                   FontWeight="SemiBold"/>
-                    </StackPanel>
-                    
-                    <Border Background="{StaticResource DarkBackground}"
-                            BorderBrush="{StaticResource CardBorder}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <ui:SymbolIcon Symbol="Clock24" 
-                                              Foreground="{StaticResource AccentBlue}"
-                                              Width="20" Height="20"
-                                              Margin="0,0,12,0"/>
-                                <TextBlock Text="System-Status" 
-                                           Style="{StaticResource ModernText}"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                            
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <Ellipse Width="8" Height="8" 
-                                         Fill="{StaticResource SuccessGreen}"
-                                         Margin="0,0,8,0"
-                                         VerticalAlignment="Center"/>
-                                <TextBlock Text="System bereit" 
-                                           Style="{StaticResource ModernSecondaryText}"/>
-                            </StackPanel>
-                            
-                            <TextBlock Text="{Binding LastUpdate, StringFormat='Letztes Update: {0}'}" 
-                                       Style="{StaticResource ModernMutedText}"
-                                       FontSize="12"
-                                       Visibility="{Binding LastUpdate, Converter={StaticResource StringToVisibilityConverter}}"/>
-                            <TextBlock Text="Warte auf Combatlog-Datei..." 
-                                       Style="{StaticResource ModernMutedText}"
-                                       FontSize="12"
-                                       Visibility="{Binding LastUpdate, Converter={StaticResource InvertStringToVisibilityConverter}}"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ui:CardControl>
+
+            <!-- Loading Spinner -->
+            <components:LoadingSpinner Margin="0,0,0,24" />
+
+            <!-- Combatlog Info Card -->
+            <components:CombatLogInfoCard Margin="0,0,0,24" />
+
         </StackPanel>
     </ScrollViewer>
 </Page>

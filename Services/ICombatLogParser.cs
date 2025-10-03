@@ -5,43 +5,52 @@ using StoDamageMeter.Models;
 namespace StoDamageMeter.Services
 {
     /// <summary>
-    /// Interface für Combatlog-Parser Service
+    /// Interface für Combatlog-Parser
     /// </summary>
     public interface ICombatLogParser
     {
         /// <summary>
-        /// Parst eine Combatlog-Datei und gibt alle relevanten Einträge zurück
+        /// Parst eine komplette Combatlog-Datei
         /// </summary>
+        /// <param name="filePath">Pfad zur Combatlog-Datei</param>
+        /// <returns>Liste aller geparsten Combatlog-Einträge</returns>
         Task<List<CombatLogEntry>> ParseCombatLogFileAsync(string filePath);
 
         /// <summary>
-        /// Parst eine einzelne Zeile aus dem Combatlog
+        /// Parst eine einzelne Combatlog-Zeile
         /// </summary>
-        CombatLogEntry? ParseCombatLogLine(string line, int lineNumber);
+        /// <param name="line">Die zu parsende Zeile</param>
+        /// <returns>Geparster Combatlog-Eintrag oder null wenn ungültig</returns>
+        CombatLogEntry? ParseCombatLogLine(string line);
 
         /// <summary>
-        /// Validiert ob eine Zeile ein gültiger Combatlog-Eintrag ist
+        /// Parst Player-Informationen aus parts[0-1]
         /// </summary>
-        bool IsValidCombatLogLine(string line);
+        /// <param name="playerName">parts[0] - Spielername</param>
+        /// <param name="playerTag">parts[1] - Player-Tag</param>
+        /// <returns>PlayerInfo-Objekt</returns>
+        PlayerInfo ParsePlayerInfo(string playerName, string playerTag);
 
         /// <summary>
-        /// Extrahiert Player-Informationen aus Position 3
+        /// Parst Entity-Informationen aus parts[2-3] oder parts[4-5]
         /// </summary>
-        PlayerInfo ParsePlayerInfo(string playerData);
+        /// <param name="entityName">parts[2] oder parts[4] - Entity-Name</param>
+        /// <param name="entityTag">parts[3] oder parts[5] - Entity-Tag</param>
+        /// <returns>EntityInfo-Objekt</returns>
+        EntityInfo ParseEntityInfo(string entityName, string entityTag);
 
         /// <summary>
-        /// Extrahiert Entity-Informationen aus Position 4 oder 5
+        /// Parst Event-Typ aus parts[9]
         /// </summary>
-        EntityInfo ParseEntityInfo(string entityData);
-
-        /// <summary>
-        /// Parst Event-Typ aus Position 9
-        /// </summary>
+        /// <param name="eventTypeData">parts[9] - Event-Typ-String</param>
+        /// <returns>EventType-Enum</returns>
         EventType ParseEventType(string eventTypeData);
 
         /// <summary>
-        /// Parst Timestamp aus Position 1
+        /// Parst Timestamp aus parts[0] (vor dem ::)
         /// </summary>
+        /// <param name="timestampData">Timestamp-String</param>
+        /// <returns>DateTime-Objekt</returns>
         DateTime ParseTimestamp(string timestampData);
     }
 }

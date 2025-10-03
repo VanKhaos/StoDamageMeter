@@ -17,6 +17,7 @@ Position 8: Schadensart, # Korrekt das ist die Schadensart, ich kenne nicht alle
 Position 9: EventTyp, # hier interessiert uns nur ob es ein Crit oder Miss war, Immune wird wie Miss behandelt, wenn immune oder miss dann ist der schaden und der schaden mit resitenz uninteressant
 Position 10: Schaden, # Der Schaden der am Feind verursacht wird.
 Position 11: SchadenMitResistenz # Das ist der Schaden mit den Resistenzen vom Geggner, der kann höher sein als der Schaden oder niedriger
+das trennzeichen ist komma
 ```
 
 ## 📋 Positionen-Analyse
@@ -29,7 +30,7 @@ Position 11: SchadenMitResistenz # Das ist der Schaden mit den Resistenzen vom G
 **Positionen-Aufschlüsselung:**
 - **Pos 1:** `25:10:02:16:06:04.2` = Timestamp auf Millisekunde genau
 - **Pos 2:** `::` = Separator
-- **Pos 3:** `Van Khaos,P[12698228@19236104 Van Khaos@vankhaos#2007]` = Spielername + Player-ID
+- **Pos 3:** `Van Khaos,P[12698228@19236104 Van Khaos@vankhaos#2007]` = Spielername + Player-ID, erkennbar am P Tag
 - **Pos 4:** `Lava-Boden,C[558 Ground_Universal_Kit_Summer_Lava_Floor]` = EntityDetails + C[ID] (Ground_ = Kitmodul)
 - **Pos 5:** `Sehlat,C[554 Beast_Sehlat_Ensign]` = ZielEntity + C[ID] (Ground_ = Bodenkampf)
 - **Pos 6:** `Lava-Boden` = Attack (Waffe/Fähigkeit)
