@@ -77,5 +77,10 @@ namespace StoDamageMeter.Models
         /// Ist der Schaden von einem Companion oder Hangar-Pet?
         /// </summary>
         public bool IsCompanionDamage { get; set; }
+
+        /// <summary>
+        /// Original-Zeile aus dem Combatlog (für Debugging)
+        /// </summary>
+        public string OriginalLine { get; set; } = string.Empty;
     }
 }

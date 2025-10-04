@@ -211,7 +211,14 @@ namespace StoDamageMeter.ViewModels
             // Automatisch den neuesten Zeitraum auswählen (immer, wenn sich die Liste ändert)
             if (CombatPeriods.Any())
             {
+                // Setze alle auf nicht ausgewählt
+                foreach (var period in CombatPeriods)
+                {
+                    period.IsSelected = false;
+                }
+
                 SelectedPeriod = CombatPeriods.First();
+                SelectedPeriod.IsSelected = true;
                 _logger.LogInformation("Neuesten Zeitraum automatisch ausgewählt: {StartTime}", SelectedPeriod.StartTime);
 
                 // Aktualisiere alle Statistiken für den automatisch ausgewählten Zeitraum
@@ -232,24 +239,28 @@ namespace StoDamageMeter.ViewModels
         /// Wählt einen Kampf-Zeitraum aus
         /// </summary>
         [RelayCommand]
-        private async Task SelectPeriod(CombatPeriod period)
+        private void SelectPeriod(CombatPeriod period)
         {
             IsLoading = true;
             LoadingMessage = "Analysiere Kampfdaten...";
 
             try
             {
+                // Setze alle auf nicht ausgewählt
+                foreach (var p in CombatPeriods)
+                {
+                    p.IsSelected = false;
+                }
+
                 SelectedPeriod = period;
+                period.IsSelected = true;
                 _logger.LogInformation("Zeitraum ausgewählt: {StartTime} - {EndTime}", period.StartTime, period.EndTime);
                 _logger.LogInformation("SelectedPeriod.Entries.Count: {EntryCount}", period.Entries.Count);
 
                 // Aktualisiere alle Statistiken für den ausgewählten Zeitraum
-                await Task.Run(() =>
-                {
-                    UpdateWeaponStatistics();
-                    UpdatePlayerSummary();
-                    UpdateDamageTypeStatistics();
-                });
+                UpdateWeaponStatistics();
+                UpdatePlayerSummary();
+                UpdateDamageTypeStatistics();
 
                 // Explizit Property-Change Notification auslösen
                 OnPropertyChanged(nameof(SelectedPeriod));
@@ -266,6 +277,11 @@ namespace StoDamageMeter.ViewModels
         /// </summary>
         private void UpdateWeaponStatistics()
         {
+            _logger.LogInformation("=== UpdateWeaponStatistics aufgerufen ===");
+            _logger.LogInformation("SelectedPeriod ist null: {IsNull}", SelectedPeriod == null);
+            _logger.LogInformation("SelectedPlayer ist leer: {IsEmpty}", string.IsNullOrEmpty(SelectedPlayer));
+            _logger.LogInformation("SelectedPlayer Wert: '{PlayerName}'", SelectedPlayer ?? "NULL");
+
             if (SelectedPeriod == null || string.IsNullOrEmpty(SelectedPlayer))
             {
                 WeaponStatistics.Clear();
@@ -279,14 +295,23 @@ namespace StoDamageMeter.ViewModels
                 _logger.LogInformation("SelectedPeriod.Entries.Count: {EntryCount}", SelectedPeriod.Entries.Count);
                 _logger.LogInformation("SelectedPeriod.Duration: {Duration}", SelectedPeriod.Duration);
 
-                // Zeige die ersten 10 Rohdaten-Einträge
-                _logger.LogInformation("=== ROHDATEN (erste 10 Einträge) ===");
-                var sampleEntries = SelectedPeriod.Entries.Take(10).ToList();
+                // Zeige die ersten 5 Rohdaten-Einträge für den AUSGEWÄHLTEN Kampf
+                _logger.LogInformation("=== ROHDATEN für AUSGEWÄHLTEN Kampf (erste 5 Einträge) ===");
+                var sampleEntries = SelectedPeriod.Entries.Take(5).ToList();
                 for (int i = 0; i < sampleEntries.Count; i++)
                 {
                     var entry = sampleEntries[i];
-                    _logger.LogInformation("Eintrag {Index}: {Timestamp} | {PlayerName} | {AttackName} | {DamageType} | {RawDamage} | {IsRelevant}",
-                        i + 1, entry.Timestamp, entry.PlayerInfo?.CharName ?? "N/A", entry.AttackName, entry.DamageType, entry.RawDamage, entry.IsRelevant);
+                    _logger.LogInformation("--- Eintrag {Index} ---", i + 1);
+                    _logger.LogInformation("ORIGINAL ZEILE: {OriginalLine}", entry.OriginalLine);
+                    _logger.LogInformation("GEPARST: Player: '{PlayerName}' | Source: '{SourceName}' | Target: '{TargetName}' | Attack: '{AttackName}' | DamageType: '{DamageType}' | Damage: {RawDamage} | IsRelevant: {IsRelevant} | IsCompanion: {IsCompanion}",
+                        entry.PlayerInfo?.CharName ?? "NULL",
+                        entry.SourceEntity?.Name ?? "NULL",
+                        entry.TargetEntity?.Name ?? "NULL",
+                        entry.AttackName,
+                        entry.DamageType,
+                        entry.RawDamage,
+                        entry.IsRelevant,
+                        entry.IsCompanionDamage);
                 }
 
                 // Filtere Einträge für den ausgewählten Spieler
@@ -393,48 +418,66 @@ namespace StoDamageMeter.ViewModels
                 return;
             }
 
-            // Alle Einträge für den Spieler (sowohl Treffer als auch Verfehlte)
-            var allPlayerEntries = SelectedPeriod.Entries
-                .Where(e => e.PlayerInfo.CharName == SelectedPlayer)
+            _logger.LogInformation("=== UpdateDamageTypeStatistics für Spieler '{PlayerName}' ===", SelectedPlayer);
+
+            // GLEICHER FILTER WIE Waffen-Statistiken: Nur relevante Einträge des Spielers
+            var playerEntries = SelectedPeriod.Entries
+                .Where(e => e.PlayerInfo?.CharName == SelectedPlayer && e.IsRelevant)
                 .ToList();
 
-            // Nur Treffer (relevante Einträge mit Schaden > 0)
-            var hitEntries = allPlayerEntries
-                .Where(e => e.IsRelevant)
-                .ToList();
+            _logger.LogInformation("Gefilterte Einträge für Schadensarten: {EntryCount}", playerEntries.Count);
 
-            // Verfehlte Angriffe (Einträge mit Schaden = 0)
-            var missEntries = allPlayerEntries
-                .Where(e => !e.IsRelevant && e.RawDamage == 0)
-                .ToList();
+            // Zeige die ersten 5 gefilterten Einträge
+            var sampleEntries = playerEntries.Take(5).ToList();
+            for (int i = 0; i < sampleEntries.Count; i++)
+            {
+                var entry = sampleEntries[i];
+                _logger.LogInformation("Schadensart {Index}: {AttackName} | {DamageType} | {RawDamage} Schaden",
+                    i + 1, entry.AttackName, entry.DamageType, entry.RawDamage);
+            }
 
-            var totalDamage = hitEntries.Sum(e => e.RawDamage);
+            var totalDamage = playerEntries.Sum(e => e.RawDamage);
             var combatDuration = SelectedPeriod.Duration.TotalSeconds;
 
-            var damageByType = hitEntries
+            _logger.LogInformation("Gesamtschaden für Schadensarten: {TotalDamage}", totalDamage);
+
+            var damageByType = playerEntries
                 .GroupBy(e => e.DamageType)
                 .Select(g =>
                 {
                     var damageType = g.Key;
-                    var missCount = missEntries.Count(e => e.DamageType == damageType);
+                    var groupDamage = g.Sum(e => e.RawDamage);
 
                     return new DamageTypeStatistic
                     {
                         DamageType = damageType,
-                        TotalDamage = g.Sum(e => e.RawDamage),
+                        TotalDamage = groupDamage,
                         HitCount = g.Count(),
-                        MissCount = missCount,
+                        MissCount = 0, // Keine Misses, da wir nur relevante Einträge verwenden
                         CriticalHits = g.Count(e => e.IsCritical),
                         AverageDamage = g.Average(e => e.RawDamage),
                         DamageShare = totalDamage > 0
-                            ? (g.Sum(e => e.RawDamage) / totalDamage) * 100
+                            ? (groupDamage / totalDamage) * 100
                             : 0,
-                        DPS = combatDuration > 0 ? g.Sum(e => e.RawDamage) / combatDuration : 0,
+                        DPS = combatDuration > 0 ? groupDamage / combatDuration : 0,
                         Accuracy = 100.0 // Für Schadensarten ist die Genauigkeit immer 100%, da nur getroffene Einträge erfasst werden
                     };
                 })
                 .OrderByDescending(s => s.TotalDamage)
                 .ToList();
+
+            _logger.LogInformation("=== FINALE Schadensarten-Statistiken ===");
+            _logger.LogInformation("Schadensarten-Statistiken aktualisiert: {DamageTypeCount} Schadensarten für Spieler '{PlayerName}'",
+                damageByType.Count, SelectedPlayer);
+
+            // Zeige Details der generierten Schadensarten-Statistiken
+            foreach (var damageType in damageByType)
+            {
+                _logger.LogInformation("Schadensart: {DamageType} | Schaden: {TotalDamage} | DPS: {DPS} | Treffer: {HitCount}",
+                    damageType.DamageType, damageType.TotalDamage, damageType.DPS, damageType.HitCount);
+            }
+
+            _logger.LogInformation("=== Ende UpdateDamageTypeStatistics ===");
 
             DamageTypeStatistics = damageByType;
             OnPropertyChanged(nameof(DamageTypeStatistics));

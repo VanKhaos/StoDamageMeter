@@ -34,10 +34,27 @@ namespace StoDamageMeter.Services
         /// <summary>
         /// Bestimmt ob ein Entity ein Companion oder Hangar-Pet ist
         /// </summary>
-        private bool IsCompanionOrHangarPet(EntityInfo sourceEntity, PlayerInfo playerInfo)
+        private bool IsCompanionOrHangarPet(EntityInfo sourceEntity, PlayerInfo playerInfo, string originalLine)
         {
-            // Wenn Source nicht der Spieler selbst ist, ist es ein Companion/Hangar-Pet
-            return sourceEntity.Name != playerInfo.CharName;
+            // Wenn Source leer ist, dann ist es direkter Spieler-Schaden (kein Companion)
+            if (string.IsNullOrEmpty(sourceEntity.Name))
+            {
+                return false; // Direkter Spieler-Schaden
+            }
+
+            // Wenn Source der Spieler selbst ist, dann ist es kein Companion
+            if (sourceEntity.Name == playerInfo.CharName)
+            {
+                return false; // Spieler selbst
+            }
+
+            // Prüfe ob ein P[ Tag in der ursprünglichen Zeile vorhanden ist
+            // Das würde bedeuten, dass es ein Companion ist
+            bool hasPlayerTag = originalLine.Contains("P[");
+
+            // Wenn ein P[ Tag vorhanden ist, dann ist es ein Companion
+            // Wenn kein P[ Tag vorhanden ist, dann ist es ein Gegner
+            return hasPlayerTag;
         }
 
         public async Task<List<CombatLogEntry>> ParseCombatLogFileAsync(string filePath)
@@ -69,7 +86,7 @@ namespace StoDamageMeter.Services
                         int randomLine = _random.Next(0, lines.Length);
                         _selectedLines.Add(randomLine);
                     }
-                    // Zufällige Zeilen-Auswahl-Logging entfernt
+                    _logger.LogInformation("Ausgewählte {Count} zufällige Zeilen für detailliertes Logging", linesToSelect);
                 }
 
                 int parsedCount = 0;
@@ -126,7 +143,17 @@ namespace StoDamageMeter.Services
                 // Teile den Rest nach Komma
                 var parts = restOfLine.Split(',');
 
-                // Parts-Debug-Logging entfernt
+                // Parts-Debug-Logging für ausgewählte Zeilen
+                if (shouldLogDetails)
+                {
+                    _logger.LogInformation("=== PARTS DEBUG ===");
+                    _logger.LogInformation("Anzahl Parts: {PartsCount}", parts.Length);
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        _logger.LogInformation("  Part[{Index}]: '{Value}'", i, parts[i]);
+                    }
+                    _logger.LogInformation("=== ENDE PARTS DEBUG ===");
+                }
 
                 // Parse Schadenswerte
                 var rawDamage = ParseDouble(parts[10]);
@@ -157,11 +184,14 @@ namespace StoDamageMeter.Services
                     DamageType = parts[8].Trim(),
                     EventType = ParseEventType(parts[9]),
                     RawDamage = Math.Round(rawDamage),
-                    DamageWithResistance = Math.Round(ParseDouble(parts[11]))
+                    DamageWithResistance = Math.Round(ParseDouble(parts[11])),
+                    OriginalLine = line // Speichere Original-Zeile für Debugging
                 };
 
                 // Bestimme ob das ein Companion/Hangar-Pet ist
-                entry.IsCompanionDamage = IsCompanionOrHangarPet(sourceEntity, playerInfo);
+                entry.IsCompanionDamage = IsCompanionOrHangarPet(sourceEntity, playerInfo, line);
+
+                // Debug-Logging entfernt - wird jetzt in StatisticsViewModel für ausgewählten Kampf gemacht
 
                 // Bestimme ob kritisch und setze EventType entsprechend
                 if (parts.Length > 12 && parts[12].Contains("Critical"))

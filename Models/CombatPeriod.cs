@@ -60,6 +60,11 @@ namespace StoDamageMeter.Models
         public double AverageDamage => EntryCount > 0 ? TotalDamage / EntryCount : 0;
 
         /// <summary>
+        /// Ist dieser Zeitraum ausgewählt?
+        /// </summary>
+        public bool IsSelected { get; set; }
+
+        /// <summary>
         /// Fügt einen neuen Eintrag zum Zeitraum hinzu
         /// </summary>
         /// <param name="entry">Der hinzuzufügende Combat Log Eintrag</param>
