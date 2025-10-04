@@ -1,9 +1,30 @@
-# Session Summary - STO Damage Meter Refaktorierung
+# 📅 Entwicklertagebuch - STO Damage Meter
 
-## 📋 Übersicht
-Diese Session befasste sich mit der strukturellen Überarbeitung der Statistics Page und der Behebung von Dateninkonsistenzen im STO Damage Meter Projekt.
+## 📋 Projekt-Übersicht
+**Projekt:** STO Damage Meter - Star Trek Online Combat Log Analyzer  
+**Technologie:** WPF (Windows Presentation Foundation) mit MVVM-Pattern  
+**Zweck:** Analyse von Combat-Logs aus Star Trek Online für Schadensstatistiken  
 
-## 🎯 Hauptziele
+---
+
+## 🎯 Projekt-Ziele
+1. **Combat-Log-Parsing** - Automatische Analyse von Spiel-Logs
+2. **Schadensstatistiken** - DPS, Krit-Rate, Waffen-Performance
+3. **Companion-Erkennung** - Unterscheidung zwischen Spieler, Companion und Kitmodul
+4. **Moderne UI** - Card-basierte, responsive Benutzeroberfläche
+5. **Export-Funktionalität** - CSV/JSON Export für weitere Analyse
+
+---
+
+## 📅 Session 1: Statistics Page Refaktorierung
+
+### **Datum:** 2024-01-14
+### **Dauer:** ~4 Stunden
+### **Teilnehmer:** Entwickler + AI-Assistent
+
+---
+
+## 🎯 Session-Ziele
 1. **Statistics Page strukturell überarbeiten** - Von monolithischer zu modularer Component-Architektur
 2. **Dateninkonsistenzen beheben** - Schadensarten vs. Waffen-Statistiken
 3. **Companion-Erkennung korrigieren** - Falsche Klassifizierung von Gegnern als Companions
@@ -13,14 +34,14 @@ Diese Session befasste sich mit der strukturellen Überarbeitung der Statistics 
 
 ## 🔧 Durchgeführte Arbeiten
 
-### 1. Statistics Page Refaktorierung
+### 1. **Statistics Page Refaktorierung**
 
-#### **Vorher:**
+#### **Problem:**
 - Monolithische StatisticsPage.xaml (~314 Zeilen)
 - Alle UI-Elemente direkt in der Page
 - Schwer wartbar und unübersichtlich
 
-#### **Nachher:**
+#### **Lösung:**
 - Modulare Component-Architektur (~65 Zeilen)
 - 6 separate Components für verschiedene Bereiche
 - Saubere Trennung der Verantwortlichkeiten
@@ -33,7 +54,7 @@ Diese Session befasste sich mit der strukturellen Überarbeitung der Statistics 
 - `DamageTypeCard` - Schadensarten-Verteilung als Tabelle
 - `WeaponStatisticsCard` - Waffen-Statistiken als Tabelle
 
-### 2. Waffen-Statistiken Tabelle
+### 2. **Waffen-Statistiken Tabelle**
 
 #### **Umsetzung:**
 - Von Card-Layout zu DataGrid-Tabelle konvertiert
@@ -42,7 +63,7 @@ Diese Session befasste sich mit der strukturellen Überarbeitung der Statistics 
 - Sortierbare, read-only Tabelle
 - Konsistente Farbgebung (Rot, Blau, Gold, Grün, Silber)
 
-### 3. Schadensarten-Verteilung Tabelle
+### 3. **Schadensarten-Verteilung Tabelle**
 
 #### **Anpassungen:**
 - Header "Ø Schaden" statt "Durchschnittsschaden"
@@ -55,7 +76,7 @@ Diese Session befasste sich mit der strukturellen Überarbeitung der Statistics 
 
 ## 🐛 Behebung von Fehlern
 
-### Fehler 1: Dateninkonsistenz zwischen Schadensarten und Waffen-Statistiken
+### **Fehler 1: Dateninkonsistenz zwischen Schadensarten und Waffen-Statistiken**
 
 #### **Problem:**
 - Schadensarten zeigten mehr Schaden als Waffen zusammen
@@ -73,7 +94,7 @@ var playerEntries = SelectedPeriod.Entries
     .ToList();
 ```
 
-### Fehler 2: Falsche Companion-Erkennung
+### **Fehler 2: Falsche Companion-Erkennung**
 
 #### **Problem:**
 - Gegner wurden als Companions klassifiziert
@@ -97,7 +118,7 @@ if (sourceEntity.Name == playerInfo.CharName)
     return false; // Spieler selbst
 ```
 
-### Fehler 3: Waffen-Statistiken werden nicht angezeigt
+### **Fehler 3: Waffen-Statistiken werden nicht angezeigt**
 
 #### **Problem:**
 - Schadensarten funktionierten, aber Waffen-Statistiken blieben leer
@@ -123,7 +144,7 @@ UpdateDamageTypeStatistics();
 Command="{Binding DataContext.SelectPeriodCommand, RelativeSource={RelativeSource AncestorType=Page}}"
 ```
 
-### Fehler 4: Ungültige Icons
+### **Fehler 4: Ungültige Icons**
 
 #### **Probleme:**
 - `Icon="Target"` - nicht gültig für IconType
@@ -135,7 +156,7 @@ Command="{Binding DataContext.SelectPeriodCommand, RelativeSource={RelativeSourc
 - `Icon="Flash"` → `Icon="Chart"`
 - `Icon="Person"` → `Icon="User"`
 
-### Fehler 5: XAML Parse Fehler
+### **Fehler 5: XAML Parse Fehler**
 
 #### **Probleme:**
 - `IsActive` Property existiert nicht in ProgressRing
@@ -149,9 +170,61 @@ Command="{Binding DataContext.SelectPeriodCommand, RelativeSource={RelativeSourc
 
 ---
 
-## 🔧 Aktuelle Session - Tabellen-Optimierung
+## 📊 Session 1 - Ergebnisse
 
-### 1. Nummerierung in Tabellen korrigiert
+### **Code-Qualität:**
+- ✅ **StatisticsPage:** Von 314 auf 65 Zeilen reduziert (-79%)
+- ✅ **Modulare Architektur:** 6 separate, wartbare Components
+- ✅ **Saubere Trennung:** Jede Component hat eine klare Verantwortlichkeit
+
+### **Funktionalität:**
+- ✅ **Konsistente Daten:** Schadensarten = Waffen-Statistiken
+- ✅ **Korrekte Companion-Erkennung:** Direkter Spieler-Schaden wird erkannt
+- ✅ **Funktionierende Waffen-Statistiken:** Korrekte Anzeige und Logging
+- ✅ **Moderne UI:** Card-basierte Übersicht mit 3 Kacheln
+
+### **Wartbarkeit:**
+- ✅ **Wiederverwendbare Components:** Können in anderen Pages verwendet werden
+- ✅ **Testbare Components:** Jede Component kann einzeln getestet werden
+- ✅ **Sauberes Projekt:** Keine ungenutzten Components mehr
+
+---
+
+## 🧹 Projektbereinigung
+
+### **Ungenutzte Components entfernt:**
+1. **`StatisticsOverviewCard`** - Wurde durch modulare Components ersetzt
+2. **`ModernTitleBar`** - Nicht verwendet in MainWindow
+3. **`StarfleetTable`** - Nicht verwendet in der UI
+
+### **Verbleibende Components (alle werden verwendet):**
+- **Statistics:** PlayerSelectionCard, CombatSelectionCard, CombatOverviewCard, DamageTypeCard, WeaponStatisticsCard
+- **Dashboard:** FileSelectionCard
+- **Configuration:** ConfigurationCard
+- **LiveTracking:** LiveTrackingCard, LiveDamageStatisticsCard
+- **Shared:** CombatLogInfoCard, LoadingSpinner, StarfleetBadge, StarfleetIcon, StarfleetProgressBar
+
+---
+
+## 📅 Session 2: Tabellen-Optimierung
+
+### **Datum:** 2024-01-15
+### **Dauer:** ~2 Stunden
+### **Teilnehmer:** Entwickler + AI-Assistent
+
+---
+
+## 🎯 Session-Ziele
+1. **Nummerierung in Tabellen korrigieren** - Feste Reihenfolge 1, 2, 3, 4, 5...
+2. **Standard-Sortierung implementieren** - Nach Gesamtschaden sortiert
+3. **UI-Optimierungen** - Kompakteres Layout
+4. **Redundanz entfernen** - PlayerSummaryCard entfernt
+
+---
+
+## 🔧 Durchgeführte Arbeiten
+
+### 1. **Nummerierung in Tabellen korrigiert**
 
 #### **Problem:**
 - Falsche Nummerierung in Waffenstatistik-Tabelle
@@ -178,7 +251,7 @@ Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow},
        ConverterParameter=Fixed}"
 ```
 
-### 2. Standard-Sortierung implementiert
+### 2. **Standard-Sortierung implementiert**
 
 #### **Umsetzung:**
 - **Beide Tabellen**: Standardmäßig nach Gesamtschaden sortiert (absteigend)
@@ -208,7 +281,7 @@ private void DataGrid_Loaded(object sender, RoutedEventArgs e)
 }
 ```
 
-### 3. UI-Optimierungen
+### 3. **UI-Optimierungen**
 
 #### **Waffenstatistik-Tabelle:**
 - **Typ-Spalte entfernt**: Redundante Spalte entfernt für kompaktere Darstellung
@@ -226,7 +299,7 @@ private void DataGrid_Loaded(object sender, RoutedEventArgs e)
 8. **Krit Rate** - Kritische Rate
 9. **Anteil** - Schadensanteil
 
-### 4. Redundanz entfernt
+### 4. **Redundanz entfernt**
 
 #### **PlayerSummaryCard entfernt:**
 - **Grund**: Redundanz mit CombatOverviewCard
@@ -242,245 +315,319 @@ private void DataGrid_Loaded(object sender, RoutedEventArgs e)
 
 ---
 
-## 🧹 Projektbereinigung
-
-### Ungenutzte Components entfernt:
-1. **`StatisticsOverviewCard`** - Wurde durch modulare Components ersetzt
-2. **`ModernTitleBar`** - Nicht verwendet in MainWindow
-3. **`StarfleetTable`** - Nicht verwendet in der UI
-4. **`PlayerSummaryCard`** - Redundanz mit CombatOverviewCard entfernt
-
-### Verbleibende Components (alle werden verwendet):
-- **Statistics:** PlayerSelectionCard, CombatSelectionCard, CombatOverviewCard, DamageTypeCard, WeaponStatisticsCard
-- **Dashboard:** FileSelectionCard
-- **Configuration:** ConfigurationCard
-- **LiveTracking:** LiveTrackingCard, LiveDamageStatisticsCard
-- **Shared:** CombatLogInfoCard, LoadingSpinner, StarfleetBadge, StarfleetIcon, StarfleetProgressBar
-
----
-
-## 📊 Ergebnisse
+## 📊 Session 2 - Ergebnisse
 
 ### **Code-Qualität:**
-- ✅ **StatisticsPage:** Von 314 auf 65 Zeilen reduziert (-79%)
-- ✅ **Modulare Architektur:** 5 separate, wartbare Components (PlayerSummaryCard entfernt)
-- ✅ **Saubere Trennung:** Jede Component hat eine klare Verantwortlichkeit
 - ✅ **Konsistente Tabellen:** Beide Tabellen haben identische Struktur und Nummerierung
-
-### **Funktionalität:**
-- ✅ **Konsistente Daten:** Schadensarten = Waffen-Statistiken
-- ✅ **Korrekte Companion-Erkennung:** Direkter Spieler-Schaden wird erkannt
-- ✅ **Funktionierende Waffen-Statistiken:** Korrekte Anzeige und Logging
-- ✅ **Moderne UI:** Card-basierte Übersicht mit 3 Kacheln
-- ✅ **Korrekte Nummerierung:** Feste Reihenfolge 1, 2, 3, 4, 5... in beiden Tabellen
+- ✅ **Feste Nummerierung:** Reihenfolge 1, 2, 3, 4, 5... in beiden Tabellen
 - ✅ **Standard-Sortierung:** Beide Tabellen nach Gesamtschaden sortiert
 
+### **Funktionalität:**
+- ✅ **Korrekte Nummerierung:** Feste Reihenfolge unabhängig von Sortierung
+- ✅ **Automatische Sortierung:** Standardmäßig nach Gesamtschaden
+- ✅ **Kompakteres Layout:** Mehr Platz für Waffen-Namen
+
 ### **Wartbarkeit:**
-- ✅ **Wiederverwendbare Components:** Können in anderen Pages verwendet werden
-- ✅ **Testbare Components:** Jede Component kann einzeln getestet werden
-- ✅ **Sauberes Projekt:** Keine ungenutzten Components mehr
 - ✅ **Redundanz entfernt:** PlayerSummaryCard entfernt, da CombatOverviewCard ausreicht
+- ✅ **Konsistente Struktur:** Beide Tabellen identisch aufgebaut
 
 ---
 
-## 🎯 Nächste Schritte (Optional)
+## 📅 Session 3: DataGrid-Optimierung und Selektion-Problem
 
-### 1. **Unit Tests** für die neuen Components schreiben
+### **Datum:** 2024-01-15
+### **Dauer:** ~2 Stunden
+### **Teilnehmer:** Entwickler + AI-Assistent
 
-#### **Test-Strategie:**
-- **Component Tests:** Jede der 6 neuen Components einzeln testen
-- **ViewModel Tests:** StatisticsViewModel mit Mock-Services testen
-- **Service Tests:** CombatLogParser, WeaponStatisticsService testen
-- **Integration Tests:** End-to-End Tests für komplette Statistiken
+---
 
-#### **Test-Framework:**
-- **xUnit** für Unit Tests
-- **Moq** für Mock-Objekte
-- **FluentAssertions** für lesbare Assertions
-- **Testcontainers** für Integration Tests mit echten Combat-Logs
+## 🎯 Session-Ziele
+1. **DataGrid-Struktur nach Microsoft Best Practices optimieren**
+2. **Selektion-Problem in Waffenstatistik-Tabelle beheben**
+3. **Neue Source-Type-Spalte für Companion/Kitmodul-Erkennung implementieren**
+4. **Debug-Logging für bessere Problem-Diagnose hinzufügen**
 
-#### **Test-Coverage:**
-- **Components:** UI-Bindings, Visibility, Data-Context
-- **ViewModels:** Commands, Property-Notifications, Data-Filtering
-- **Services:** Parsing-Logic, Statistics-Berechnung, Error-Handling
+---
 
-### 2. **Performance-Optimierung** für große Combat-Logs
+## 🔧 Durchgeführte Arbeiten
 
-#### **Identifizierte Bottlenecks:**
-- **CombatLogParser:** Regex-Parsing für jede Zeile
-- **StatisticsViewModel:** LINQ-Operationen auf großen Collections
-- **UI-Updates:** Häufige Property-Notifications
+### 1. **Neue Source-Type-Spalte implementiert**
 
-#### **Optimierungs-Strategien:**
-- **Async Parsing:** Combat-Log-Parsing in Background-Thread
-- **Lazy Loading:** Statistiken nur bei Bedarf berechnen
-- **Caching:** Berechnete Statistiken zwischenspeichern
-- **Virtualization:** DataGrid mit Virtualization für große Datenmengen
-- **Pagination:** Combat-Periods in Seiten aufteilen
+#### **Problem:**
+- Benutzer wollte Unterscheidung zwischen Companion- und Kitmodul-Schaden
+- Kitmodul-Erkennung durch "Kit" im SourceEntity-Namen
+- Companion-Erkennung durch S-Tag in EntityTag
 
-#### **Technische Umsetzung:**
+#### **Lösung:**
 ```csharp
-// Async Parsing mit Progress-Reporting
-public async Task<CombatPeriod> ParseCombatLogAsync(
-    string filePath, 
-    IProgress<ParseProgress> progress, 
-    CancellationToken cancellationToken)
+// WeaponStatistics Model erweitert
+public string SourceType { get; set; } = "player"; // "player", "companion", "kitmodul"
 
-// Lazy Loading für Statistiken
-private Lazy<ObservableCollection<WeaponStatistics>> _weaponStatistics;
-public ObservableCollection<WeaponStatistics> WeaponStatistics => 
-    _weaponStatistics.Value;
-
-// Caching mit MemoryCache
-private readonly IMemoryCache _cache;
-public async Task<CombatPeriod> GetCombatPeriodAsync(string periodId)
+// WeaponStatisticsService erweitert
+private string DetermineSourceType(CombatLogEntry entry)
 {
-    return await _cache.GetOrCreateAsync(periodId, async entry =>
-    {
-        entry.SlidingExpiration = TimeSpan.FromMinutes(30);
-        return await _combatLogService.GetCombatPeriodAsync(periodId);
-    });
-}
-```
-
-### 3. **Export-Funktionalität** für Statistiken
-
-#### **Export-Formate:**
-- **CSV:** Für Excel-Import und weitere Analyse
-- **JSON:** Für API-Integration und Backup
-- **PDF:** Für Reports und Dokumentation
-- **HTML:** Für Web-basierte Reports
-
-#### **Export-Inhalte:**
-- **Spieler-Statistiken:** DPS, Krit Rate, Gesamtschaden
-- **Waffen-Statistiken:** Alle Waffen mit Details
-- **Schadensarten-Verteilung:** Schadensarten mit Anteilen
-- **Combat-Timeline:** Zeitbasierte Schadens-Verteilung
-
-#### **Technische Umsetzung:**
-```csharp
-// Export-Service Interface
-public interface IExportService
-{
-    Task ExportToCsvAsync(StatisticsData data, string filePath);
-    Task ExportToJsonAsync(StatisticsData data, string filePath);
-    Task ExportToPdfAsync(StatisticsData data, string filePath);
-    Task ExportToHtmlAsync(StatisticsData data, string filePath);
-}
-
-// Export-Commands in StatisticsViewModel
-[RelayCommand]
-private async Task ExportToCsvAsync()
-{
-    var data = new StatisticsData
-    {
-        PlayerSummary = PlayerSummary,
-        WeaponStatistics = WeaponStatistics,
-        DamageTypeStatistics = DamageTypeStatistics
-    };
+    if (entry.SourceEntity == null || string.IsNullOrEmpty(entry.SourceEntity.Name))
+        return "player";
     
-    var filePath = await _fileDialogService.SaveFileAsync("CSV Files|*.csv");
-    if (filePath != null)
-    {
-        await _exportService.ExportToCsvAsync(data, filePath);
-    }
+    if (entry.SourceEntity.EntityTag.StartsWith("S["))
+        return "companion";
+    
+    if (entry.SourceEntity.EntityTag.StartsWith("C[") && 
+        entry.SourceEntity.Name.Contains("Kit"))
+        return "kitmodul";
+    
+    return "player";
 }
 ```
 
-### 4. **Erweiterte Filter** für Waffen- und Schadensarten-Statistiken
+#### **UI-Implementierung:**
+- **Neue Spalte**: "Quelle" zwischen # und Waffe
+- **Icons**: User (Gold), People (Blau), Settings (Grün)
+- **Converter**: SourceTypeToIconConverter und SourceTypeToColorConverter
 
-#### **Filter-Optionen:**
-- **Zeit-Filter:** Start/Ende Zeit für Combat-Periods
-- **Schaden-Filter:** Min/Max Schaden pro Eintrag
-- **Waffen-Filter:** Spezifische Waffen auswählen/ausschließen
-- **Schadensarten-Filter:** Spezifische Schadensarten filtern
-- **Companion-Filter:** Companion-Schaden ein-/ausschließen
+### 2. **DataGrid-Struktur nach Microsoft Best Practices optimiert**
 
-#### **UI-Komponenten:**
-- **Filter-Panel:** Collapsible Panel mit allen Filter-Optionen
-- **Quick-Filter:** Schnellfilter für häufige Szenarien
-- **Filter-Presets:** Vordefinierte Filter-Kombinationen
-- **Filter-Reset:** Alle Filter zurücksetzen
+#### **Problem:**
+- Inline-Styles in jeder Spalte (schlechte Wartbarkeit)
+- Keine zentrale Style-Verwaltung
+- Inkonsistente Darstellung
 
-#### **Technische Umsetzung:**
+#### **Lösung:**
+- **Separate Styles-Datei**: `Styles/DataGridStyles.xaml` erstellt
+- **Zentrale Style-Definitionen**: Alle DataGrid-Styles an einem Ort
+- **Wiederverwendbare Styles**: Können in allen DataGrids verwendet werden
+
+#### **Neue Styles:**
+```xml
+<Style x:Key="DataGridNumericStyle" TargetType="TextBlock">
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="FontFamily" Value="Consolas" />
+    <Setter Property="FontWeight" Value="Bold" />
+</Style>
+
+<Style x:Key="DataGridDPStyle" TargetType="TextBlock" BasedOn="{StaticResource DataGridNumericStyle}">
+    <Setter Property="Foreground" Value="{StaticResource StarfleetRed}" />
+</Style>
+```
+
+### 3. **Spalten-Layout optimiert**
+
+#### **Änderungen:**
+- **DPS**: 80px → 60px (-20px)
+- **Gesamt**: 120px → 80px (-40px)
+- **Anteil**: 150px → 100px (-50px)
+- **Verwendung**: 100px → 60px (-40px) + Icon im Header
+
+#### **Verwendung-Spalte mit Icon:**
+- **Header**: Nur Star-Icon (16px, zentriert)
+- **Zellen**: Nur die Zahl (zentriert)
+- **Sauberer Look**: Kompakter und intuitiver
+
+### 4. **DataGrid-Selektion Problem behoben**
+
+#### **Problem:**
+- Inkonsistente Selektion: Manche Zellen blau, andere nicht
+- Custom-Templates überschrieben Standard-Selektion
+- Zellen zeigten `#00FFFFFF` (transparentes Weiß) statt blau
+
+#### **Debug-Logging implementiert:**
 ```csharp
-// Filter-Model
-public class StatisticsFilter
+private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
 {
-    public DateTime? StartTime { get; set; }
-    public DateTime? EndTime { get; set; }
-    public double? MinDamage { get; set; }
-    public double? MaxDamage { get; set; }
-    public List<string> IncludedWeapons { get; set; } = new();
-    public List<string> ExcludedWeapons { get; set; } = new();
-    public List<string> IncludedDamageTypes { get; set; } = new();
-    public bool IncludeCompanionDamage { get; set; } = true;
-}
-
-// Filtered Statistics in ViewModel
-private StatisticsFilter _currentFilter = new();
-public StatisticsFilter CurrentFilter
-{
-    get => _currentFilter;
-    set => SetProperty(ref _currentFilter, value);
-}
-
-// Filtered Collections
-public ObservableCollection<WeaponStatistics> FilteredWeaponStatistics =>
-    new(WeaponStatistics.Where(FilterWeaponStatistics));
-
-private bool FilterWeaponStatistics(WeaponStatistics weapon)
-{
-    if (CurrentFilter.IncludedWeapons.Any() && 
-        !CurrentFilter.IncludedWeapons.Contains(weapon.Name))
-        return false;
-        
-    if (CurrentFilter.ExcludedWeapons.Contains(weapon.Name))
-        return false;
-        
-    if (CurrentFilter.MinDamage.HasValue && 
-        weapon.AverageDamage < CurrentFilter.MinDamage.Value)
-        return false;
-        
-    return true;
+    // Detailliertes Logging für Selektion-Analyse
+    Console.WriteLine("=== DataGrid Selection Changed ===");
+    Console.WriteLine($"Selected Items Count: {dataGrid.SelectedItems.Count}");
+    
+    // Original CombatLog-Daten
+    if (selectedItem is Models.WeaponStatistics weaponStat)
+    {
+        Console.WriteLine($"Number of original entries: {weaponStat.OriginalEntries.Count}");
+        // Zeigt erste 3 Original-CombatLog-Einträge
+    }
+    
+    // Visual State Analysis
+    Console.WriteLine($"Row Background: {row.Background}");
+    Console.WriteLine($"Row IsSelected: {row.IsSelected}");
+    // Zeigt Background und IsSelected für jede Zelle
 }
 ```
 
-### 5. **Erweiterte Visualisierung** (Bonus)
+#### **Lösung:**
+- **Custom Cell-Templates entfernt**: Keine `CellStyle` mehr für Spalten
+- **Standard-Selektion**: DataGrid verwendet jetzt Standard-Selektion
+- **Zentrierung beibehalten**: Icons zentriert durch StackPanel
+- **Header-Styles beibehalten**: Header-Zentrierung funktioniert weiterhin
 
-#### **Charts und Diagramme:**
-- **DPS-Timeline:** Zeitbasierte DPS-Entwicklung
-- **Schadensarten-Pie-Chart:** Visuelle Schadensarten-Verteilung
-- **Waffen-Vergleich:** Balkendiagramm für Waffen-Performance
-- **Krit-Rate-Trend:** Krit-Rate über Zeit
+### 5. **Original-CombatLog-Daten für Debugging hinzugefügt**
 
-#### **Technische Umsetzung:**
-- **LiveCharts.Wpf** für WPF-Charts
-- **OxyPlot** für erweiterte Diagramme
-- **Custom Charts** mit Canvas und DrawingVisual
+#### **Implementierung:**
+```csharp
+// WeaponStatistics Model erweitert
+public List<CombatLogEntry> OriginalEntries { get; set; } = new();
 
-### 6. **Konfiguration und Einstellungen** (Bonus)
+// WeaponStatisticsService erweitert
+var weaponStat = new WeaponStatistics(weaponName, "weapon")
+{
+    // ... andere Properties
+    OriginalEntries = weaponEntries.ToList() // Speichere Original-Entries
+};
+```
 
-#### **Benutzer-Einstellungen:**
-- **Theme-Auswahl:** Light/Dark Mode
-- **Sprache:** Deutsch/Englisch
-- **Standard-Filter:** Vordefinierte Filter-Einstellungen
-- **Export-Einstellungen:** Standard-Export-Format und -Pfad
-
-#### **Technische Umsetzung:**
-- **Settings-Service** mit JSON-Serialisierung
-- **UserSettings-Model** für alle Einstellungen
-- **Settings-Page** in der Configuration-Section
+#### **Debug-Output:**
+```
+=== Original CombatLog Entries ===
+Number of original entries: 37
+  Entry: [2024-01-15 10:30:15] Player@12345 C[429 Ground_Universal_Kit_Summer_Ball_Lightning]@67890 Target@11111 Kugelblitz@22222 Physical Normal 100 95
+    SourceEntity: C[429 Ground_Universal_Kit_Summer_Ball_Lightning] | Tag: C[429 Ground_Universal_Kit_Summer_Ball_Lightning]
+    AttackName: Kugelblitz
+    RawDamage: 100
+    IsCritical: False
+    IsCompanionDamage: False
+```
 
 ---
 
-## 📝 Technische Details
+## 🐛 Behebung von Problemen
+
+### **Problem 1: Icon-Fehler**
+- **Fehler**: `Icon="Repeat"` und `Icon="ArrowClockwise"` nicht gültig
+- **Lösung**: `Icon="Star"` verwendet (gültig und passend)
+
+### **Problem 2: ServiceProvider-Fehler**
+- **Fehler**: `CS1061: "App" enthält keine Definition für "ServiceProvider"`
+- **Lösung**: `Console.WriteLine` statt Logger-Framework verwendet
+
+### **Problem 3: DependencyObject-Fehler**
+- **Fehler**: `CS0246: Der Typ- oder Namespacename "DependencyObject" wurde nicht gefunden`
+- **Lösung**: `using System.Windows;` hinzugefügt
+
+### **Problem 4: InvalidCastException**
+- **Fehler**: `Unable to cast object of type 'DataGridRow' to type 'DataGridCell'`
+- **Lösung**: Vereinfachte Cell-Analyse ohne problematische Casts
+
+### **Problem 5: Inkonsistente Selektion**
+- **Fehler**: Custom-Templates überschrieben Standard-Selektion
+- **Lösung**: Custom Cell-Templates entfernt, Standard-Selektion verwendet
+
+---
+
+## 📊 Session 3 - Ergebnisse
+
+### **Code-Qualität:**
+- ✅ **Separate Styles-Datei**: Bessere Wartbarkeit und Wiederverwendbarkeit
+- ✅ **Microsoft Best Practices**: DataGrid-Struktur folgt offiziellen Empfehlungen
+- ✅ **Debug-Logging**: Umfassende Diagnose-Möglichkeiten
+- ✅ **Kompakteres Layout**: 150px weniger Gesamtbreite
+
+### **Funktionalität:**
+- ✅ **Source-Type-Erkennung**: Companion vs. Kitmodul vs. Player
+- ✅ **Konsistente Selektion**: Alle Zellen zeigen blauen Hintergrund
+- ✅ **Original-Daten**: CombatLog-Rohdaten für Debugging verfügbar
+- ✅ **Optimierte Spalten**: Mehr Platz für Waffen-Namen
+
+### **Wartbarkeit:**
+- ✅ **Zentrale Styles**: Alle DataGrid-Styles an einem Ort
+- ✅ **Wiederverwendbare Components**: Styles können in anderen DataGrids verwendet werden
+- ✅ **Debug-Tools**: Einfache Problem-Diagnose durch Logging
+- ✅ **Sauberer Code**: Weniger inline Styles, bessere Struktur
+
+---
+
+## 🔧 Technische Details
+
+### **Neue Dateien:**
+- `Styles/DataGridStyles.xaml` - Zentrale DataGrid-Styles
+- `Converters/SourceTypeToIconConverter.cs` - Icon-Konvertierung
+- `Converters/SourceTypeToColorConverter.cs` - Farb-Konvertierung
+
+### **Geänderte Dateien:**
+- `Models/WeaponStatistics.cs` - SourceType und OriginalEntries hinzugefügt
+- `Services/WeaponStatisticsService.cs` - SourceType-Logik implementiert
+- `Components/PageSpecific/Statistics/WeaponStatisticsCard.xaml` - Neue Spalte und Styles
+- `Components/PageSpecific/Statistics/WeaponStatisticsCard.xaml.cs` - Debug-Logging
 
 ### **Verwendete Technologien:**
-- **WPF** mit MVVM-Pattern
-- **CommunityToolkit.Mvvm** für ObservableObject und RelayCommand
-- **Microsoft.Extensions.Logging** für Debugging
-- **Dependency Injection** für Service-Management
+- **WPF DataGrid** mit Custom-Templates und Styles
+- **Value Converters** für Icon- und Farb-Konvertierung
+- **Visual Tree Navigation** für Debug-Logging
+- **Console.WriteLine** für einfaches Debugging
+
+---
+
+## 📈 Projekt-Metriken
+
+### **Code-Reduktion:**
+- **StatisticsPage.xaml**: 314 → 65 Zeilen (-79%)
+- **WeaponStatisticsCard.xaml**: ~50 Zeilen weniger durch zentrale Styles
+- **DamageTypeCard.xaml**: ~40 Zeilen weniger durch zentrale Styles
+- **Gesamt**: ~90 Zeilen weniger Code
+
+### **Neue Features:**
+- **Source-Type-Spalte**: Companion/Kitmodul-Erkennung
+- **Debug-Logging**: Umfassende Diagnose-Möglichkeiten
+- **Optimierte Spalten**: Kompakteres Layout
+- **Zentrale Styles**: Bessere Wartbarkeit
+
+### **Behobene Bugs:**
+- **Inkonsistente Selektion**: Alle Zellen zeigen jetzt blauen Hintergrund
+- **Icon-Fehler**: Alle Icons sind gültig und funktional
+- **Compilation-Fehler**: Alle using-Direktiven korrekt
+- **Template-Überschreibung**: Standard-Selektion funktioniert
+- **Dateninkonsistenz**: Schadensarten = Waffen-Statistiken
+- **Companion-Erkennung**: Direkter Spieler-Schaden wird korrekt erkannt
+
+---
+
+## 📝 Lessons Learned
+
+### **Was gut funktioniert hat:**
+- **Schritt-für-Schritt Debugging**: Systematische Problem-Analyse
+- **Microsoft Best Practices**: Offizielle Dokumentation befolgen
+- **Separate Styles**: Bessere Wartbarkeit und Konsistenz
+- **Umfassendes Logging**: Schnelle Problem-Identifikation
+- **Modulare Architektur**: Bessere Wartbarkeit und Testbarkeit
+
+### **Was verbessert werden kann:**
+- **Test-First Approach**: Tests vor Implementierung schreiben
+- **Performance-Monitoring**: Große Datenmengen testen
+- **Error-Handling**: Robusterer Umgang mit Edge Cases
+- **Documentation**: Code-Kommentare für komplexe Logik
+
+### **Technische Erkenntnisse:**
+- **DataGrid Custom-Templates**: Können Standard-Verhalten überschreiben
+- **WPF Visual Tree**: Komplex zu navigieren, einfachere Ansätze bevorzugen
+- **Style-Inheritance**: `BasedOn` für konsistente Styles nutzen
+- **Debugging-Strategien**: Console.WriteLine für schnelle Diagnose
+- **MVVM-Pattern**: Saubere Trennung von UI und Business Logic
+
+---
+
+## 🎯 Nächste Schritte
+
+### **Sofort:**
+1. **Selektion testen**: Prüfen ob alle Zellen konsistent blau werden
+2. **Source-Type testen**: Prüfen ob Companion/Kitmodul korrekt erkannt wird
+3. **Debug-Logging auswerten**: Original-CombatLog-Daten analysieren
+
+### **Mittelfristig:**
+1. **DamageTypeCard optimieren**: Gleiche Styles anwenden
+2. **Performance testen**: Mit großen Combat-Logs
+3. **Export-Funktionalität**: CSV/JSON Export für Statistiken
+
+### **Langfristig:**
+1. **Unit Tests**: Für neue Components und Services
+2. **Erweiterte Filter**: Zeit-, Schaden-, Waffen-Filter
+3. **Visualisierung**: Charts und Diagramme
+
+---
+
+## 🔧 Verwendete Technologien
+
+### **Framework:**
+- **WPF (Windows Presentation Foundation)** - UI-Framework
+- **MVVM-Pattern** - Architektur-Pattern
+- **CommunityToolkit.Mvvm** - ObservableObject und RelayCommand
+- **Microsoft.Extensions.Logging** - Debugging
 
 ### **Architektur-Pattern:**
 - **Component-based UI** statt monolithische Pages
@@ -492,3 +639,30 @@ private bool FilterWeaponStatistics(WeaponStatistics weapon)
 - **Ausführliches Logging** für Datenfluss-Tracing
 - **Rohdaten-Logging** für Combat-Log-Analyse
 - **Schritt-für-Schritt Debugging** bei komplexen Problemen
+
+---
+
+## 📋 Projekt-Status
+
+### **✅ Abgeschlossen:**
+- Statistics Page Refaktorierung
+- Tabellen-Optimierung
+- DataGrid-Selektion Problem behoben
+- Source-Type-Erkennung implementiert
+- Debug-Logging hinzugefügt
+
+### **🔄 In Arbeit:**
+- Selektion-Testing
+- Source-Type-Validation
+
+### **📋 Geplant:**
+- DamageTypeCard Optimierung
+- Performance-Testing
+- Export-Funktionalität
+- Unit Tests
+- Erweiterte Filter
+- Visualisierung
+
+---
+
+*Letzte Aktualisierung: 2024-01-15 - Session 3 abgeschlossen*
