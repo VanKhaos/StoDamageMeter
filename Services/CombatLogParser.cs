@@ -16,6 +16,9 @@ namespace StoDamageMeter.Services
     public class CombatLogParser : ICombatLogParser
     {
         private readonly ILogger<CombatLogParser> _logger;
+        private int _lineCounter = 0;
+        private readonly Random _random = new Random();
+        private readonly HashSet<int> _selectedLines = new HashSet<int>();
 
         // Regex-Pattern für verschiedene ID-Tags
         private static readonly Regex PlayerIdPattern = new(@"P\[(\d+)@(\d+)\s+([^@]+)@([^#]+)#(\d+)\]", RegexOptions.Compiled);
@@ -25,6 +28,16 @@ namespace StoDamageMeter.Services
         public CombatLogParser(ILogger<CombatLogParser> logger)
         {
             _logger = logger;
+        }
+
+
+        /// <summary>
+        /// Bestimmt ob ein Entity ein Companion oder Hangar-Pet ist
+        /// </summary>
+        private bool IsCompanionOrHangarPet(EntityInfo sourceEntity, PlayerInfo playerInfo)
+        {
+            // Wenn Source nicht der Spieler selbst ist, ist es ein Companion/Hangar-Pet
+            return sourceEntity.Name != playerInfo.CharName;
         }
 
         public async Task<List<CombatLogEntry>> ParseCombatLogFileAsync(string filePath)
@@ -39,6 +52,28 @@ namespace StoDamageMeter.Services
                 }
 
                 var lines = await File.ReadAllLinesAsync(filePath);
+                _logger.LogInformation("=== COMBAT LOG PARSING GESTARTET ===");
+                _logger.LogInformation("Datei: {FilePath}", filePath);
+                _logger.LogInformation("Anzahl Zeilen: {LineCount}", lines.Length);
+
+                // Reset line counter für neue Datei
+                _lineCounter = 0;
+                _selectedLines.Clear();
+
+                // Wähle 10 zufällige Zeilen für detailliertes Logging aus
+                if (lines.Length > 0)
+                {
+                    int linesToSelect = Math.Min(10, lines.Length);
+                    for (int i = 0; i < linesToSelect; i++)
+                    {
+                        int randomLine = _random.Next(0, lines.Length);
+                        _selectedLines.Add(randomLine);
+                    }
+                    // Zufällige Zeilen-Auswahl-Logging entfernt
+                }
+
+                int parsedCount = 0;
+                int skippedCount = 0;
 
                 foreach (var line in lines)
                 {
@@ -46,8 +81,16 @@ namespace StoDamageMeter.Services
                     if (entry != null)
                     {
                         entries.Add(entry);
+                        parsedCount++;
+                    }
+                    else
+                    {
+                        skippedCount++;
                     }
                 }
+
+                _logger.LogInformation("Parsing abgeschlossen: {ParsedCount} Einträge geparst, {SkippedCount} übersprungen", parsedCount, skippedCount);
+                _logger.LogInformation("=== COMBAT LOG PARSING BEENDET ===");
             }
             catch (Exception ex)
             {
@@ -61,42 +104,72 @@ namespace StoDamageMeter.Services
         {
             try
             {
+                // Logge zufällig ausgewählte Zeilen mit Rohdaten-Parsing-Details
+                _lineCounter++;
+                bool shouldLogDetails = _selectedLines.Contains(_lineCounter - 1);
+
+                // Parsing-Debug-Logging entfernt für saubere Console
+
                 // Teile zuerst nach :: (Timestamp + Separator)
                 var timestampAndRest = line.Split(new[] { "::" }, 2, StringSplitOptions.None);
                 if (timestampAndRest.Length != 2)
                 {
+                    // Fehler-Logging entfernt für saubere Console
                     return null;
                 }
 
                 var timestamp = timestampAndRest[0].Trim();
                 var restOfLine = timestampAndRest[1];
 
+                // Timestamp-Debug-Logging entfernt
+
                 // Teile den Rest nach Komma
                 var parts = restOfLine.Split(',');
+
+                // Parts-Debug-Logging entfernt
 
                 // Parse Schadenswerte
                 var rawDamage = ParseDouble(parts[10]);
 
+                // Raw Damage-Debug-Logging entfernt
+
                 // Ignoriere negative Schadenswerte (Heilung)
                 if (rawDamage <= 0)
                 {
+                    // Heilung-Logging entfernt
                     return null;
                 }
+
+                // Parse Player und Source
+                var playerInfo = ParsePlayerInfo(parts[0], parts[1]);
+                var sourceEntity = ParseEntityInfo(parts[2], parts[3]);
+                var targetEntity = ParseEntityInfo(parts[4], parts[5]);
 
                 // Erstelle CombatLogEntry
                 var entry = new CombatLogEntry
                 {
                     Timestamp = ParseTimestamp(timestamp),
-                    PlayerInfo = ParsePlayerInfo(parts[0], parts[1]),
-                    SourceEntity = ParseEntityInfo(parts[2], parts[3]),
-                    TargetEntity = ParseEntityInfo(parts[4], parts[5]),
+                    PlayerInfo = playerInfo,
+                    SourceEntity = sourceEntity,
+                    TargetEntity = targetEntity,
                     AttackName = parts[6].Trim(),
                     AbilityId = parts[7].Trim(),
                     DamageType = parts[8].Trim(),
                     EventType = ParseEventType(parts[9]),
-                    RawDamage = rawDamage,
-                    DamageWithResistance = ParseDouble(parts[11])
+                    RawDamage = Math.Round(rawDamage),
+                    DamageWithResistance = Math.Round(ParseDouble(parts[11]))
                 };
+
+                // Bestimme ob das ein Companion/Hangar-Pet ist
+                entry.IsCompanionDamage = IsCompanionOrHangarPet(sourceEntity, playerInfo);
+
+                // Bestimme ob kritisch und setze EventType entsprechend
+                if (parts.Length > 12 && parts[12].Contains("Critical"))
+                {
+                    entry.EventType = EventType.Critical;
+                }
+
+                // Detailliertes Parsing-Logging entfernt
 
                 return entry;
             }

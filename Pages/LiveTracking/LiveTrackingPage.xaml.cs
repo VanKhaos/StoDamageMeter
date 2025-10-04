@@ -8,10 +8,9 @@ namespace StoDamageMeter.Pages.LiveTracking
     /// </summary>
     public partial class LiveTrackingPage : Page
     {
-        public LiveTrackingPage(MainViewModel viewModel)
+        public LiveTrackingPage()
         {
             InitializeComponent();
-            DataContext = viewModel;
         }
     }
 }

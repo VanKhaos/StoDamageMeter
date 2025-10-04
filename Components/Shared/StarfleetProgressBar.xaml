@@ -1,0 +1,40 @@
+<UserControl x:Class="StoDamageMeter.Components.Shared.StarfleetProgressBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    d:DesignHeight="20" d:DesignWidth="200">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ModernStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border x:Name="BackgroundBorder"
+            Background="{StaticResource Secondary}"
+            BorderBrush="{StaticResource Border}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Height="8" />
+
+        <Border x:Name="ProgressBorder"
+            Background="{StaticResource Primary}"
+            CornerRadius="3"
+            Height="6"
+            Margin="1"
+            HorizontalAlignment="Left" />
+
+        <TextBlock x:Name="ProgressText"
+            Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Foreground="{StaticResource MutedForeground}"
+            FontSize="10"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="0,0,0,2" />
+    </Grid>
+</UserControl>

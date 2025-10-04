@@ -8,10 +8,9 @@ namespace StoDamageMeter.Pages.Configuration
     /// </summary>
     public partial class ConfigurationPage : Page
     {
-        public ConfigurationPage(MainViewModel viewModel)
+        public ConfigurationPage()
         {
             InitializeComponent();
-            DataContext = viewModel;
         }
     }
 }

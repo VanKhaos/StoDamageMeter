@@ -39,7 +39,7 @@ namespace StoDamageMeter.ViewModels
         {
             try
             {
-                _logger.LogInformation("Combat Log Daten aktualisiert - koordiniere Child ViewModels");
+                // Combat Log Daten aktualisiert - koordiniere Child ViewModels
 
                 // Aktualisiere Statistics ViewModel
                 if (e.Result?.Entries != null)
@@ -47,6 +47,12 @@ namespace StoDamageMeter.ViewModels
                     Statistics.UpdateAvailablePlayers(e.Result.Entries);
                     Statistics.UpdateCombatPeriods(e.Result.Entries);
                 }
+                else
+                {
+                    _logger.LogWarning("Keine Einträge verfügbar - UpdateAvailablePlayers wird nicht aufgerufen");
+                }
+
+                // OnCombatLogDataUpdated beendet
             }
             catch (Exception ex)
             {

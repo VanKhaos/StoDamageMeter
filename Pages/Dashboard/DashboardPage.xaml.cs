@@ -1,5 +1,6 @@
 using StoDamageMeter.ViewModels;
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace StoDamageMeter.Pages.Dashboard
 {
@@ -8,10 +9,10 @@ namespace StoDamageMeter.Pages.Dashboard
     /// </summary>
     public partial class DashboardPage : Page
     {
-        public DashboardPage(MainViewModel viewModel)
+        public DashboardPage()
         {
             InitializeComponent();
-            DataContext = viewModel;
+            // DataContext wird über MainWindow gesetzt
         }
     }
 }

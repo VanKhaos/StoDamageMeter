@@ -65,16 +65,24 @@ namespace StoDamageMeter.ViewModels
         [RelayCommand]
         public async Task SelectLogFile()
         {
+            _logger.LogInformation("=== SelectLogFile Command aufgerufen ===");
             try
             {
+                _logger.LogInformation("Erstelle OpenFileDialog...");
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "Combatlog-Datei auswählen",
-                    Filter = "Log-Dateien (*.log)|*.log|Alle Dateien (*.*)|*.*",
-                    DefaultExt = "log"
+                    Filter = "Combat Log Dateien (*.txt;*.log;*.combatlog)|*.txt;*.log;*.combatlog|Text-Dateien (*.txt)|*.txt|Log-Dateien (*.log)|*.log|Alle Dateien (*.*)|*.*",
+                    DefaultExt = "txt",
+                    Multiselect = false,
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 };
 
-                if (openFileDialog.ShowDialog() == true)
+                _logger.LogInformation("Zeige File Dialog...");
+                var result = openFileDialog.ShowDialog();
+                _logger.LogInformation("File Dialog Result: {Result}", result);
+
+                if (result == true)
                 {
                     SelectedLogFile = openFileDialog.FileName;
                     await ProcessCombatLogFile(SelectedLogFile);
@@ -84,6 +92,10 @@ namespace StoDamageMeter.ViewModels
             {
                 StatusMessage = $"Fehler: {ex.Message}";
                 _logger.LogError(ex, "Fehler beim Auswählen der Log-Datei");
+            }
+            finally
+            {
+                _logger.LogInformation("=== SelectLogFile Command beendet ===");
             }
         }
 
@@ -102,6 +114,8 @@ namespace StoDamageMeter.ViewModels
                 IsLoading = true;
                 LoadingMessage = "📖 Lade Datei...";
 
+                // Debug-Logging ist jetzt in der Console
+
                 // Stoppe vorherige Überwachung
                 if (IsWatching)
                 {
@@ -113,6 +127,7 @@ namespace StoDamageMeter.ViewModels
 
                 if (result.Success)
                 {
+                    // Combat Log erfolgreich verarbeitet
                     CurrentResult = result;
                     Statistics = result.Statistics;
                     PlayerCount = result.Statistics.PlayerCount;
@@ -122,7 +137,7 @@ namespace StoDamageMeter.ViewModels
                     DataUpdated?.Invoke(this, new CombatLogDataUpdatedEventArgs
                     {
                         Result = result,
-                        NewEntries = result.Entries
+                        NewEntries = result.Entries ?? new List<CombatLogEntry>()
                     });
                 }
                 else
@@ -209,5 +224,7 @@ namespace StoDamageMeter.ViewModels
                 _logger.LogError(ex, "Fehler beim Verarbeiten des Live-Updates");
             }
         }
+
+
     }
 }

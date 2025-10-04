@@ -124,12 +124,37 @@ namespace StoDamageMeter.Services
         /// <returns>Liste der Spielernamen</returns>
         public List<string> GetAvailablePlayers(List<CombatLogEntry> allEntries)
         {
-            return allEntries
+            _logger.LogInformation("=== GetAvailablePlayers aufgerufen ===");
+            _logger.LogInformation("Anzahl Einträge: {EntryCount}", allEntries.Count);
+
+            var playerEntries = allEntries
                 .Where(e => e.PlayerInfo.IsPlayer && !string.IsNullOrEmpty(e.PlayerInfo.CharName))
+                .ToList();
+
+            _logger.LogInformation("Einträge mit gültigen Spielern: {PlayerEntryCount}", playerEntries.Count);
+
+            // Debug: Zeige erste paar Einträge
+            for (int i = 0; i < Math.Min(5, playerEntries.Count); i++)
+            {
+                var entry = playerEntries[i];
+                _logger.LogInformation("Eintrag {Index}: Player='{PlayerName}', IsPlayer={IsPlayer}, CharName='{CharName}'",
+                    i, entry.PlayerInfo.CharName, entry.PlayerInfo.IsPlayer, entry.PlayerInfo.CharName);
+            }
+
+            var players = playerEntries
                 .Select(e => e.PlayerInfo.CharName)
                 .Distinct()
                 .OrderBy(name => name)
                 .ToList();
+
+            _logger.LogInformation("Eindeutige Spieler gefunden: {PlayerCount}", players.Count);
+            foreach (var player in players)
+            {
+                _logger.LogInformation("Spieler: '{PlayerName}'", player);
+            }
+
+            _logger.LogInformation("=== GetAvailablePlayers beendet ===");
+            return players;
         }
     }
 }

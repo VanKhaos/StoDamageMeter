@@ -1,0 +1,22 @@
+{
+  "watch": {
+    "exclude": [
+      "**/bin/**",
+      "**/obj/**",
+      "**/logs/**",
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/ReactApp/**",
+      "**/*.log",
+      "**/*.tmp",
+      "**/*.cache"
+    ],
+    "include": [
+      "**/*.cs",
+      "**/*.xaml",
+      "**/*.csproj",
+      "**/*.json"
+    ]
+  }
+}
+

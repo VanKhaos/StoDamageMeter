@@ -53,6 +53,8 @@ namespace StoDamageMeter.Services
 
                 // Berechne Statistiken
                 result.Statistics = CalculateStatistics(entries);
+
+                // Event wird in CombatLogViewModel ausgelöst, nicht hier
             }
             catch (Exception ex)
             {

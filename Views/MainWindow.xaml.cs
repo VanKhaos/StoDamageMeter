@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace StoDamageMeter.Views
 {
@@ -11,11 +12,13 @@ namespace StoDamageMeter.Views
     public partial class MainWindow : System.Windows.Window
     {
         private readonly MainViewModel _viewModel;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainWindow(MainViewModel viewModel)
+        public MainWindow(MainViewModel viewModel, IServiceProvider serviceProvider)
         {
             InitializeComponent();
             _viewModel = viewModel;
+            _serviceProvider = serviceProvider;
             DataContext = viewModel;
 
             // Setup navigation
@@ -51,19 +54,29 @@ namespace StoDamageMeter.Views
             switch (pageTag)
             {
                 case "Dashboard":
-                    ContentFrame.Navigate(new Pages.Dashboard.DashboardPage(_viewModel));
+                    var dashboardPage = _serviceProvider.GetRequiredService<Pages.Dashboard.DashboardPage>();
+                    dashboardPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(dashboardPage);
                     break;
                 case "LiveTracking":
-                    ContentFrame.Navigate(new Pages.LiveTracking.LiveTrackingPage(_viewModel));
+                    var liveTrackingPage = _serviceProvider.GetRequiredService<Pages.LiveTracking.LiveTrackingPage>();
+                    liveTrackingPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(liveTrackingPage);
                     break;
                 case "Statistics":
-                    ContentFrame.Navigate(new Pages.Statistics.StatisticsPage(_viewModel));
+                    var statisticsPage = _serviceProvider.GetRequiredService<Pages.Statistics.StatisticsPage>();
+                    statisticsPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(statisticsPage);
                     break;
                 case "Configuration":
-                    ContentFrame.Navigate(new Pages.Configuration.ConfigurationPage(_viewModel));
+                    var configurationPage = _serviceProvider.GetRequiredService<Pages.Configuration.ConfigurationPage>();
+                    configurationPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(configurationPage);
                     break;
                 case "About":
-                    ContentFrame.Navigate(new Pages.About.AboutPage(_viewModel));
+                    var aboutPage = _serviceProvider.GetRequiredService<Pages.About.AboutPage>();
+                    aboutPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(aboutPage);
                     break;
                 case "Theme":
                     // Toggle theme logic here

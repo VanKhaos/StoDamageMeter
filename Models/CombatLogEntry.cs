@@ -72,5 +72,10 @@ namespace StoDamageMeter.Models
         /// Ist es ein DoT (Damage over Time)?
         /// </summary>
         public bool IsDoT => EventType == EventType.DoT;
+
+        /// <summary>
+        /// Ist der Schaden von einem Companion oder Hangar-Pet?
+        /// </summary>
+        public bool IsCompanionDamage { get; set; }
     }
 }
