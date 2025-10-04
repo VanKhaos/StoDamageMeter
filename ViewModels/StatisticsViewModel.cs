@@ -37,6 +37,15 @@ namespace StoDamageMeter.ViewModels
         [ObservableProperty]
         private List<DamageTypeStatistic> _damageTypeStatistics = new();
 
+        // Filter-Properties
+        [ObservableProperty]
+        private StatisticsFilter _currentFilter = new();
+
+        [ObservableProperty]
+        private List<WeaponStatistics> _filteredWeaponStatistics = new();
+
+        [ObservableProperty]
+        private List<DamageTypeStatistic> _filteredDamageTypeStatistics = new();
 
         [ObservableProperty]
         private bool _isLoading = false;
@@ -52,6 +61,9 @@ namespace StoDamageMeter.ViewModels
             _combatPeriodService = combatPeriodService;
             _weaponStatisticsService = weaponStatisticsService;
             _logger = logger;
+
+            // Filter-Änderungen überwachen
+            CurrentFilter.PropertyChanged += OnFilterChanged;
         }
 
         /// <summary>
@@ -354,6 +366,9 @@ namespace StoDamageMeter.ViewModels
 
                 // Explizit Property-Change Notification auslösen
                 OnPropertyChanged(nameof(WeaponStatistics));
+
+                // Filtere die neuen Daten
+                ApplyFilters();
             }
             catch (Exception ex)
             {
@@ -481,6 +496,9 @@ namespace StoDamageMeter.ViewModels
 
             DamageTypeStatistics = damageByType;
             OnPropertyChanged(nameof(DamageTypeStatistics));
+
+            // Filtere die neuen Daten
+            ApplyFilters();
         }
 
 
@@ -498,6 +516,159 @@ namespace StoDamageMeter.ViewModels
             {
                 _logger.LogInformation("SelectedPlayer Property geändert zu: '{SelectedPlayer}'", SelectedPlayer);
                 UpdateCombatPeriods(_lastEntries);
+            }
+        }
+
+        /// <summary>
+        /// Reagiert auf Filter-Änderungen
+        /// </summary>
+        private void OnFilterChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Wendet die aktuellen Filter auf die Statistiken an
+        /// </summary>
+        private void ApplyFilters()
+        {
+            _logger.LogInformation("=== ApplyFilters aufgerufen ===");
+            _logger.LogInformation("Filter aktiv: {IsActive}", CurrentFilter.IsActive);
+
+            if (!CurrentFilter.IsActive)
+            {
+                // Keine Filter aktiv - zeige alle Daten
+                FilteredWeaponStatistics = new List<WeaponStatistics>(WeaponStatistics);
+                FilteredDamageTypeStatistics = new List<DamageTypeStatistic>(DamageTypeStatistics);
+                _logger.LogInformation("Keine Filter aktiv - alle Daten angezeigt");
+                return;
+            }
+
+            // Filtere Waffen-Statistiken
+            FilteredWeaponStatistics = WeaponStatistics.Where(FilterWeaponStatistics).ToList();
+
+            // Filtere Schadensarten-Statistiken
+            FilteredDamageTypeStatistics = DamageTypeStatistics.Where(FilterDamageTypeStatistics).ToList();
+
+            _logger.LogInformation("Filter angewendet - Waffen: {WeaponCount}, Schadensarten: {DamageTypeCount}",
+                FilteredWeaponStatistics.Count, FilteredDamageTypeStatistics.Count);
+        }
+
+        /// <summary>
+        /// Prüft ob eine Waffen-Statistik den Filter-Kriterien entspricht
+        /// </summary>
+        private bool FilterWeaponStatistics(WeaponStatistics weapon)
+        {
+            // Zeit-Filter (falls implementiert)
+            if (CurrentFilter.StartTime.HasValue && SelectedPeriod?.StartTime < CurrentFilter.StartTime.Value)
+                return false;
+            if (CurrentFilter.EndTime.HasValue && SelectedPeriod?.EndTime > CurrentFilter.EndTime.Value)
+                return false;
+
+            // Schaden-Filter
+            if (CurrentFilter.MinDamage.HasValue && weapon.AverageDamage < CurrentFilter.MinDamage.Value)
+                return false;
+            if (CurrentFilter.MaxDamage.HasValue && weapon.AverageDamage > CurrentFilter.MaxDamage.Value)
+                return false;
+
+            // Waffen-Filter
+            if (CurrentFilter.IncludedWeapons.Any() && !CurrentFilter.IncludedWeapons.Contains(weapon.Name))
+                return false;
+            if (CurrentFilter.ExcludedWeapons.Contains(weapon.Name))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Prüft ob eine Schadensarten-Statistik den Filter-Kriterien entspricht
+        /// </summary>
+        private bool FilterDamageTypeStatistics(DamageTypeStatistic damageType)
+        {
+            // Zeit-Filter (falls implementiert)
+            if (CurrentFilter.StartTime.HasValue && SelectedPeriod?.StartTime < CurrentFilter.StartTime.Value)
+                return false;
+            if (CurrentFilter.EndTime.HasValue && SelectedPeriod?.EndTime > CurrentFilter.EndTime.Value)
+                return false;
+
+            // Schaden-Filter
+            if (CurrentFilter.MinDamage.HasValue && damageType.AverageDamage < CurrentFilter.MinDamage.Value)
+                return false;
+            if (CurrentFilter.MaxDamage.HasValue && damageType.AverageDamage > CurrentFilter.MaxDamage.Value)
+                return false;
+
+            // Schadensarten-Filter
+            if (CurrentFilter.IncludedDamageTypes.Any() && !CurrentFilter.IncludedDamageTypes.Contains(damageType.DamageType))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Setzt alle Filter zurück
+        /// </summary>
+        [RelayCommand]
+        private void ResetFilters()
+        {
+            _logger.LogInformation("=== ResetFilters aufgerufen ===");
+            CurrentFilter.Reset();
+            _logger.LogInformation("Alle Filter zurückgesetzt");
+        }
+
+        /// <summary>
+        /// Wendet die aktuellen Filter an (manuell)
+        /// </summary>
+        [RelayCommand]
+        private void ApplyFiltersCommand()
+        {
+            _logger.LogInformation("=== ApplyFilters Command aufgerufen ===");
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Togglet die Sichtbarkeit des Filter-Panels
+        /// </summary>
+        [ObservableProperty]
+        private bool _isFilterPanelVisible = false;
+
+        [RelayCommand]
+        private void ToggleFilterPanel()
+        {
+            IsFilterPanelVisible = !IsFilterPanelVisible;
+            _logger.LogInformation("Filter-Panel Sichtbarkeit: {IsVisible}", IsFilterPanelVisible);
+        }
+
+        /// <summary>
+        /// Wendet einen vordefinierten Filter an
+        /// </summary>
+        [RelayCommand]
+        private void ApplyFilterPreset(string presetName)
+        {
+            _logger.LogInformation("=== ApplyFilterPreset aufgerufen: {PresetName} ===", presetName);
+
+            switch (presetName)
+            {
+                case "HighDamage":
+                    CurrentFilter.MinDamage = 1000;
+                    _logger.LogInformation("High Damage Filter angewendet (Min: 1000)");
+                    break;
+                case "CriticalHits":
+                    CurrentFilter.MinDamage = 500; // Kritische Treffer haben meist höheren Schaden
+                    _logger.LogInformation("Critical Hits Filter angewendet (Min: 500)");
+                    break;
+                case "TopWeapons":
+                    // Zeige nur Top 5 Waffen
+                    var topWeapons = WeaponStatistics
+                        .OrderByDescending(w => w.TotalDamage)
+                        .Take(5)
+                        .Select(w => w.Name)
+                        .ToList();
+                    CurrentFilter.IncludedWeapons = topWeapons;
+                    _logger.LogInformation("Top Weapons Filter angewendet: {WeaponCount} Waffen", topWeapons.Count);
+                    break;
+                default:
+                    _logger.LogWarning("Unbekannter Filter-Preset: {PresetName}", presetName);
+                    break;
             }
         }
     }

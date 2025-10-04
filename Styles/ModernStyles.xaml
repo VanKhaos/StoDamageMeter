@@ -438,4 +438,99 @@
         </Setter>
     </Style>
 
+    <!-- Starfleet GroupBox Style -->
+    <Style x:Key="StarfleetGroupBoxStyle" TargetType="GroupBox">
+        <Setter Property="Background" Value="{StaticResource CardBackground}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Margin" Value="0,0,0,16" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupBox">
+                    <Grid>
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"
+                            Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Header -->
+                                <Border Grid.Row="0"
+                                    Background="{StaticResource StarfleetBlue}"
+                                    CornerRadius="4,4,0,0"
+                                    Margin="-16,-16,-16,8"
+                                    Padding="12,8">
+                                    <TextBlock Text="{TemplateBinding Header}"
+                                        Foreground="{StaticResource TextPrimary}"
+                                        FontWeight="SemiBold"
+                                        FontSize="14" />
+                                </Border>
+
+                                <!-- Content -->
+                                <ContentPresenter Grid.Row="1" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Starfleet CheckBox Style -->
+    <Style x:Key="StarfleetCheckBox" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Check Box -->
+                        <Border Grid.Column="0"
+                            Width="20"
+                            Height="20"
+                            Background="{StaticResource Input}"
+                            BorderBrush="{StaticResource Border}"
+                            BorderThickness="2"
+                            CornerRadius="4"
+                            Margin="0,0,8,0">
+                            <Path x:Name="CheckMark"
+                                Data="M 3,8 L 7,12 L 15,4"
+                                Stroke="{StaticResource StarfleetGold}"
+                                StrokeThickness="2"
+                                Visibility="Collapsed" />
+                        </Border>
+
+                        <!-- Content -->
+                        <ContentPresenter Grid.Column="1"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                            <Setter Property="Background" Value="{StaticResource StarfleetBlue}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource StarfleetBlue}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>
