@@ -149,15 +149,109 @@ Command="{Binding DataContext.SelectPeriodCommand, RelativeSource={RelativeSourc
 
 ---
 
+## 🔧 Aktuelle Session - Tabellen-Optimierung
+
+### 1. Nummerierung in Tabellen korrigiert
+
+#### **Problem:**
+- Falsche Nummerierung in Waffenstatistik-Tabelle
+- Doppelte Zahlen und Sprünge beim Scrollen
+- Inkonsistente Nummerierung bei Sortierung
+
+#### **Lösung:**
+- **RowIndexConverter verbessert**: Unterstützt jetzt MultiBinding und Parameter
+- **Feste Nummerierung**: Beide Tabellen verwenden `ConverterParameter=Fixed`
+- **Konsistente Struktur**: Waffenstatistik-Tabelle an Schadensarten-Tabelle angepasst
+
+#### **Technische Details:**
+```csharp
+// RowIndexConverter mit Parameter-Support
+public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+{
+    bool useFixedNumbering = parameter?.ToString() == "Fixed";
+    return GetRowIndex(row, null, useFixedNumbering);
+}
+
+// XAML mit Fixed-Parameter
+Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, 
+       Converter={StaticResource RowIndexConverter}, 
+       ConverterParameter=Fixed}"
+```
+
+### 2. Standard-Sortierung implementiert
+
+#### **Umsetzung:**
+- **Beide Tabellen**: Standardmäßig nach Gesamtschaden sortiert (absteigend)
+- **DataGrid_Loaded Event**: Automatische Sortierung beim Laden
+- **Visueller Indikator**: Sortier-Pfeil in der Gesamtschaden-Spalte
+
+#### **Code-Implementierung:**
+```csharp
+private void DataGrid_Loaded(object sender, RoutedEventArgs e)
+{
+    if (sender is DataGrid dataGrid)
+    {
+        // Finde die Gesamtschaden-Spalte und sortiere absteigend
+        foreach (var column in dataGrid.Columns)
+        {
+            if (column is DataGridTextColumn textColumn && 
+                textColumn.Binding is Binding binding &&
+                binding.Path.Path == "TotalDamage")
+            {
+                dataGrid.Items.SortDescriptions.Add(
+                    new SortDescription("TotalDamage", ListSortDirection.Descending));
+                column.SortDirection = ListSortDirection.Descending;
+                break;
+            }
+        }
+    }
+}
+```
+
+### 3. UI-Optimierungen
+
+#### **Waffenstatistik-Tabelle:**
+- **Typ-Spalte entfernt**: Redundante Spalte entfernt für kompaktere Darstellung
+- **Header angepasst**: "Gesamtschaden" → "Gesamt" (Benutzer-Änderung)
+- **Gleiche Struktur**: Identisch mit Schadensarten-Tabelle
+
+#### **Spalten-Reihenfolge (beide Tabellen):**
+1. **#** - Reihenfolge (fest)
+2. **Name** - Waffe/Schadensart
+3. **DPS** - Schaden pro Sekunde
+4. **Ø Schaden** - Durchschnittsschaden
+5. **Gesamt** - Gesamtschaden
+6. **Verwendung** - Anzahl der Verwendungen
+7. **Krit Treffer** - Kritische Treffer
+8. **Krit Rate** - Kritische Rate
+9. **Anteil** - Schadensanteil
+
+### 4. Redundanz entfernt
+
+#### **PlayerSummaryCard entfernt:**
+- **Grund**: Redundanz mit CombatOverviewCard
+- **CombatOverviewCard behalten**: Zeigt die 3 wichtigsten Werte (DPS, Krit Rate, Gesamtschaden)
+- **Sauberer Code**: Ungenutzte Dateien entfernt
+
+#### **Neue StatisticsPage-Struktur:**
+1. **PlayerSelectionCard** - Spieler-Auswahl
+2. **CombatSelectionCard** - Kampf-Auswahl  
+3. **CombatOverviewCard** - 3 Kacheln (DPS, Krit Rate, Gesamtschaden)
+4. **DamageTypeCard** - Schadensarten-Tabelle
+5. **WeaponStatisticsCard** - Waffen-Statistiken-Tabelle
+
+---
+
 ## 🧹 Projektbereinigung
 
 ### Ungenutzte Components entfernt:
 1. **`StatisticsOverviewCard`** - Wurde durch modulare Components ersetzt
 2. **`ModernTitleBar`** - Nicht verwendet in MainWindow
 3. **`StarfleetTable`** - Nicht verwendet in der UI
+4. **`PlayerSummaryCard`** - Redundanz mit CombatOverviewCard entfernt
 
 ### Verbleibende Components (alle werden verwendet):
-- **Statistics:** PlayerSelectionCard, CombatSelectionCard, CombatOverviewCard, PlayerSummaryCard, DamageTypeCard, WeaponStatisticsCard
+- **Statistics:** PlayerSelectionCard, CombatSelectionCard, CombatOverviewCard, DamageTypeCard, WeaponStatisticsCard
 - **Dashboard:** FileSelectionCard
 - **Configuration:** ConfigurationCard
 - **LiveTracking:** LiveTrackingCard, LiveDamageStatisticsCard
@@ -169,19 +263,23 @@ Command="{Binding DataContext.SelectPeriodCommand, RelativeSource={RelativeSourc
 
 ### **Code-Qualität:**
 - ✅ **StatisticsPage:** Von 314 auf 65 Zeilen reduziert (-79%)
-- ✅ **Modulare Architektur:** 6 separate, wartbare Components
+- ✅ **Modulare Architektur:** 5 separate, wartbare Components (PlayerSummaryCard entfernt)
 - ✅ **Saubere Trennung:** Jede Component hat eine klare Verantwortlichkeit
+- ✅ **Konsistente Tabellen:** Beide Tabellen haben identische Struktur und Nummerierung
 
 ### **Funktionalität:**
 - ✅ **Konsistente Daten:** Schadensarten = Waffen-Statistiken
 - ✅ **Korrekte Companion-Erkennung:** Direkter Spieler-Schaden wird erkannt
 - ✅ **Funktionierende Waffen-Statistiken:** Korrekte Anzeige und Logging
 - ✅ **Moderne UI:** Card-basierte Übersicht mit 3 Kacheln
+- ✅ **Korrekte Nummerierung:** Feste Reihenfolge 1, 2, 3, 4, 5... in beiden Tabellen
+- ✅ **Standard-Sortierung:** Beide Tabellen nach Gesamtschaden sortiert
 
 ### **Wartbarkeit:**
 - ✅ **Wiederverwendbare Components:** Können in anderen Pages verwendet werden
 - ✅ **Testbare Components:** Jede Component kann einzeln getestet werden
 - ✅ **Sauberes Projekt:** Keine ungenutzten Components mehr
+- ✅ **Redundanz entfernt:** PlayerSummaryCard entfernt, da CombatOverviewCard ausreicht
 
 ---
 

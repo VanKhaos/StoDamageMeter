@@ -5,8 +5,16 @@
     xmlns:converters="clr-namespace:StoDamageMeter.Converters">
 
     <UserControl.Resources>
-        <converters:RowIndexConverter x:Key="RowIndexConverter" />
-        <converters:TypeToIconConverter x:Key="TypeToIconConverter" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../../Styles/DataGridStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:RowIndexConverter x:Key="RowIndexConverter" />
+            <converters:TypeToIconConverter x:Key="TypeToIconConverter" />
+            <converters:SourceTypeToIconConverter x:Key="SourceTypeToIconConverter" />
+            <converters:SourceTypeToColorConverter x:Key="SourceTypeToColorConverter" />
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <Border Style="{StaticResource StarfleetCardStyle}">
@@ -36,7 +44,9 @@
                 BorderThickness="0"
                 RowHeaderWidth="0"
                 MaxHeight="400"
-                MinWidth="900">
+                MinWidth="900"
+                Loaded="DataGrid_Loaded"
+                SelectionChanged="DataGrid_SelectionChanged">
 
                 <DataGrid.Columns>
                     <!-- # Reihenfolge -->
@@ -44,20 +54,23 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <shared:StarfleetBadge
-                                    Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource RowIndexConverter}}"
+                                    Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource RowIndexConverter}, ConverterParameter=Fixed}"
                                     Variant="Outline" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <!-- Typ -->
-                    <DataGridTemplateColumn Header="Typ" Width="60">
+                    <!-- Source Type -->
+                    <DataGridTemplateColumn Header="Quelle" Width="60"
+                        HeaderStyle="{StaticResource DataGridHeaderCentering}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <shared:StarfleetIcon
-                                    Icon="{Binding Type, Converter={StaticResource TypeToIconConverter}}"
-                                    Size="20"
-                                    Color="{StaticResource StarfleetGold}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <shared:StarfleetIcon
+                                        Icon="{Binding SourceType, Converter={StaticResource SourceTypeToIconConverter}}"
+                                        Size="20"
+                                        Color="{Binding SourceType, Converter={StaticResource SourceTypeToColorConverter}}" />
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -65,103 +78,65 @@
                     <!-- Waffen-Name -->
                     <DataGridTextColumn Header="Waffe"
                         Binding="{Binding Name}"
-                        Width="*">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground" Value="{StaticResource StarfleetGold}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="*"
+                        ElementStyle="{StaticResource DataGridNameStyle}" />
 
                     <!-- DPS -->
                     <DataGridTextColumn Header="DPS"
                         Binding="{Binding DPS, StringFormat='{}{0:N0}'}"
-                        Width="80">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="Foreground" Value="{StaticResource StarfleetRed}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="60"
+                        ElementStyle="{StaticResource DataGridDPStyle}"
+                        HeaderStyle="{StaticResource DataGridHeaderRightAlign}" />
 
                     <!-- Ø Schaden -->
                     <DataGridTextColumn Header="Ø Schaden"
                         Binding="{Binding AverageDamage, StringFormat='{}{0:N0}'}"
-                        Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground"
-                                    Value="{StaticResource StarfleetGreen}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="120"
+                        ElementStyle="{StaticResource DataGridAverageStyle}"
+                        HeaderStyle="{StaticResource DataGridHeaderRightAlign}" />
 
                     <!-- Gesamtschaden -->
-                    <DataGridTextColumn Header="Gesamtschaden"
+                    <DataGridTextColumn Header="Gesamt"
                         Binding="{Binding TotalDamage, StringFormat='{}{0:N0}'}"
-                        Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="Foreground" Value="{StaticResource StarfleetGold}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="80"
+                        ElementStyle="{StaticResource DataGridTotalStyle}"
+                        HeaderStyle="{StaticResource DataGridHeaderRightAlign}" />
 
                     <!-- Verwendungen -->
-                    <DataGridTextColumn Header="Verwendung"
-                        Binding="{Binding TotalUses}"
-                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground"
-                                    Value="{StaticResource StarfleetSilver}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Width="60"
+                        HeaderStyle="{StaticResource DataGridHeaderCentering}">
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <shared:StarfleetIcon Icon="Star" Size="16"
+                                    Color="{StaticResource StarfleetSilver}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TotalUses}"
+                                        Style="{StaticResource DataGridUsageStyle}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- Kritische Treffer -->
                     <DataGridTextColumn Header="Krit Treffer"
                         Binding="{Binding CriticalHits}"
-                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground" Value="{StaticResource StarfleetBlue}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="100"
+                        ElementStyle="{StaticResource DataGridCriticalStyle}"
+                        HeaderStyle="{StaticResource DataGridHeaderRightAlign}" />
 
                     <!-- Kritische Rate -->
                     <DataGridTextColumn Header="Krit Rate"
                         Binding="{Binding CriticalRate, StringFormat='{}{0:F1}%'}"
-                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="FontFamily" Value="Consolas" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground" Value="{StaticResource StarfleetBlue}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        Width="100"
+                        ElementStyle="{StaticResource DataGridCriticalStyle}"
+                        HeaderStyle="{StaticResource DataGridHeaderRightAlign}" />
 
                     <!-- Anteil -->
-                    <DataGridTemplateColumn Header="Anteil" Width="150">
+                    <DataGridTemplateColumn Header="Anteil" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>

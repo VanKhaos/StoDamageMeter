@@ -75,12 +75,18 @@ namespace StoDamageMeter.Services
                 var weaponName = group.Key;
                 var weaponEntries = group.ToList();
 
+                // Bestimme SourceType basierend auf der ersten Eintrag
+                var firstEntry = weaponEntries.First();
+                var sourceType = DetermineSourceType(firstEntry);
+
                 var weaponStat = new WeaponStatistics(weaponName, "weapon")
                 {
+                    SourceType = sourceType,
                     TotalDamage = weaponEntries.Sum(e => e.RawDamage),
                     TotalUses = weaponEntries.Count,
                     CriticalHits = weaponEntries.Count(e => e.IsCritical),
-                    DPS = duration > 0 ? weaponEntries.Sum(e => e.RawDamage) / duration : 0
+                    DPS = duration > 0 ? weaponEntries.Sum(e => e.RawDamage) / duration : 0,
+                    OriginalEntries = weaponEntries.ToList() // Speichere Original-Entries für Debugging
                 };
 
                 // Berechne Durchschnittsschaden
@@ -218,6 +224,45 @@ namespace StoDamageMeter.Services
             _logger.LogInformation("=== Ende GEFILTERTE Einträge ===");
 
             return GetWeaponStatistics(playerEntries, duration);
+        }
+
+        /// <summary>
+        /// Bestimmt den SourceType basierend auf der SourceEntity
+        /// </summary>
+        /// <param name="entry">CombatLogEntry</param>
+        /// <returns>"player", "companion" oder "kitmodul"</returns>
+        private string DetermineSourceType(CombatLogEntry entry)
+        {
+            // Wenn keine SourceEntity oder leere SourceEntity, ist es direkter Spieler-Schaden
+            if (entry.SourceEntity == null || string.IsNullOrEmpty(entry.SourceEntity.Name))
+            {
+                _logger.LogDebug("SourceType: player (keine SourceEntity)");
+                return "player";
+            }
+
+            var entityTag = entry.SourceEntity.EntityTag;
+            var entityName = entry.SourceEntity.Name;
+
+            _logger.LogDebug("SourceType-Analyse: Tag='{EntityTag}', Name='{EntityName}'", entityTag, entityName);
+
+            // Prüfe auf S-Tag für Companion
+            if (entityTag.StartsWith("S[", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogDebug("SourceType: companion (S-Tag erkannt)");
+                return "companion";
+            }
+
+            // Prüfe auf C-Tag mit "Kit" im Namen für Kitmodul
+            if (entityTag.StartsWith("C[", StringComparison.OrdinalIgnoreCase) &&
+                entityName.Contains("Kit", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogDebug("SourceType: kitmodul (C-Tag mit Kit erkannt)");
+                return "kitmodul";
+            }
+
+            // Standard: Spieler-Schaden (auch bei C-Tag ohne Kit)
+            _logger.LogDebug("SourceType: player (Standard)");
+            return "player";
         }
     }
 }

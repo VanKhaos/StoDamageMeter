@@ -12,6 +12,7 @@ namespace StoDamageMeter.Models
     {
         public string Name { get; set; } = string.Empty;
         public string Type { get; set; } = "weapon"; // "weapon" oder "companion"
+        public string SourceType { get; set; } = "player"; // "player", "companion", "kitmodul"
         public double TotalDamage { get; set; }
         public double AverageDamage { get; set; }
         public int CriticalHits { get; set; }
@@ -23,6 +24,9 @@ namespace StoDamageMeter.Models
         // Für Companion-Erweiterung
         public List<WeaponStatistics> Abilities { get; set; } = new();
         public List<WeaponStatistics> Weapons { get; set; } = new();
+
+        // Original CombatLog-Daten für Debugging
+        public List<CombatLogEntry> OriginalEntries { get; set; } = new();
 
         private bool _isExpanded;
         public bool IsExpanded
