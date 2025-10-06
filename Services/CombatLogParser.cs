@@ -69,9 +69,9 @@ namespace StoDamageMeter.Services
                 }
 
                 var lines = await File.ReadAllLinesAsync(filePath);
-                _logger.LogInformation("=== COMBAT LOG PARSING GESTARTET ===");
-                _logger.LogInformation("Datei: {FilePath}", filePath);
-                _logger.LogInformation("Anzahl Zeilen: {LineCount}", lines.Length);
+
+
+
 
                 // Reset line counter für neue Datei
                 _lineCounter = 0;
@@ -86,7 +86,7 @@ namespace StoDamageMeter.Services
                         int randomLine = _random.Next(0, lines.Length);
                         _selectedLines.Add(randomLine);
                     }
-                    _logger.LogInformation("Ausgewählte {Count} zufällige Zeilen für detailliertes Logging", linesToSelect);
+
                 }
 
                 int parsedCount = 0;
@@ -106,8 +106,8 @@ namespace StoDamageMeter.Services
                     }
                 }
 
-                _logger.LogInformation("Parsing abgeschlossen: {ParsedCount} Einträge geparst, {SkippedCount} übersprungen", parsedCount, skippedCount);
-                _logger.LogInformation("=== COMBAT LOG PARSING BEENDET ===");
+
+
             }
             catch (Exception ex)
             {
@@ -146,13 +146,13 @@ namespace StoDamageMeter.Services
                 // Parts-Debug-Logging für ausgewählte Zeilen
                 if (shouldLogDetails)
                 {
-                    _logger.LogInformation("=== PARTS DEBUG ===");
-                    _logger.LogInformation("Anzahl Parts: {PartsCount}", parts.Length);
+
+
                     for (int i = 0; i < parts.Length; i++)
                     {
-                        _logger.LogInformation("  Part[{Index}]: '{Value}'", i, parts[i]);
+
                     }
-                    _logger.LogInformation("=== ENDE PARTS DEBUG ===");
+
                 }
 
                 // Parse Schadenswerte

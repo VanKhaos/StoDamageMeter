@@ -44,8 +44,8 @@ namespace StoDamageMeter.ViewModels
                 // Aktualisiere Statistics ViewModel
                 if (e.Result?.Entries != null)
                 {
-                    Statistics.UpdateAvailablePlayers(e.Result.Entries);
-                    Statistics.UpdateCombatPeriods(e.Result.Entries);
+                    Statistics.UpdateAvailablePlayers();
+                    Statistics.UpdateCombatPeriods();
                 }
                 else
                 {

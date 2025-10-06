@@ -24,6 +24,7 @@ namespace StoDamageMeter.ViewModels
                 "Dashboard" => "Dashboard",
                 "LiveTracking" => "Live Tracking",
                 "Statistics" => "Statistiken",
+                "CustomStyles" => "Custom Styles",
                 "Configuration" => "Konfiguration",
                 "About" => "Über",
                 _ => "Dashboard"
@@ -34,6 +35,7 @@ namespace StoDamageMeter.ViewModels
                 "Dashboard" => "Home24",
                 "LiveTracking" => "DataUsage24",
                 "Statistics" => "ChartMultiple24",
+                "CustomStyles" => "Color24",
                 "Configuration" => "Settings24",
                 "About" => "Info24",
                 _ => "Home24"

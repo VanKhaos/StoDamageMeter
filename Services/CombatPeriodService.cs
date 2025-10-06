@@ -74,8 +74,7 @@ namespace StoDamageMeter.Services
                     if (currentPeriod != null)
                     {
                         periods.Add(currentPeriod);
-                        _logger.LogDebug("Kampf-Periode beendet: {StartTime} - {EndTime} ({Duration}s) - {Damage:F0} Schaden",
-                            currentPeriod.StartTime, currentPeriod.EndTime, currentPeriod.Duration.TotalSeconds, currentPeriod.TotalDamage);
+
                     }
 
                     // Starte neue Periode
@@ -84,7 +83,7 @@ namespace StoDamageMeter.Services
                         StartTime = entry.Timestamp
                     };
 
-                    _logger.LogDebug("Neue Kampf-Periode erkannt: {StartTime}", currentPeriod.StartTime);
+
                 }
 
                 // Füge Eintrag zur aktuellen Periode hinzu
@@ -96,8 +95,7 @@ namespace StoDamageMeter.Services
             if (currentPeriod != null)
             {
                 periods.Add(currentPeriod);
-                _logger.LogDebug("Letzte Kampf-Periode beendet: {StartTime} - {EndTime} ({Duration}s) - {Damage:F0} Schaden",
-                    currentPeriod.StartTime, currentPeriod.EndTime, currentPeriod.Duration.TotalSeconds, currentPeriod.TotalDamage);
+
             }
 
             _logger.LogInformation("Kampf-Erkennung abgeschlossen für '{PlayerName}': {PeriodCount} Zeiträume erkannt",

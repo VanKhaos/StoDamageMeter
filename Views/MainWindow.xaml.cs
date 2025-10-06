@@ -31,6 +31,7 @@ namespace StoDamageMeter.Views
             DashboardButton.Click += OnNavigationButtonClick;
             LiveTrackingButton.Click += OnNavigationButtonClick;
             StatisticsButton.Click += OnNavigationButtonClick;
+            CustomStylesButton.Click += OnNavigationButtonClick;
             ConfigurationButton.Click += OnNavigationButtonClick;
             AboutButton.Click += OnNavigationButtonClick;
 
@@ -67,6 +68,11 @@ namespace StoDamageMeter.Views
                     var statisticsPage = _serviceProvider.GetRequiredService<Pages.Statistics.StatisticsPage>();
                     statisticsPage.DataContext = _viewModel;
                     ContentFrame.Navigate(statisticsPage);
+                    break;
+                case "CustomStyles":
+                    var customStylesPage = _serviceProvider.GetRequiredService<Pages.CustomStyles.CustomStylesPage>();
+                    customStylesPage.DataContext = _viewModel;
+                    ContentFrame.Navigate(customStylesPage);
                     break;
                 case "Configuration":
                     var configurationPage = _serviceProvider.GetRequiredService<Pages.Configuration.ConfigurationPage>();

@@ -1,0 +1,122 @@
+<UserControl x:Class="StoDamageMeter.Components.PageSpecific.Statistics.CustomStylesExampleCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
+    xmlns:models="clr-namespace:StoDamageMeter.Models">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../../Styles/ModernStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Text="Benutzerdefinierte Styles - Beispiele"
+            FontSize="20" FontWeight="Bold"
+            Margin="0,0,0,20"
+            Foreground="{StaticResource StarfleetGold}" />
+
+        <!-- Gaming-Style Beispiel -->
+        <TextBlock Text="🎮 Gaming-Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBlock Text="Perfekt für Gaming-Anwendungen mit grünen Matrix-Akzenten"
+            FontSize="12" Margin="0,0,0,10"
+            Foreground="{StaticResource StarfleetSilver}" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Gaming Damage Stats"
+            HeaderSubtitle="Matrix-Style für Gaming-Apps"
+            HeaderIcon="Gamepad"
+            StyleVariant="Gaming"
+            HeaderStyleVariant="Default"
+            MaxHeight="200"
+            MinWidth="600"
+            Margin="0,0,0,30" />
+
+        <!-- Corporate-Style Beispiel -->
+        <TextBlock Text="💼 Corporate-Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBlock Text="Professioneller Business-Look für Unternehmensanwendungen"
+            FontSize="12" Margin="0,0,0,10"
+            Foreground="{StaticResource StarfleetSilver}" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Business Analytics"
+            HeaderSubtitle="Professional Corporate Design"
+            HeaderIcon="Chart"
+            StyleVariant="Corporate"
+            HeaderStyleVariant="Detailed"
+            MaxHeight="200"
+            MinWidth="600"
+            Margin="0,0,0,30" />
+
+        <!-- Retro-Style Beispiel -->
+        <TextBlock Text="🕹️ Retro-Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBlock Text="Vintage-Look für Retro-Gaming oder klassische Anwendungen"
+            FontSize="12" Margin="0,0,0,10"
+            Foreground="{StaticResource StarfleetSilver}" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Classic Statistics"
+            HeaderSubtitle="Vintage Terminal Look"
+            HeaderIcon="Monitor"
+            StyleVariant="Retro"
+            HeaderStyleVariant="Default"
+            MaxHeight="200"
+            MinWidth="600" />
+
+        <!-- Anleitung -->
+        <Border Background="{StaticResource StarfleetDarkBlue}"
+            BorderBrush="{StaticResource StarfleetGold}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="20"
+            Margin="0,30,0,0">
+            <StackPanel>
+                <TextBlock Text="📝 So erstellst du eigene Styles:"
+                    FontSize="16" FontWeight="Bold"
+                    Foreground="{StaticResource StarfleetGold}"
+                    Margin="0,0,0,15" />
+
+                <TextBlock Text="1. Füge neue Styles in Styles/DataGridStyles.xaml hinzu:"
+                    FontSize="12" Margin="0,0,0,5" />
+                <TextBlock
+                    Text="   &lt;Style x:Key=&quot;StarfleetCardMyStyle&quot; TargetType=&quot;{x:Type Border}&quot;&gt;"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,5" />
+                <TextBlock
+                    Text="       &lt;Setter Property=&quot;Background&quot; Value=&quot;#FF0000&quot; /&gt;"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,5" />
+                <TextBlock Text="   &lt;/Style&gt;"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,10" />
+
+                <TextBlock Text="2. Erweitere das DataGridStyleVariant Enum:"
+                    FontSize="12" Margin="0,0,0,5" />
+                <TextBlock Text="   MyStyle,  // Dein neuer Style"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,10" />
+
+                <TextBlock Text="3. Füge die Style-Zuordnung in GenericDataGrid.xaml.cs hinzu:"
+                    FontSize="12" Margin="0,0,0,5" />
+                <TextBlock
+                    Text="   DataGridStyleVariant.MyStyle => FindResource(&quot;StarfleetCardMyStyle&quot;)"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,10" />
+
+                <TextBlock Text="4. Verwende den neuen Style:"
+                    FontSize="12" Margin="0,0,0,5" />
+                <TextBlock Text="   StyleVariant=&quot;MyStyle&quot;"
+                    FontSize="11" FontFamily="Consolas"
+                    Foreground="{StaticResource StarfleetSilver}"
+                    Margin="20,0,0,0" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

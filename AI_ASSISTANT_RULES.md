@@ -3,7 +3,7 @@
 ## 🚫 Was ich NICHT tun soll
 
 ### Build & Deployment
-- **NIEMALS** Build-Tests ausführen
+- **NIEMALS** automatisch die app starten, immer bescheid geben
 - **NIEMALS** automatisch committen oder pushen ohne explizite Erlaubnis
 - **NIEMALS** Git-Operationen ohne vorherige Nachfrage durchführen
 

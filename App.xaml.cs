@@ -47,19 +47,19 @@ public partial class App : Application
         // Services registrieren
         services.AddSingleton<ICombatLogParser, CombatLogParser>();
         services.AddSingleton<CombatPeriodService>();
-        services.AddSingleton<WeaponStatisticsService>();
         services.AddSingleton<ICombatLogService, CombatLogService>();
 
         // ViewModels registrieren
-        services.AddTransient<CombatLogViewModel>();
-        services.AddTransient<StatisticsViewModel>();
-        services.AddTransient<NavigationViewModel>();
-        services.AddTransient<MainViewModel>();
+        services.AddSingleton<CombatLogViewModel>();
+        services.AddSingleton<StatisticsViewModel>();
+        services.AddSingleton<NavigationViewModel>();
+        services.AddSingleton<MainViewModel>();
 
         // Pages registrieren
         services.AddTransient<Pages.Statistics.StatisticsPage>();
         services.AddTransient<Pages.Dashboard.DashboardPage>();
         services.AddTransient<Pages.LiveTracking.LiveTrackingPage>();
+        services.AddTransient<Pages.CustomStyles.CustomStylesPage>();
         services.AddTransient<Pages.Configuration.ConfigurationPage>();
         services.AddTransient<Pages.About.AboutPage>();
 

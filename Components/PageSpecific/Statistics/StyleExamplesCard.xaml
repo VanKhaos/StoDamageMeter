@@ -1,0 +1,106 @@
+<UserControl x:Class="StoDamageMeter.Components.PageSpecific.Statistics.StyleExamplesCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
+    xmlns:models="clr-namespace:StoDamageMeter.Models">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../../Styles/ModernStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Beispiel 1: Default Style -->
+        <TextBlock Text="Default Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Standard Style"
+            HeaderSubtitle="Default Starfleet-Style"
+            HeaderIcon="BarChart"
+            StyleVariant="Default"
+            HeaderStyleVariant="Default"
+            MaxHeight="200"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 2: Compact Style -->
+        <TextBlock Text="Compact Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Kompakter Style"
+            HeaderSubtitle="Weniger Platz, kleinere Schrift"
+            HeaderIcon="BarChart"
+            StyleVariant="Compact"
+            HeaderStyleVariant="Compact"
+            MaxHeight="150"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 3: Minimal Style -->
+        <TextBlock Text="Minimal Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Minimaler Style"
+            HeaderSubtitle="Ohne Card-Border, sehr clean"
+            HeaderIcon="BarChart"
+            StyleVariant="Minimal"
+            HeaderStyleVariant="Minimal"
+            MaxHeight="150"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 4: Dark Style -->
+        <TextBlock Text="Dark Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Dunkler Style"
+            HeaderSubtitle="Dark Theme für bessere Sichtbarkeit"
+            HeaderIcon="BarChart"
+            StyleVariant="Dark"
+            HeaderStyleVariant="Default"
+            MaxHeight="150"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 5: Accent Style -->
+        <TextBlock Text="Accent Style" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Akzent Style"
+            HeaderSubtitle="Mit Schatten und Akzentfarben"
+            HeaderIcon="BarChart"
+            StyleVariant="Accent"
+            HeaderStyleVariant="Detailed"
+            MaxHeight="150"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 6: Icon Only Header -->
+        <TextBlock Text="Icon Only Header" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Nur Icon"
+            HeaderSubtitle="Text wird versteckt"
+            HeaderIcon="BarChart"
+            StyleVariant="Default"
+            HeaderStyleVariant="IconOnly"
+            MaxHeight="150"
+            MinWidth="600"
+            Margin="0,0,0,20" />
+
+        <!-- Beispiel 7: Text Only Header -->
+        <TextBlock Text="Text Only Header" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <shared:GenericDataGrid
+            ItemsSource="{Binding DamageTypeStatistics}"
+            HeaderTitle="Nur Text"
+            HeaderSubtitle="Icon wird versteckt"
+            HeaderIcon="BarChart"
+            StyleVariant="Default"
+            HeaderStyleVariant="TextOnly"
+            MaxHeight="150"
+            MinWidth="600" />
+    </StackPanel>
+</UserControl>

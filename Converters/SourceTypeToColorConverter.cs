@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows;
 
 namespace StoDamageMeter.Converters
 {
@@ -16,13 +17,14 @@ namespace StoDamageMeter.Converters
             {
                 return sourceType switch
                 {
-                    "player" => new SolidColorBrush(Color.FromRgb(255, 215, 0)), // Gold
-                    "companion" => new SolidColorBrush(Color.FromRgb(0, 191, 255)), // Blue
-                    "kitmodul" => new SolidColorBrush(Color.FromRgb(50, 205, 50)), // Green
-                    _ => new SolidColorBrush(Color.FromRgb(255, 215, 0)) // Gold als Standard
+                    "player" => Application.Current.TryFindResource("StarfleetGold") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(255, 215, 0)),
+                    "companion" => Application.Current.TryFindResource("StarfleetBlue") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(0, 191, 255)),
+                    "kitmodul" => Application.Current.TryFindResource("StarfleetGreen") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(50, 205, 50)),
+                    "npc" => Application.Current.TryFindResource("WarningOrange") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(255, 165, 0)),
+                    _ => Application.Current.TryFindResource("StarfleetGold") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(255, 215, 0))
                 };
             }
-            return new SolidColorBrush(Color.FromRgb(255, 215, 0)); // Gold als Standard
+            return Application.Current.TryFindResource("StarfleetGold") as SolidColorBrush ?? new SolidColorBrush(Color.FromRgb(255, 215, 0));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -45,9 +45,9 @@ namespace StoDamageMeter.Converters
             }
             else
             {
-                // For dynamic numbering, use the visual index (for WeaponStatistics table)
+                // For dynamic numbering, use the visual index
                 dataGrid ??= FindParent<DataGrid>(row);
-                
+
                 if (dataGrid != null)
                 {
                     // Get the visual index of the row in the DataGrid
@@ -57,7 +57,7 @@ namespace StoDamageMeter.Converters
                         return (visualIndex + 1).ToString();
                     }
                 }
-                
+
                 // Fallback to GetIndex() if visual index is not available
                 return (row.GetIndex() + 1).ToString();
             }

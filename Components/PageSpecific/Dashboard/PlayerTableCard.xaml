@@ -1,0 +1,251 @@
+<UserControl x:Class="StoDamageMeter.Components.PageSpecific.Dashboard.PlayerTableCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+    xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
+    xmlns:converters="clr-namespace:StoDamageMeter.Converters"
+    mc:Ignorable="d"
+    d:DesignHeight="400" d:DesignWidth="600">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/StoDamageMeter;component/Styles/ModernStyles.xaml" />
+                <ResourceDictionary Source="/StoDamageMeter;component/Styles/DataGridStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converter -->
+            <converters:RowIndexConverter x:Key="RowIndexConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource StarfleetCardStyle}"
+        Visibility="{Binding Statistics.PlayerSummaries.Count, Converter={StaticResource NotNullToVisibilityConverter}}">
+        <StackPanel>
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <shared:StarfleetIcon Icon="Users" Size="20"
+                    Color="{StaticResource StarfleetGold}" Margin="0,0,8,0" />
+                <TextBlock Text="Gefundene Spieler"
+                    Style="{StaticResource StarfleetSubtitle}"
+                    FontWeight="SemiBold" />
+            </StackPanel>
+
+            <!-- Suchfeld -->
+            <Border Background="{StaticResource Secondary}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12"
+                Margin="0,0,0,16">
+                <StackPanel Orientation="Horizontal">
+                    <shared:StarfleetIcon Icon="Search" Size="16"
+                        Color="{StaticResource StarfleetSilver}" Margin="0,0,8,0" />
+                    <TextBox
+                        Text="{Binding Statistics.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        FontSize="14"
+                        Foreground="{StaticResource StarfleetGold}"
+                        VerticalAlignment="Center"
+                        MinWidth="200">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                                <ScrollViewer x:Name="PART_ContentHost" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Player Table (Modern Design) -->
+            <Border Background="{StaticResource Secondary}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Margin="0,0,0,16">
+
+                <!-- Table Header -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Row -->
+                    <Border Grid.Row="0"
+                        Background="{StaticResource Primary}"
+                        CornerRadius="12,12,0,0"
+                        Padding="20,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="#"
+                                HorizontalAlignment="Center"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetGold}" />
+
+                            <TextBlock Grid.Column="1" Text="Spielername"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetGold}"
+                                Margin="20,0,0,0" />
+
+                            <TextBlock Grid.Column="2" Text="DPS"
+                                HorizontalAlignment="Center"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetRed}" />
+
+                            <TextBlock Grid.Column="3" Text="⌀ Schaden"
+                                HorizontalAlignment="Center"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetGreen}" />
+
+                            <TextBlock Grid.Column="4" Text="Schaden"
+                                HorizontalAlignment="Center"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetBlue}" />
+
+                            <TextBlock Grid.Column="5" Text="Aktion"
+                                HorizontalAlignment="Center"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                Foreground="{StaticResource StarfleetGold}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Player Rows -->
+                    <ItemsControl Grid.Row="1"
+                        ItemsSource="{Binding Statistics.FilteredPlayerSummaries}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="Transparent"
+                                    BorderBrush="{StaticResource Border}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,16">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="120" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Reihenfolge Badge -->
+                                        <shared:StarfleetBadge Grid.Column="0"
+                                            Text="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, 
+                                                Converter={StaticResource RowIndexConverter}, 
+                                                ConverterParameter=Fixed}"
+                                            Variant="Default"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" />
+
+                                        <!-- Spielername -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                                            Margin="20,0,0,0">
+                                            <TextBlock Text="{Binding Name}"
+                                                FontWeight="SemiBold"
+                                                FontSize="16"
+                                                Foreground="{StaticResource StarfleetGold}" />
+                                        </StackPanel>
+
+                                        <!-- DPS -->
+                                        <TextBlock Grid.Column="2"
+                                            Text="{Binding DPS, StringFormat={}{0:N0}}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            FontSize="14"
+                                            Foreground="{StaticResource StarfleetRed}"
+                                            FontFamily="Consolas" />
+
+                                        <!-- ⌀ Schaden -->
+                                        <TextBlock Grid.Column="3"
+                                            Text="{Binding AverageDamage, StringFormat={}{0:N0}}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            FontSize="14"
+                                            Foreground="{StaticResource StarfleetGreen}"
+                                            FontFamily="Consolas" />
+
+                                        <!-- Schaden -->
+                                        <TextBlock Grid.Column="4"
+                                            Text="{Binding TotalDamage, StringFormat={}{0:N0}}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            FontSize="14"
+                                            Foreground="{StaticResource StarfleetBlue}"
+                                            FontFamily="Consolas" />
+
+                                        <!-- Auswahl Button -->
+                                        <Button Grid.Column="5"
+                                            Content="Auswählen"
+                                            Style="{StaticResource StarfleetButton}"
+                                            Command="{Binding DataContext.SelectPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Padding="12,6"
+                                            FontSize="12"
+                                            MinWidth="80" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
+            <!-- Fallback wenn keine Spieler gefunden -->
+            <Border Background="{StaticResource Secondary}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24"
+                Margin="0,16,0,0"
+                Visibility="{Binding Statistics.AvailablePlayers.Count, Converter={StaticResource NullToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center">
+                    <shared:StarfleetIcon Icon="Users" Size="48"
+                        Color="{StaticResource StarfleetSilver}"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,12" />
+                    <TextBlock Text="Keine Spieler gefunden"
+                        Style="{StaticResource StarfleetSubtitle}"
+                        HorizontalAlignment="Center"
+                        Foreground="{StaticResource StarfleetSilver}" />
+                    <TextBlock Text="Laden Sie eine Combatlog-Datei, um Spieler zu sehen"
+                        Style="{StaticResource StarfleetMutedText}"
+                        HorizontalAlignment="Center"
+                        Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

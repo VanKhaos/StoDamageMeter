@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
+using StoDamageMeter.Components.Shared;
 
 namespace StoDamageMeter.Converters
 {
@@ -15,13 +16,14 @@ namespace StoDamageMeter.Converters
             {
                 return sourceType switch
                 {
-                    "player" => "User",
-                    "companion" => "People",
-                    "kitmodul" => "Settings",
-                    _ => "User"
+                    "player" => IconType.User,
+                    "companion" => IconType.Users,
+                    "kitmodul" => IconType.Settings,
+                    "npc" => IconType.Shield,
+                    _ => IconType.User
                 };
             }
-            return "User";
+            return IconType.User;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

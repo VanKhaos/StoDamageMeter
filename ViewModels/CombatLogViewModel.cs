@@ -65,10 +65,8 @@ namespace StoDamageMeter.ViewModels
         [RelayCommand]
         public async Task SelectLogFile()
         {
-            _logger.LogInformation("=== SelectLogFile Command aufgerufen ===");
             try
             {
-                _logger.LogInformation("Erstelle OpenFileDialog...");
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "Combatlog-Datei auswählen",
@@ -78,9 +76,7 @@ namespace StoDamageMeter.ViewModels
                     InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 };
 
-                _logger.LogInformation("Zeige File Dialog...");
                 var result = openFileDialog.ShowDialog();
-                _logger.LogInformation("File Dialog Result: {Result}", result);
 
                 if (result == true)
                 {
@@ -91,11 +87,9 @@ namespace StoDamageMeter.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Fehler: {ex.Message}";
-                _logger.LogError(ex, "Fehler beim Auswählen der Log-Datei");
             }
             finally
             {
-                _logger.LogInformation("=== SelectLogFile Command beendet ===");
             }
         }
 
