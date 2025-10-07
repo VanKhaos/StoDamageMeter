@@ -1,0 +1,79 @@
+<Project>
+  <!-- MSBuild-Targets für automatische Backend-Integration -->
+  
+  <PropertyGroup>
+    <BackendSourcePath>..\backend\dist\OSCRBackend.exe</BackendSourcePath>
+    <BackendTargetPath>$(OutputPath)OSCRBackend.exe</BackendTargetPath>
+    <BackendBuildScript>..\backend\build_backend.py</BackendBuildScript>
+  </PropertyGroup>
+
+  <!-- Target: Backend vor WPF-Build erstellen -->
+  <Target Name="BuildBackend" BeforeTargets="Build">
+    <Message Text="Building Python Backend..." Importance="high" />
+    
+    <!-- Prüfen ob Backend bereits existiert -->
+    <PropertyGroup>
+      <BackendExists Condition="Exists('$(BackendSourcePath)')">true</BackendExists>
+    </PropertyGroup>
+    
+    <!-- Backend nur bauen wenn es nicht existiert oder älter als Source ist -->
+    <Exec Command="python.exe $(BackendBuildScript)" 
+          Condition="'$(BackendExists)' != 'true'"
+          WorkingDirectory="$(MSBuildProjectDirectory)\..\backend"
+          ContinueOnError="false" />
+    
+    <Message Text="Backend build completed or already exists." Importance="high" />
+  </Target>
+
+  <!-- Target: Backend in Output kopieren -->
+  <Target Name="CopyBackend" AfterTargets="Build">
+    <Message Text="Copying Backend to Output..." Importance="high" />
+    
+    <!-- Backend in Output-Verzeichnis kopieren -->
+    <Copy SourceFiles="$(BackendSourcePath)" 
+          DestinationFiles="$(BackendTargetPath)"
+          SkipUnchangedFiles="true" />
+    
+    <Message Text="Backend copied to: $(BackendTargetPath)" Importance="high" />
+  </Target>
+
+  <!-- Target: Backend für Publish kopieren -->
+  <Target Name="CopyBackendForPublish" AfterTargets="Publish">
+    <Message Text="Copying Backend for Publish..." Importance="high" />
+    
+    <PropertyGroup>
+      <PublishBackendPath>$(PublishDir)OSCRBackend.exe</PublishBackendPath>
+    </PropertyGroup>
+    
+    <Copy SourceFiles="$(BackendSourcePath)" 
+          DestinationFiles="$(PublishBackendPath)"
+          SkipUnchangedFiles="true" />
+    
+    <Message Text="Backend copied to publish directory: $(PublishBackendPath)" Importance="high" />
+  </Target>
+
+  <!-- Target: Clean Backend -->
+  <Target Name="CleanBackend" AfterTargets="Clean">
+    <Message Text="Cleaning Backend files..." Importance="high" />
+    
+    <Delete Files="$(BackendTargetPath)" Condition="Exists('$(BackendTargetPath)')" />
+    <Delete Files="$(PublishDir)OSCRBackend.exe" Condition="Exists('$(PublishDir)OSCRBackend.exe')" />
+    
+    <Message Text="Backend files cleaned." Importance="high" />
+  </Target>
+
+  <!-- Target: Prüfen ob Python verfügbar ist -->
+  <Target Name="CheckPython" BeforeTargets="BuildBackend">
+    <Exec Command="python.exe --version" 
+          ContinueOnError="true"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="PythonExitCode" />
+    </Exec>
+    
+    <Error Text="Python is not available. Please install Python and ensure it's in PATH." 
+           Condition="'$(PythonExitCode)' != '0'" />
+    
+    <Message Text="Python is available." Importance="high" />
+  </Target>
+
+</Project>

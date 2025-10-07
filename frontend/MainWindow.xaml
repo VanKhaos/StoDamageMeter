@@ -1,0 +1,334 @@
+﻿<Window x:Class="frontend.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:frontend"
+        mc:Ignorable="d"
+        Title="STO Damage Meter" Height="800" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Background="#0A0A0A"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="CanResize">
+    
+    <Window.Resources>
+        <!-- Star Trek Farb-Definitionen -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0A"/>                    <!-- Tiefes Schwarz -->
+        <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1A1A1A"/>             <!-- Dunkles Grau -->
+        <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#151515"/>              <!-- Header Schwarz -->
+        <SolidColorBrush x:Key="TextForegroundBrush" Color="#B0B0B0"/>                <!-- Dunkleres Grau -->
+        <SolidColorBrush x:Key="ActiveAccentBrush" Color="#B8860B"/>                  <!-- Gold für aktive Elemente -->
+        <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#B8860B"/>               <!-- Dunkleres Gold -->
+        <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#1A1A1A"/>              <!-- Noch dunkleres Grau -->
+        <SolidColorBrush x:Key="ButtonHoverBrush" Color="#B8860B"/>                   <!-- Gold Hover -->
+        <SolidColorBrush x:Key="ButtonPressedBrush" Color="#0F0F0F"/>                 <!-- Noch dunklerer Pressed -->
+        <SolidColorBrush x:Key="BorderBrush" Color="#333333"/>                        <!-- Dunklerer Border -->
+        <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="#1A1A1A"/>            <!-- Dunkles Grau für ausgewählte Elemente -->
+        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#0F0F0F"/>               <!-- Noch dunklerer Input -->
+        <SolidColorBrush x:Key="InputBorderBrush" Color="#0066CC"/>                   <!-- Dunkleres Blau für Borders -->
+        
+        <!-- Styles -->
+        <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        
+        <Style x:Key="TabItemStyle" TargetType="TabItem">
+            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource ActiveAccentBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource ActiveAccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonHoverBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="MainButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#B0B0B0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#333333"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1A1A1A"/>
+                    <Setter Property="Foreground" Value="#B0B0B0"/>
+                    <Setter Property="BorderBrush" Value="#B8860B"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#0F0F0F"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource ActiveAccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" 
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="20"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Name="ContentSite" IsHitTestVisible="False" 
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                      Margin="3,3,23,3"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Left"/>
+                                    <Path x:Name="Arrow" Grid.Column="1" Fill="{StaticResource TextForegroundBrush}" 
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                          Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                </Grid>
+                            </ToggleButton>
+                            <ContentPresenter Name="ContentSite2" IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="3,3,23,3"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"/>
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True" 
+                                      MinWidth="{TemplateBinding ActualWidth}" 
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder" 
+                                            Background="{StaticResource InputBackgroundBrush}"
+                                            BorderBrush="{StaticResource InputBorderBrush}"
+                                            BorderThickness="1"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonHoverBrush}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Background="{StaticResource HeaderBackgroundBrush}" Padding="15,10" 
+                MouseLeftButtonDown="Header_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Logo & Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="24" Height="24" Fill="{StaticResource ActiveAccentBrush}" Margin="0,0,10,0"/>
+                    <TextBlock Text="STO Damage Meter" Style="{StaticResource HeaderTextStyle}" FontSize="18"/>
+                </StackPanel>
+                
+                <!-- Navigation Tabs -->
+                <TabControl Grid.Column="1" Background="Transparent" BorderThickness="0" Margin="50,0,0,0">
+                    <TabControl.Template>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TabPanel Grid.Row="0" IsItemsHost="True"/>
+                                <ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </TabControl.Template>
+                </TabControl>
+                
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="MinimizeButton" Content="─" Width="30" Height="25" 
+                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold"
+                            Click="MinimizeButton_Click"/>
+                    <Button x:Name="MaximizeButton" Content="□" Width="30" Height="25" 
+                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold"
+                            Click="MaximizeButton_Click"/>
+                    <Button x:Name="CloseButton" Content="✕" Width="30" Height="25" 
+                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold"
+                            Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left Sidebar -->
+            <Border Grid.Column="0" Background="{StaticResource SidebarBackgroundBrush}" 
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Log Path Section -->
+                    <StackPanel Grid.Row="0" Margin="15,15,15,10">
+                        <TextBlock Text="STO Combatlog:" Foreground="{StaticResource ActiveAccentBrush}" 
+                                   FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="LogFilePathTextBox" Text="Select a combat log file..." 
+                                 Style="{StaticResource InputTextBoxStyle}"
+                                 Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BrowseButton" Content="Browse..." Style="{StaticResource MainButtonStyle}" 
+                                    Margin="0,0,5,0" Click="BrowseButton_Click"/>
+                            <Button Content="Default" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
+                            <Button x:Name="AnalyzeButton" Content="Analyze" Style="{StaticResource MainButtonStyle}" 
+                                    Background="{StaticResource ActiveAccentBrush}" 
+                                    Foreground="{StaticResource TextForegroundBrush}" Click="AnalyzeButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Combat List Section -->
+                    <StackPanel Grid.Row="1" Margin="15,0,15,10">
+                        <TextBlock Text="Combat List:" Foreground="{StaticResource ActiveAccentBrush}" 
+                                   FontWeight="Bold" Margin="0,0,0,5"/>
+                        <!-- Combat List wird hier eingefügt -->
+                        <Border Background="{StaticResource InputBackgroundBrush}" 
+                                BorderBrush="{StaticResource InputBorderBrush}" 
+                                BorderThickness="1" Height="200">
+                            <TextBlock Text="Combat list will appear here..." 
+                                       Foreground="{StaticResource TextForegroundBrush}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Opacity="0.7"/>
+                        </Border>
+                    </StackPanel>
+                    
+                    <!-- Spacer -->
+                    <Grid Grid.Row="2"/>
+                    
+                    <!-- Footer Info -->
+                    <StackPanel Grid.Row="3" Margin="15,0,15,15">
+                        <TextBlock Text="Log Duration: 0s" Foreground="{StaticResource TextForegroundBrush}" 
+                                   FontSize="11" Margin="0,0,0,2"/>
+                        <TextBlock Text="Player Duration: 0s" Foreground="{StaticResource TextForegroundBrush}" 
+                                   FontSize="11" Margin="0,0,0,5"/>
+                        <TextBlock Text="Map Detection Details" Foreground="{StaticResource ActiveAccentBrush}" 
+                                   FontSize="11" TextDecorations="Underline" Cursor="Hand"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+            <!-- Right Data Area -->
+            <Border Grid.Column="1" Background="{StaticResource BackgroundBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Filter Bar -->
+                    <Border Grid.Row="0" Background="{StaticResource SidebarBackgroundBrush}" 
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" 
+                            Padding="15,10">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Damage Out" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
+                            <Button Content="Damage Taken" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
+                            <Button Content="Heals Out" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
+                            <Button Content="Heals In" Style="{StaticResource MainButtonStyle}" Margin="0,0,20,0"/>
+                            <ComboBox Style="{StaticResource ComboBoxStyle}" MinWidth="100">
+                                <ComboBoxItem Content="Selection" IsSelected="True" Style="{StaticResource ComboBoxItemStyle}"/>
+                            </ComboBox>
+                            <Ellipse Width="20" Height="20" Fill="{StaticResource SecondaryAccentBrush}" 
+                                     Opacity="0.8" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- DPS Graph Area -->
+                    <Border Grid.Row="1" Margin="15" Background="{StaticResource SidebarBackgroundBrush}" 
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <TextBlock Text="DPS Graph" Foreground="{StaticResource TextForegroundBrush}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="16" Opacity="0.7"/>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Data Table Area -->
+                    <Border Grid.Row="2" Margin="15,0,15,15" Background="{StaticResource SidebarBackgroundBrush}" 
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Height="300">
+                        <Grid>
+                            <TextBlock Text="Data Table" Foreground="{StaticResource TextForegroundBrush}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="16" Opacity="0.7"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
