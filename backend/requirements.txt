@@ -1,0 +1,8 @@
+# OSCR Backend Dependencies
+numpy>=1.26.1
+
+# Build Dependencies
+pyinstaller>=5.13.0
+
+# Optional: UPX für Kompression (falls verfügbar)
+# upx-ucl>=4.0.0

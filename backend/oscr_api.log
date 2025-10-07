@@ -1,0 +1,85 @@
+2025-10-07 22:01:08,701 - OSCR.api_wrapper - INFO - Getting available combats for: test_combat.log
+2025-10-07 22:01:08,702 - OSCR.api_wrapper - ERROR - Error getting available combats: [Errno 2] No such file or directory: 'test_combat.log'
+2025-10-07 22:01:08,704 - OSCR.api_wrapper - ERROR - Traceback (most recent call last):
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\api_wrapper.py", line 159, in get_available_combats_api
+    combats = parser.isolate_combats(parser.log_path, max_combats)
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 351, in isolate_combats
+    self.error_callback(e)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 23, in raise_error
+    raise error
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 300, in isolate_combats
+    with ReadFileBackwards(path) as backwards_file:
+         ~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\oscr_read_file_backwards.py", line 70, in __enter__
+    self._file = open(self._path, 'rb')
+                 ~~~~^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'test_combat.log'
+
+2025-10-07 22:01:08,708 - OSCR.api_wrapper - INFO - Starting combat log analysis for: test_combat.log
+2025-10-07 22:01:08,709 - OSCR.api_wrapper - ERROR - Error during combat analysis: [Errno 2] No such file or directory: 'test_combat.log'
+2025-10-07 22:01:08,709 - OSCR.api_wrapper - ERROR - Traceback (most recent call last):
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\api_wrapper.py", line 74, in process_combat_log_api
+    parser.analyze_log_file(max_combats=max_combats)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 193, in analyze_log_file
+    self.bytes_consumed = OSCR._analyze_log_file(
+                          ~~~~~~~~~~~~~~~~~~~~~~^
+            self.log_path, total_combats, next_combat_id, offset, self._settings,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self.analyze_new_combat, self.error_callback)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 157, in _analyze_log_file
+    error_handler(e)
+    ~~~~~~~~~~~~~^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 23, in raise_error
+    raise error
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\main.py", line 108, in _analyze_log_file
+    with ReadFileBackwards(log_path, offset) as backwards_file:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projekte\StoDamageMeter\backend\OSCR\oscr_read_file_backwards.py", line 70, in __enter__
+    self._file = open(self._path, 'rb')
+                 ~~~~^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'test_combat.log'
+
+2025-10-07 22:05:56,185 - __main__ - INFO - Getting available combats for: test.log
+2025-10-07 22:05:56,185 - __main__ - INFO - Found 1 available combats (mock)
+2025-10-07 22:06:00,776 - __main__ - INFO - Starting combat log analysis for: test.log
+2025-10-07 22:06:00,776 - __main__ - INFO - Successfully analyzed 1 combats (mock)
+2025-10-07 22:26:34,627 - __main__ - WARNING - Failed to import OSCR modules as package, trying direct import.
+2025-10-07 22:26:34,628 - __main__ - INFO - PyInstaller bundle detected. Added C:\Users\Khaos\AppData\Local\Temp\_MEI276642\OSCR to sys.path.
+2025-10-07 22:26:34,628 - __main__ - ERROR - Critical: Could not import OSCR modules: No module named 'main'
+2025-10-07 22:27:31,433 - __main__ - WARNING - Failed to import OSCR modules as package, trying direct import.
+2025-10-07 22:27:31,434 - __main__ - INFO - PyInstaller bundle detected. Added C:\Users\Khaos\AppData\Local\Temp\_MEI193242\OSCR to sys.path.
+2025-10-07 22:27:31,479 - __main__ - ERROR - Critical: Could not import OSCR modules: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.
+2025-10-07 22:29:07,546 - __main__ - WARNING - Failed to import OSCR modules as package, trying direct import.
+2025-10-07 22:29:07,546 - __main__ - INFO - PyInstaller bundle detected. Added C:\Users\Khaos\AppData\Local\Temp\_MEI293842\OSCR to sys.path.
+2025-10-07 22:29:07,586 - __main__ - WARNING - Could not import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:29:07,586 - __main__ - WARNING - Falling back to mock data mode.
+2025-10-07 22:29:07,586 - __main__ - INFO - Performing health check.
+2025-10-07 22:29:13,851 - __main__ - WARNING - Failed to import OSCR modules as package, trying direct import.
+2025-10-07 22:29:13,851 - __main__ - INFO - PyInstaller bundle detected. Added C:\Users\Khaos\AppData\Local\Temp\_MEI62802\OSCR to sys.path.
+2025-10-07 22:29:13,886 - __main__ - WARNING - Could not import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:29:13,886 - __main__ - WARNING - Falling back to mock data mode.
+2025-10-07 22:29:13,886 - __main__ - INFO - Getting available combats for: test.log
+2025-10-07 22:29:13,887 - __main__ - WARNING - OSCR not available, using mock data
+2025-10-07 22:29:19,070 - __main__ - WARNING - Failed to import OSCR modules as package, trying direct import.
+2025-10-07 22:29:19,070 - __main__ - INFO - PyInstaller bundle detected. Added C:\Users\Khaos\AppData\Local\Temp\_MEI161762\OSCR to sys.path.
+2025-10-07 22:29:19,106 - __main__ - WARNING - Could not import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:29:19,106 - __main__ - WARNING - Falling back to mock data mode.
+2025-10-07 22:29:19,106 - __main__ - INFO - Starting combat log analysis for: test.log
+2025-10-07 22:29:19,106 - __main__ - WARNING - OSCR not available, using mock data
+2025-10-07 22:46:46,075 - __main__ - WARNING - Could not import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:46:46,075 - __main__ - WARNING - Falling back to mock data mode.
+2025-10-07 22:46:46,075 - __main__ - INFO - Performing health check.
+2025-10-07 22:49:37,519 - __main__ - ERROR - Failed to import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:49:37,519 - __main__ - ERROR - This is a critical error - OSCR functionality will not work.
+2025-10-07 22:49:51,364 - __main__ - ERROR - Failed to import OSCR modules: attempted relative import with no known parent package
+2025-10-07 22:49:51,364 - __main__ - ERROR - This is a critical error - OSCR functionality will not work.
+2025-10-07 22:51:12,174 - __main__ - INFO - Performing health check.
+2025-10-07 22:51:28,023 - __main__ - INFO - Getting available combats for: ../combatlog.log
+2025-10-07 22:51:28,024 - __main__ - INFO - Isolating combats from: ../combatlog.log
+2025-10-07 22:51:28,126 - __main__ - INFO - Found 0 combats
+2025-10-07 22:51:28,131 - __main__ - INFO - Found 0 available combats
