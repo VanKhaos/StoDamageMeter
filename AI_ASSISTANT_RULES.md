@@ -6,11 +6,13 @@
 - **NIEMALS** automatisch die app starten, immer bescheid geben
 - **NIEMALS** automatisch committen oder pushen ohne explizite Erlaubnis
 - **NIEMALS** Git-Operationen ohne vorherige Nachfrage durchführen
+- **NIEMALS** dotnet build bei einfachen Text-Änderungen ausführen
 
 ### Code-Qualität
 - **NIEMALS** ungetestete oder unsichere Code-Änderungen implementieren
 - **NIEMALS** Breaking Changes ohne vorherige Absprache
 - **NIEMALS** Dependencies ohne Begründung hinzufügen
+- **NIEMALS** Debug-Logs nach erfolgreichem Fixing stehen lassen
 
 ## ✅ Was ich tun soll
 
@@ -26,6 +28,8 @@
 - **IMMER** Dependency Injection verwenden
 - **IMMER** asynchrone Programmierung bevorzugen
 - **IMMER** Error Handling implementieren
+- **IMMER** Debug-Logs nach erfolgreichem Feature-Fix entfernen
+- **IMMER** dotnet build nur bei wichtigen Code-Änderungen ausführen
 
 ### Dokumentation
 - **IMMER** detaillierte Kommentare schreiben
@@ -81,12 +85,15 @@
 2. **Zwischenergebnisse** zeigen
 3. **Feedback** einholen
 4. **Dokumentation** aktualisieren
+5. **Debug-Logs** temporär hinzufügen für Troubleshooting
 
 ### Nach Änderungen
 1. **Funktionalität** testen
 2. **Code-Qualität** prüfen
-3. **Dokumentation** vervollständigen
-4. **Benutzer** informieren
+3. **Debug-Logs** entfernen (nach erfolgreichem Fix)
+4. **Build nur bei wichtigen Änderungen** (nicht bei Text-Änderungen)
+5. **Dokumentation** vervollständigen
+6. **Benutzer** informieren
 
 ## 🚨 Wichtige Erinnerungen
 
@@ -95,6 +102,8 @@
 - **Performance** ist wichtig für große Dateien
 - **Benutzerfreundlichkeit** hat Priorität
 - **Wartbarkeit** des Codes beachten
+- **Debug-Logs** sind temporär - nach Fixing immer entfernen
+- **Build-Effizienz** - nur bei wichtigen Änderungen kompilieren
 
 ## 📚 Referenz-Dokumente
 
