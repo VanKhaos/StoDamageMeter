@@ -10,11 +10,11 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using Microsoft.Extensions.DependencyInjection;
-using frontend.Services;
-using frontend.Models;
+using StoDamageMeter.Services;
+using StoDamageMeter.Models;
 using System.Text.Json;
 
-namespace frontend;
+namespace StoDamageMeter;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

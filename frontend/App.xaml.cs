@@ -4,9 +4,9 @@ using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using frontend.Services;
+using StoDamageMeter.Services;
 
-namespace frontend;
+namespace StoDamageMeter;
 
 /// <summary>
 /// Interaction logic for App.xaml

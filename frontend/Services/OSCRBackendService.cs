@@ -8,9 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using frontend.Models;
+using StoDamageMeter.Models;
 
-namespace frontend.Services
+namespace StoDamageMeter.Services
 {
     /// <summary>
     /// Service für die Kommunikation mit dem OSCR Python-Backend
@@ -78,15 +78,16 @@ namespace frontend.Services
         {
             _logger = logger;
             
-            // Backend-Pfad relativ zum Frontend-Verzeichnis
+            // Backend-Pfad relativ zum Deploy-Verzeichnis
             var frontendDir = AppDomain.CurrentDomain.BaseDirectory;
+            var deployDir = Path.Combine(Path.GetDirectoryName(frontendDir) ?? "", "Deploy");
             
             // Versuche zuerst Batch-Backend, dann arbeitendes OSCR-Backend, dann echtes OSCR-Backend, dann Python-Backend, dann Executable
-            var batchBackendPath = Path.Combine(frontendDir, "start_backend.bat");
-            var workingOscrBackendPath = Path.Combine(frontendDir, "working_oscr_backend.py");
-            var realOscrBackendPath = Path.Combine(frontendDir, "real_oscr_backend.py");
-            var pythonBackendPath = Path.Combine(frontendDir, "python_backend.py");
-            var executableBackendPath = Path.Combine(frontendDir, configuration["OSCRBackendPath"] ?? "OSCRBackend.exe");
+            var batchBackendPath = Path.Combine(deployDir, "start_backend.bat");
+            var workingOscrBackendPath = Path.Combine(deployDir, "working_oscr_backend.py");
+            var realOscrBackendPath = Path.Combine(deployDir, "real_oscr_backend.py");
+            var pythonBackendPath = Path.Combine(deployDir, "python_backend.py");
+            var executableBackendPath = Path.Combine(deployDir, configuration["OSCRBackendPath"] ?? "OSCRBackend.exe");
             
             if (File.Exists(batchBackendPath))
             {

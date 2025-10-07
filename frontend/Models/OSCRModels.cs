@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace frontend.Models
+namespace StoDamageMeter.Models
 {
     /// <summary>
     /// Basis-Response für alle OSCR API-Aufrufe

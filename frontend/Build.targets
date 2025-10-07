@@ -3,7 +3,7 @@
   
   <PropertyGroup>
     <BackendSourcePath>..\backend\dist\OSCRBackend.exe</BackendSourcePath>
-    <BackendTargetPath>$(OutputPath)OSCRBackend.exe</BackendTargetPath>
+    <BackendTargetPath>..\Deploy\OSCRBackend.exe</BackendTargetPath>
     <BackendBuildScript>..\backend\build_backend.py</BackendBuildScript>
   </PropertyGroup>
 
@@ -42,7 +42,7 @@
     <Message Text="Copying Backend for Publish..." Importance="high" />
     
     <PropertyGroup>
-      <PublishBackendPath>$(PublishDir)OSCRBackend.exe</PublishBackendPath>
+      <PublishBackendPath>..\Deploy\OSCRBackend.exe</PublishBackendPath>
     </PropertyGroup>
     
     <Copy SourceFiles="$(BackendSourcePath)" 
@@ -57,7 +57,7 @@
     <Message Text="Cleaning Backend files..." Importance="high" />
     
     <Delete Files="$(BackendTargetPath)" Condition="Exists('$(BackendTargetPath)')" />
-    <Delete Files="$(PublishDir)OSCRBackend.exe" Condition="Exists('$(PublishDir)OSCRBackend.exe')" />
+    <Delete Files="..\Deploy\OSCRBackend.exe" Condition="Exists('..\Deploy\OSCRBackend.exe')" />
     
     <Message Text="Backend files cleaned." Importance="high" />
   </Target>
