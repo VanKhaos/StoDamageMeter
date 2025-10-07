@@ -1,0 +1,247 @@
+# STO Damage Meter - .gitignore
+
+## Build Outputs
+# .NET Build Outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/dist/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# Python Build Outputs
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/build/
+**/develop-eggs/
+**/dist/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/*.egg-info/
+**/.installed.cfg
+**/*.egg
+
+# PyInstaller
+**/build/
+**/dist/
+**/*.spec
+
+## IDE and Editor Files
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+## OS Generated Files
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+## Logs and Temporary Files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.backup
+*.orig
+
+# Application specific logs
+oscr_api.log
+frontend.log
+backend.log
+combat_analysis.log
+
+## Configuration and Secrets
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Configuration files with sensitive data
+appsettings.Development.json
+appsettings.Production.json
+secrets.json
+*.secrets
+
+## Test and Coverage Reports
+# Test results
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output
+
+## Package Managers
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+## Runtime and Cache
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+## Deployment and Release
+# Deployment artifacts
+**/Deploy/
+**/deploy/
+**/release/
+**/publish/
+**/output/
+
+# Installer files
+*.msi
+*.exe
+*.deb
+*.rpm
+*.dmg
+*.pkg
+
+## Development Tools
+# Profiling
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+## Project Specific
+# Large test files (keep small samples)
+# Uncomment if you want to exclude large combat logs
+# *.log
+# combatlog_*.log
+
+# Temporary analysis files
+analysis_*.json
+temp_*.csv
+debug_*.txt
+
+# Backup files
+*.backup
+*.bak
+*_backup.*
+
+## Documentation Build
+# Generated documentation
+docs/_build/
+site/
+
+## Miscellaneous
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Temporary folders
+tmp/
+temp/
+temporary/
