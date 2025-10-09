@@ -245,3 +245,6 @@ site/
 tmp/
 temp/
 temporary/
+
+# Combat Log Test Files
+combatlog.log
