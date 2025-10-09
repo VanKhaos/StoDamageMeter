@@ -1,8 +1,45 @@
 ﻿<Application x:Class="StoDamageMeter.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:StoDamageMeter">
+             xmlns:local="clr-namespace:StoDamageMeter"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- WPF UI Theme Dictionary - Dark Theme -->
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Star Trek Custom Colors -->
+            <SolidColorBrush x:Key="StarTrekBlue" Color="#5B9BD5"/>
+            <SolidColorBrush x:Key="StarTrekDarkGray" Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="StarTrekDeepBlack" Color="#0A0A0A"/>
+            <SolidColorBrush x:Key="StarTrekTextGray" Color="#B0B0B0"/>
+            <SolidColorBrush x:Key="StarTrekBorderGray" Color="#333333"/>
+            
+            <!-- Override WPF UI Colors for Star Trek Theme -->
+            <Color x:Key="ApplicationBackgroundColor">#0A0A0A</Color>
+            
+            <!-- Alle möglichen Accent-Color Keys für Blau -->
+            <Color x:Key="SystemAccentColor">#5B9BD5</Color>
+            <Color x:Key="SystemAccentColorDark1">#4A8BC2</Color>
+            <Color x:Key="SystemAccentColorDark2">#3A7AB0</Color>
+            <Color x:Key="SystemAccentColorDark3">#2A6A9E</Color>
+            <Color x:Key="SystemAccentColorLight1">#6BAAD6</Color>
+            <Color x:Key="SystemAccentColorLight2">#7BBBD7</Color>
+            <Color x:Key="SystemAccentColorLight3">#8BCCD8</Color>
+            
+            <!-- WPF UI 3.0 spezifische Keys -->
+            <SolidColorBrush x:Key="SystemFillColorAccentDefaultBrush" Color="#5B9BD5"/>
+            <SolidColorBrush x:Key="SystemFillColorAccentSecondaryBrush" Color="#4A8BC2"/>
+            <SolidColorBrush x:Key="SystemFillColorAccentTertiaryBrush" Color="#3A7AB0"/>
+            
+            <!-- Legacy Keys -->
+            <SolidColorBrush x:Key="SystemAccentBrush" Color="#5B9BD5"/>
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#5B9BD5"/>
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="#5B9BD5"/>
+            
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

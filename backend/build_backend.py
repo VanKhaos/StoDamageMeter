@@ -27,16 +27,17 @@ def check_dependencies():
     """Prüft ob alle benötigten Abhängigkeiten installiert sind"""
     print("Checking dependencies...")
     
-    required_packages = ['pyinstaller', 'numpy']
+    # PyInstaller wird als 'PyInstaller' importiert (großes P)
+    required_packages = [('PyInstaller', 'pyinstaller'), ('numpy', 'numpy')]
     missing_packages = []
     
-    for package in required_packages:
+    for import_name, package_name in required_packages:
         try:
-            __import__(package)
-            print(f"PASS {package} is installed")
+            __import__(import_name)
+            print(f"PASS {package_name} is installed")
         except ImportError:
-            missing_packages.append(package)
-            print(f"FAIL {package} is missing")
+            missing_packages.append(package_name)
+            print(f"FAIL {package_name} is missing")
     
     if missing_packages:
         print(f"\nMissing packages: {', '.join(missing_packages)}")
@@ -59,29 +60,17 @@ def build_executable():
     """Erstellt die PyInstaller-Executable"""
     print("Building executable with PyInstaller...")
     
-    # PyInstaller-Befehl
+    # Verwende das working_oscr.spec File (mit working_oscr_backend.py - gefixt Datum-Parsing)
+    spec_file = Path('working_oscr.spec')
+    if not spec_file.exists():
+        print(f"FAIL Spec file not found: {spec_file}")
+        return False
+    
+    # PyInstaller-Befehl mit Spec-File
     cmd = [
         'pyinstaller',
         '--clean',
-        '--onefile',
-        '--name=OSCRBackend',
-        '--distpath=dist',
-        '--workpath=build',
-        '--specpath=.',
-        '--add-data=OSCR/Data;Data',
-        '--exclude-module=tkinter',
-        '--exclude-module=matplotlib',
-        '--exclude-module=pandas',
-        '--exclude-module=scipy',
-        '--exclude-module=PIL',
-        '--exclude-module=cv2',
-        '--exclude-module=tensorflow',
-        '--exclude-module=torch',
-        '--exclude-module=jupyter',
-        '--exclude-module=notebook',
-        '--exclude-module=IPython',
-        '--console',
-        'OSCR/api_wrapper.py'
+        str(spec_file)
     ]
     
     if not run_command(cmd):

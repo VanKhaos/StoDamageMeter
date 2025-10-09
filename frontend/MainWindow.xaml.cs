@@ -13,15 +13,18 @@ using Microsoft.Extensions.DependencyInjection;
 using StoDamageMeter.Services;
 using StoDamageMeter.Models;
 using System.Text.Json;
+using Wpf.Ui.Controls;
 
 namespace StoDamageMeter;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : FluentWindow
 {
     private readonly IOSCRBackendService _backendService;
+    private CancellationTokenSource? _loadingCancellation;
+    private List<CombatInfo>? _loadedCombats;
 
     public MainWindow()
     {
@@ -64,8 +67,10 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            // Progress wird später in der UI angezeigt
-            // Für jetzt nur in der Konsole loggen
+            // Progress in UI anzeigen
+            LoadingProgressBar.Value = e.ProgressPercentage;
+            LoadingStatusText.Text = e.Message;
+            
             System.Diagnostics.Debug.WriteLine($"Analysis Progress: {e.Message} ({e.ProgressPercentage}%)");
         });
     }
@@ -73,13 +78,26 @@ public partial class MainWindow : Window
     private void AppendResult(string message)
     {
         // Results werden später in der Data Table angezeigt
-        // Für jetzt nur in der Konsole loggen
-        System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
+        var logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        
+        // In Debug-Konsole schreiben
+        System.Diagnostics.Debug.WriteLine(logMessage);
+        
+        // In Log-Datei schreiben
+        try
+        {
+            var logFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frontend_debug.log");
+            System.IO.File.AppendAllText(logFile, logMessage + Environment.NewLine);
+        }
+        catch
+        {
+            // Ignore file logging errors
+        }
     }
 
     // CheckStatusButton_Click entfernt - Button existiert nicht mehr in der neuen UI
 
-    private void BrowseButton_Click(object sender, RoutedEventArgs e)
+    private async void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         var openFileDialog = new OpenFileDialog
         {
@@ -91,6 +109,109 @@ public partial class MainWindow : Window
         if (openFileDialog.ShowDialog() == true)
         {
             LogFilePathTextBox.Text = openFileDialog.FileName;
+            
+            // Automatisch Combat-Liste laden
+            await LoadCombatListAsync(openFileDialog.FileName);
+        }
+    }
+
+    private async Task LoadCombatListAsync(string logPath)
+    {
+        try
+        {
+            AppendResult($"=== Starting LoadCombatListAsync ===");
+            AppendResult($"Log path: {logPath}");
+            
+            // Cancel previous loading
+            _loadingCancellation?.Cancel();
+            _loadingCancellation = new CancellationTokenSource();
+
+            // Show progress UI
+            LoadingProgressBar.Visibility = Visibility.Visible;
+            LoadingStatusText.Visibility = Visibility.Visible;
+            EmptyCombatListText.Visibility = Visibility.Collapsed;
+            BrowseButton.IsEnabled = false;
+
+            AppendResult($"Calling GetAvailableCombatsWithProgressAsync...");
+            
+            // Get available combats
+            var response = await _backendService.GetAvailableCombatsWithProgressAsync(
+                logPath, 
+                maxCombats: 100, 
+                _loadingCancellation.Token);
+            
+            AppendResult($"Response received. Success: {response.Success}");
+
+            if (!response.Success)
+            {
+                var errorDetails = response.Error ?? "Unbekannter Fehler";
+                AppendResult($"Backend returned error: {errorDetails}");
+                
+                System.Windows.MessageBox.Show(
+                    $"Die Combat-Log-Datei konnte nicht gelesen werden.\n\n" +
+                    $"Fehler: {errorDetails}\n\n" +
+                    $"Bitte prüfe die Datei oscr_api.log für weitere Details.",
+                    "Fehler beim Laden",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            // Sort combats by date and time (newest first)
+            var sortedCombats = response.Combats
+                .OrderByDescending(c => c.Date)
+                .ThenByDescending(c => c.Time)
+                .ToList();
+
+            _loadedCombats = sortedCombats;
+
+            // Update UI
+            Dispatcher.Invoke(() =>
+            {
+                CombatListView.ItemsSource = sortedCombats;
+                
+                if (sortedCombats.Count == 0)
+                {
+                    EmptyCombatListText.Text = "No combats found in this log file.";
+                    EmptyCombatListText.Visibility = Visibility.Visible;
+                }
+            });
+
+            AppendResult($"Loaded {sortedCombats.Count} combats from log file");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendResult("Combat list loading was cancelled");
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex.Message;
+            var innerException = ex.InnerException?.Message ?? "";
+            
+            AppendResult($"Failed to load combat list: {errorMessage}");
+            if (!string.IsNullOrEmpty(innerException))
+            {
+                AppendResult($"Inner exception: {innerException}");
+            }
+            
+            System.Windows.MessageBox.Show(
+                $"Die Combat-Log-Datei konnte nicht gelesen werden.\n\n" +
+                $"Fehler: {errorMessage}\n\n" +
+                $"{(!string.IsNullOrEmpty(innerException) ? $"Details: {innerException}\n\n" : "")}" +
+                $"Bitte prüfe die Datei oscr_api.log im Deploy-Ordner für weitere Details.",
+                "Fehler beim Laden",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            // Hide progress UI
+            Dispatcher.Invoke(() =>
+            {
+                LoadingProgressBar.Visibility = Visibility.Collapsed;
+                LoadingStatusText.Visibility = Visibility.Collapsed;
+                BrowseButton.IsEnabled = true;
+            });
         }
     }
 
@@ -100,7 +221,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var logPath = LogFilePathTextBox.Text.Trim();
+            var logPath = LogFilePathTextBox.Text;
             if (string.IsNullOrEmpty(logPath) || !System.IO.File.Exists(logPath))
             {
                 AppendResult("Please select a valid log file first.");
@@ -119,34 +240,12 @@ public partial class MainWindow : Window
         }
     }
 
-    // Window Control Event Handlers
-    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    private void CombatListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void MaximizeButton_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-    }
-
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    // Window Drag Functionality
-    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2)
+        if (CombatListView.SelectedItem is CombatInfo selectedCombat)
         {
-            // Double-click to maximize/restore
-            MaximizeButton_Click(sender, e);
-        }
-        else
-        {
-            // Single click to drag
-            DragMove();
+            // Hier später die Combat-Details anzeigen
+            System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
         }
     }
 

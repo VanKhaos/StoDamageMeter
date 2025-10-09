@@ -28,6 +28,14 @@ namespace StoDamageMeter.Services
         Task<AvailableCombatsResponse> GetAvailableCombatsAsync(string logPath, int maxCombats = 50);
 
         /// <summary>
+        /// Ruft verfügbare Combats mit Progress-Reporting ab
+        /// </summary>
+        Task<AvailableCombatsResponse> GetAvailableCombatsWithProgressAsync(
+            string logPath, 
+            int maxCombats = 50,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Analysiert Combats aus einer Log-Datei
         /// </summary>
         Task<CombatAnalysisResponse> AnalyzeCombatLogAsync(string logPath, int maxCombats = 10, AnalysisSettings? settings = null);
@@ -79,8 +87,11 @@ namespace StoDamageMeter.Services
             _logger = logger;
             
             // Backend-Pfad relativ zum Deploy-Verzeichnis
+            // BaseDirectory ist z.B.: D:\Projekte\StoDamageMeter\frontend\bin\Debug\net9.0-windows\
+            // Wir müssen 4 Ebenen hoch zum Projekt-Root
             var frontendDir = AppDomain.CurrentDomain.BaseDirectory;
-            var deployDir = Path.Combine(Path.GetDirectoryName(frontendDir) ?? "", "Deploy");
+            var projectRoot = Path.GetFullPath(Path.Combine(frontendDir, "..", "..", "..", ".."));
+            var deployDir = Path.Combine(projectRoot, "Deploy");
             
             // Versuche zuerst Batch-Backend, dann arbeitendes OSCR-Backend, dann echtes OSCR-Backend, dann Python-Backend, dann Executable
             var batchBackendPath = Path.Combine(deployDir, "start_backend.bat");
@@ -231,6 +242,58 @@ namespace StoDamageMeter.Services
         }
 
         /// <summary>
+        /// Ruft verfügbare Combats mit Progress-Reporting ab
+        /// </summary>
+        public async Task<AvailableCombatsResponse> GetAvailableCombatsWithProgressAsync(
+            string logPath, 
+            int maxCombats = 50,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _logger.LogInformation("Getting available combats with progress for: {LogPath}", logPath);
+                
+                if (!File.Exists(logPath))
+                {
+                    throw new FileNotFoundException($"Log file not found: {logPath}");
+                }
+
+                var fileInfo = new FileInfo(logPath);
+                var fileSizeKB = fileInfo.Length / 1024.0;
+                OnAnalysisProgress($"Loading combat list from file ({fileSizeKB:F2} KB)...", 0, false);
+
+                var request = new AvailableCombatsRequest
+                {
+                    LogPath = logPath,
+                    MaxCombats = maxCombats
+                };
+
+                OnAnalysisProgress("Reading combat log...", 25, false);
+
+                var response = await ExecuteBackendCommandWithProgressAsync<AvailableCombatsResponse>(
+                    request, 
+                    cancellationToken);
+                
+                OnAnalysisProgress($"Found {response.TotalCombats} combats", 100, true);
+                
+                _logger.LogInformation("Found {Count} available combats", response.TotalCombats);
+                return response;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Combat list loading was cancelled");
+                OnAnalysisProgress("Loading cancelled", 0, true);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get available combats from: {LogPath}", logPath);
+                OnAnalysisProgress($"Failed to load combat list: {ex.Message}", 0, true);
+                throw new OSCRBackendException($"Failed to get available combats from {logPath}", ex);
+            }
+        }
+
+        /// <summary>
         /// Prüft ob das Backend verfügbar ist
         /// </summary>
         public async Task<bool> IsBackendAvailableAsync()
@@ -255,9 +318,11 @@ namespace StoDamageMeter.Services
         }
 
         /// <summary>
-        /// Führt einen Backend-Befehl aus und gibt die JSON-Response zurück
+        /// Führt einen Backend-Befehl aus mit CancellationToken-Support
         /// </summary>
-        private async Task<T> ExecuteBackendCommandAsync<T>(object request) where T : OSCRResponse
+        private async Task<T> ExecuteBackendCommandWithProgressAsync<T>(
+            object request, 
+            CancellationToken cancellationToken) where T : OSCRResponse
         {
             var jsonInput = JsonSerializer.Serialize(request, _jsonOptions);
             
@@ -290,28 +355,46 @@ namespace StoDamageMeter.Services
                 if (e.Data != null)
                 {
                     errorBuilder.AppendLine(e.Data);
+                    // Progress-Updates aus stderr
+                    if (e.Data.Contains("progress") || e.Data.Contains("combats"))
+                    {
+                        OnAnalysisProgress(e.Data, 50, false);
+                    }
                 }
             };
 
             try
             {
+                LogToFile($"Starting backend process: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
+                LogToFile($"JSON Input: {jsonInput}");
+                
+                _logger.LogInformation("Starting backend process: {FileName} {Arguments}", process.StartInfo.FileName, process.StartInfo.Arguments);
+                
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
+                LogToFile("Process started. Sending JSON input...");
+                _logger.LogInformation("Process started. Sending JSON input...");
+                
                 // JSON-Input senden
                 await process.StandardInput.WriteAsync(jsonInput);
                 process.StandardInput.Close();
-
-                // Warten auf Beendigung mit Timeout
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-                await process.WaitForExitAsync(cts.Token);
-                var completed = process.HasExited;
                 
-                if (!completed)
+                LogToFile("JSON input sent. Waiting for process to exit...");
+                _logger.LogInformation("JSON input sent. Waiting for process to exit...");
+
+                // Warten auf Beendigung mit Timeout und Cancellation
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token);
+                
+                await process.WaitForExitAsync(cts.Token);
+                
+                if (cancellationToken.IsCancellationRequested)
                 {
                     process.Kill();
-                    throw new OSCRBackendException("Backend process timed out after 5 minutes");
+                    throw new OperationCanceledException();
                 }
 
                 var output = outputBuilder.ToString();
@@ -347,10 +430,18 @@ namespace StoDamageMeter.Services
 
                 return response;
             }
-            catch (Exception ex) when (!(ex is OSCRBackendException))
+            catch (Exception ex) when (!(ex is OSCRBackendException) && !(ex is OperationCanceledException))
             {
                 throw new OSCRBackendException("Failed to execute backend command", ex);
             }
+        }
+
+        /// <summary>
+        /// Führt einen Backend-Befehl aus und gibt die JSON-Response zurück
+        /// </summary>
+        private async Task<T> ExecuteBackendCommandAsync<T>(object request) where T : OSCRResponse
+        {
+            return await ExecuteBackendCommandWithProgressAsync<T>(request, CancellationToken.None);
         }
 
         /// <summary>
@@ -364,6 +455,19 @@ namespace StoDamageMeter.Services
                 ProgressPercentage = progressPercentage,
                 IsCompleted = isCompleted
             });
+        }
+
+        private void LogToFile(string message)
+        {
+            try
+            {
+                var logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backend_service_debug.log");
+                File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss.fff}] {message}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Ignore
+            }
         }
     }
 }

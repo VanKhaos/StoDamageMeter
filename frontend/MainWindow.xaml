@@ -1,165 +1,18 @@
-﻿<Window x:Class="StoDamageMeter.MainWindow"
+﻿<ui:FluentWindow x:Class="StoDamageMeter.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-               xmlns:local="clr-namespace:StoDamageMeter"
+        xmlns:local="clr-namespace:StoDamageMeter"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="STO Damage Meter" Height="800" Width="1200"
+        Title="STO Damage Meter" 
+        Height="800" 
+        Width="1200"
         WindowStartupLocation="CenterScreen"
-        Background="#0A0A0A"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        ResizeMode="CanResize">
-    
-    <Window.Resources>
-        <!-- Star Trek Farb-Definitionen -->
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0A"/>                    <!-- Tiefes Schwarz -->
-        <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1A1A1A"/>             <!-- Dunkles Grau -->
-        <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#151515"/>              <!-- Header Schwarz -->
-        <SolidColorBrush x:Key="TextForegroundBrush" Color="#B0B0B0"/>                <!-- Dunkleres Grau -->
-        <SolidColorBrush x:Key="ActiveAccentBrush" Color="#B8860B"/>                  <!-- Gold für aktive Elemente -->
-        <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#B8860B"/>               <!-- Dunkleres Gold -->
-        <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#1A1A1A"/>              <!-- Noch dunkleres Grau -->
-        <SolidColorBrush x:Key="ButtonHoverBrush" Color="#B8860B"/>                   <!-- Gold Hover -->
-        <SolidColorBrush x:Key="ButtonPressedBrush" Color="#0F0F0F"/>                 <!-- Noch dunklerer Pressed -->
-        <SolidColorBrush x:Key="BorderBrush" Color="#333333"/>                        <!-- Dunklerer Border -->
-        <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="#1A1A1A"/>            <!-- Dunkles Grau für ausgewählte Elemente -->
-        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#0F0F0F"/>               <!-- Noch dunklerer Input -->
-        <SolidColorBrush x:Key="InputBorderBrush" Color="#0066CC"/>                   <!-- Dunkleres Blau für Borders -->
-        
-        <!-- Styles -->
-        <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-        
-        <Style x:Key="TabItemStyle" TargetType="TabItem">
-            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,10"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource ActiveAccentBrush}"/>
-                    <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource ActiveAccentBrush}"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource ButtonHoverBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        
-        <Style x:Key="MainButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#1A1A1A"/>
-            <Setter Property="Foreground" Value="#B0B0B0"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#333333"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1A1A1A"/>
-                    <Setter Property="Foreground" Value="#B0B0B0"/>
-                    <Setter Property="BorderBrush" Value="#B8860B"/>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#0F0F0F"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        
-        <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,5"/>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource ActiveAccentBrush}"/>
-                    <Setter Property="BorderThickness" Value="2"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        
-        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,5"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Name="ToggleButton" 
-                                          Background="{TemplateBinding Background}"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          BorderThickness="{TemplateBinding BorderThickness}"
-                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          ClickMode="Press">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition/>
-                                        <ColumnDefinition Width="20"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ContentPresenter Name="ContentSite" IsHitTestVisible="False" 
-                                                      Content="{TemplateBinding SelectionBoxItem}"
-                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                                      Margin="3,3,23,3"
-                                                      VerticalAlignment="Center"
-                                                      HorizontalAlignment="Left"/>
-                                    <Path x:Name="Arrow" Grid.Column="1" Fill="{StaticResource TextForegroundBrush}" 
-                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                          Data="M 0 0 L 4 4 L 8 0 Z"/>
-                                </Grid>
-                            </ToggleButton>
-                            <ContentPresenter Name="ContentSite2" IsHitTestVisible="False" 
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                              Margin="3,3,23,3"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"/>
-                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" 
-                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                <Grid Name="DropDown" SnapsToDevicePixels="True" 
-                                      MinWidth="{TemplateBinding ActualWidth}" 
-                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                    <Border x:Name="DropDownBorder" 
-                                            Background="{StaticResource InputBackgroundBrush}"
-                                            BorderBrush="{StaticResource InputBorderBrush}"
-                                            BorderThickness="1"/>
-                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
-                                    </ScrollViewer>
-                                </Grid>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextForegroundBrush}"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource ButtonHoverBrush}"/>
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round">
     
     <Grid>
         <Grid.RowDefinitions>
@@ -167,168 +20,332 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <!-- Header Bar -->
-        <Border Grid.Row="0" Background="{StaticResource HeaderBackgroundBrush}" Padding="15,10" 
-                MouseLeftButtonDown="Header_MouseLeftButtonDown">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <!-- Logo & Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="24" Height="24" Fill="{StaticResource ActiveAccentBrush}" Margin="0,0,10,0"/>
-                    <TextBlock Text="STO Damage Meter" Style="{StaticResource HeaderTextStyle}" FontSize="18"/>
-                </StackPanel>
-                
-                <!-- Navigation Tabs -->
-                <TabControl Grid.Column="1" Background="Transparent" BorderThickness="0" Margin="50,0,0,0">
-                    <TabControl.Template>
-                        <ControlTemplate TargetType="TabControl">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <TabPanel Grid.Row="0" IsItemsHost="True"/>
-                                <ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
-                            </Grid>
-                        </ControlTemplate>
-                    </TabControl.Template>
-                </TabControl>
-                
-                <!-- Window Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="MinimizeButton" Content="─" Width="30" Height="25" 
-                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
-                            BorderThickness="0" FontSize="12" FontWeight="Bold"
-                            Click="MinimizeButton_Click"/>
-                    <Button x:Name="MaximizeButton" Content="□" Width="30" Height="25" 
-                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
-                            BorderThickness="0" FontSize="12" FontWeight="Bold"
-                            Click="MaximizeButton_Click"/>
-                    <Button x:Name="CloseButton" Content="✕" Width="30" Height="25" 
-                            Background="Transparent" Foreground="{StaticResource TextForegroundBrush}"
-                            BorderThickness="0" FontSize="12" FontWeight="Bold"
-                            Click="CloseButton_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <!-- Title Bar -->
+        <ui:TitleBar 
+            Grid.Row="0"
+            Title="STO Damage Meter"
+            Icon="{ui:SymbolIcon ChartMultiple24}">
+        </ui:TitleBar>
         
         <!-- Main Content Area -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Margin="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="320"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             
             <!-- Left Sidebar -->
-            <Border Grid.Column="0" Background="{StaticResource SidebarBackgroundBrush}" 
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    
-                    <!-- Log Path Section -->
-                    <StackPanel Grid.Row="0" Margin="15,15,15,10">
-                        <TextBlock Text="STO Combatlog:" Foreground="{StaticResource ActiveAccentBrush}" 
-                                   FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="LogFilePathTextBox" Text="Select a combat log file..." 
-                                 Style="{StaticResource InputTextBoxStyle}"
-                                 Margin="0,0,0,10"/>
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BrowseButton" Content="Browse..." Style="{StaticResource MainButtonStyle}" 
-                                    Margin="0,0,5,0" Click="BrowseButton_Click"/>
-                            <Button Content="Default" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
-                            <Button x:Name="AnalyzeButton" Content="Analyze" Style="{StaticResource MainButtonStyle}" 
-                                    Background="{StaticResource ActiveAccentBrush}" 
-                                    Foreground="{StaticResource TextForegroundBrush}" Click="AnalyzeButton_Click"/>
-                        </StackPanel>
+            <Border Grid.Column="0" 
+                    Background="{DynamicResource StarTrekDarkGray}"
+                    BorderBrush="{DynamicResource StarTrekBorderGray}" 
+                    BorderThickness="0,0,1,0"
+                    Padding="16">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Combat Log Selection Card -->
+                        <ui:Card Margin="0,0,0,16" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="STO Combatlog" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StarTrekBlue}"
+                                           Margin="0,0,0,12"/>
+                                
+                                <ui:TextBox x:Name="LogFilePathTextBox"
+                                            PlaceholderText="Select a combat log file..."
+                                            Icon="{ui:SymbolIcon Document24}"
+                                            Margin="0,0,0,12"/>
+                                
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                    <ui:Button x:Name="BrowseButton"
+                                               Content="Browse"
+                                               Icon="{ui:SymbolIcon FolderOpen24}"
+                                               Appearance="Secondary"
+                                               Margin="0,0,8,0"
+                                               Click="BrowseButton_Click"/>
+                                </StackPanel>
+                                
+                                <!-- Progress Bar -->
+                                <ProgressBar x:Name="LoadingProgressBar"
+                                             Visibility="Collapsed"
+                                             IsIndeterminate="False"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Height="4"
+                                             Margin="0,8,0,4"/>
+                                <TextBlock x:Name="LoadingStatusText"
+                                           Visibility="Collapsed"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource StarTrekTextGray}"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </ui:Card>
+                        
+                        <!-- Combat List Card -->
+                        <ui:Card Margin="0,0,0,16" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Combat List" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StarTrekBlue}"
+                                           Margin="0,0,0,12"/>
+                                
+                                <Border Background="{DynamicResource StarTrekDeepBlack}"
+                                        BorderBrush="{DynamicResource StarTrekBorderGray}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Height="300">
+                                    <Grid>
+                                        <!-- Empty State -->
+                                        <TextBlock x:Name="EmptyCombatListText"
+                                                   Text="Select a combat log file to view combats..." 
+                                                   Foreground="{DynamicResource StarTrekTextGray}"
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"
+                                                   Opacity="0.6"/>
+                                        
+                                        <!-- Combat List -->
+                                        <ListView x:Name="CombatListView" 
+                                                  Margin="8"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  SelectionChanged="CombatListView_SelectionChanged">
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="ListViewItem">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="Margin" Value="0,0,0,4"/>
+                                                    <Setter Property="Background" Value="{DynamicResource StarTrekDarkGray}"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ListViewItem">
+                                                                <Border Background="{TemplateBinding Background}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                                        CornerRadius="4"
+                                                                        Padding="12,8">
+                                                                    <ContentPresenter/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <!-- Hover Effect -->
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#2A2A2A"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource StarTrekBlue}"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                        </Trigger>
+                                                        <!-- Selected Effect -->
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter Property="Background" Value="#1E3A5F"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource StarTrekBlue}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Date}" 
+                                                                   Foreground="White"
+                                                                   FontSize="12"
+                                                                   HorizontalAlignment="Left"/>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding Time}" 
+                                                                   Foreground="{DynamicResource StarTrekTextGray}"
+                                                                   FontSize="12"
+                                                                   HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ui:Card>
+                        
+                        <!-- Info Card -->
+                        <ui:Card Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Statistics" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StarTrekBlue}"
+                                           Margin="0,0,0,12"/>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <ui:SymbolIcon Symbol="Timer24" FontSize="16" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Log Duration:" 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="LogDurationText"
+                                               Text="0s" 
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <ui:SymbolIcon Symbol="Person24" FontSize="16" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Player Duration:" 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="PlayerDurationText"
+                                               Text="0s" 
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
+                                
+                                <ui:HyperlinkButton Content="Map Detection Details"
+                                                    Icon="{ui:SymbolIcon Info24}"
+                                                    Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </ui:Card>
                     </StackPanel>
-                    
-                    <!-- Combat List Section -->
-                    <StackPanel Grid.Row="1" Margin="15,0,15,10">
-                        <TextBlock Text="Combat List:" Foreground="{StaticResource ActiveAccentBrush}" 
-                                   FontWeight="Bold" Margin="0,0,0,5"/>
-                        <!-- Combat List wird hier eingefügt -->
-                        <Border Background="{StaticResource InputBackgroundBrush}" 
-                                BorderBrush="{StaticResource InputBorderBrush}" 
-                                BorderThickness="1" Height="200">
-                            <TextBlock Text="Combat list will appear here..." 
-                                       Foreground="{StaticResource TextForegroundBrush}" 
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Opacity="0.7"/>
-                        </Border>
-                    </StackPanel>
-                    
-                    <!-- Spacer -->
-                    <Grid Grid.Row="2"/>
-                    
-                    <!-- Footer Info -->
-                    <StackPanel Grid.Row="3" Margin="15,0,15,15">
-                        <TextBlock Text="Log Duration: 0s" Foreground="{StaticResource TextForegroundBrush}" 
-                                   FontSize="11" Margin="0,0,0,2"/>
-                        <TextBlock Text="Player Duration: 0s" Foreground="{StaticResource TextForegroundBrush}" 
-                                   FontSize="11" Margin="0,0,0,5"/>
-                        <TextBlock Text="Map Detection Details" Foreground="{StaticResource ActiveAccentBrush}" 
-                                   FontSize="11" TextDecorations="Underline" Cursor="Hand"/>
-                    </StackPanel>
-                </Grid>
+                </ScrollViewer>
             </Border>
             
             <!-- Right Data Area -->
-            <Border Grid.Column="1" Background="{StaticResource BackgroundBrush}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    
-                    <!-- Filter Bar -->
-                    <Border Grid.Row="0" Background="{StaticResource SidebarBackgroundBrush}" 
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" 
-                            Padding="15,10">
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="Damage Out" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
-                            <Button Content="Damage Taken" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
-                            <Button Content="Heals Out" Style="{StaticResource MainButtonStyle}" Margin="0,0,5,0"/>
-                            <Button Content="Heals In" Style="{StaticResource MainButtonStyle}" Margin="0,0,20,0"/>
-                            <ComboBox Style="{StaticResource ComboBoxStyle}" MinWidth="100">
-                                <ComboBoxItem Content="Selection" IsSelected="True" Style="{StaticResource ComboBoxItemStyle}"/>
-                            </ComboBox>
-                            <Ellipse Width="20" Height="20" Fill="{StaticResource SecondaryAccentBrush}" 
-                                     Opacity="0.8" Margin="10,0,0,0"/>
+            <Grid Grid.Column="1" Background="{DynamicResource StarTrekDeepBlack}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="3*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Filter Bar -->
+                <ui:Card Grid.Row="0" Margin="16,16,16,8" Padding="16">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button Content="Damage Out"
+                                   Icon="{ui:SymbolIcon ArrowExportLtr24}"
+                                   Appearance="Primary"
+                                   Margin="0,0,8,0"/>
+                        
+                        <ui:Button Content="Damage Taken"
+                                   Icon="{ui:SymbolIcon ArrowImport24}"
+                                   Appearance="Secondary"
+                                   Margin="0,0,8,0"/>
+                        
+                        <ui:Button Content="Heals Out"
+                                   Icon="{ui:SymbolIcon HeartPulse24}"
+                                   Appearance="Secondary"
+                                   Margin="0,0,8,0"/>
+                        
+                        <ui:Button Content="Heals In"
+                                   Icon="{ui:SymbolIcon Heart24}"
+                                   Appearance="Secondary"
+                                   Margin="0,0,20,0"/>
+                        
+                        <ComboBox Width="150" 
+                                  SelectedIndex="0"
+                                  VerticalAlignment="Center">
+                            <ComboBoxItem Content="Selection"/>
+                            <ComboBoxItem Content="All Players"/>
+                            <ComboBoxItem Content="Top 5"/>
+                        </ComboBox>
+                        
+                        <ui:Button Icon="{ui:SymbolIcon Settings24}"
+                                   Appearance="Secondary"
+                                   Margin="12,0,0,0"
+                                   ToolTip="Settings"/>
+                    </StackPanel>
+                </ui:Card>
+                
+                <!-- DPS Graph Area -->
+                <ui:Card Grid.Row="1" Margin="16,8,16,8" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0" 
+                                   Text="DPS Over Time" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource StarTrekBlue}"
+                                   Margin="0,0,0,12"/>
+                        
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource StarTrekDarkGray}"
+                                BorderBrush="{DynamicResource StarTrekBorderGray}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <Grid>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="ChartMultiple24" 
+                                                   FontSize="48" 
+                                                   Foreground="{DynamicResource StarTrekBlue}"
+                                                   Opacity="0.3"
+                                                   Margin="0,0,0,12"/>
+                                    <TextBlock Text="DPS Graph will be displayed here" 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               HorizontalAlignment="Center"
+                                               Opacity="0.6"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ui:Card>
+                
+                <!-- Data Table Area -->
+                <ui:Card Grid.Row="2" Margin="16,8,16,16" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="Combat Statistics" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource StarTrekBlue}"
+                                       VerticalAlignment="Center"/>
+                            
+                            <ui:Button Content="Export"
+                                       Icon="{ui:SymbolIcon Save24}"
+                                       Appearance="Secondary"
+                                       Margin="16,0,0,0"
+                                       FontSize="12"/>
                         </StackPanel>
-                    </Border>
-                    
-                    <!-- DPS Graph Area -->
-                    <Border Grid.Row="1" Margin="15" Background="{StaticResource SidebarBackgroundBrush}" 
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                        <Grid>
-                            <TextBlock Text="DPS Graph" Foreground="{StaticResource TextForegroundBrush}" 
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="16" Opacity="0.7"/>
-                        </Grid>
-                    </Border>
-                    
-                    <!-- Data Table Area -->
-                    <Border Grid.Row="2" Margin="15,0,15,15" Background="{StaticResource SidebarBackgroundBrush}" 
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Height="300">
-                        <Grid>
-                            <TextBlock Text="Data Table" Foreground="{StaticResource TextForegroundBrush}" 
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="16" Opacity="0.7"/>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </Border>
+                        
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource StarTrekDarkGray}"
+                                BorderBrush="{DynamicResource StarTrekBorderGray}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="DataTablePanel" Margin="12">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40">
+                                        <ui:SymbolIcon Symbol="Table24" 
+                                                       FontSize="48" 
+                                                       Foreground="{DynamicResource StarTrekBlue}"
+                                                       Opacity="0.3"
+                                                       Margin="0,0,0,12"/>
+                                        <TextBlock Text="Combat data will be displayed here" 
+                                                   Foreground="{DynamicResource StarTrekTextGray}"
+                                                   HorizontalAlignment="Center"
+                                                   Opacity="0.6"/>
+                                        <TextBlock Text="Analyze a combat log to see detailed statistics" 
+                                                   Foreground="{DynamicResource StarTrekTextGray}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,8,0,0"
+                                                   FontSize="11"
+                                                   Opacity="0.5"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </ui:Card>
+            </Grid>
         </Grid>
     </Grid>
-</Window>
+</ui:FluentWindow>
