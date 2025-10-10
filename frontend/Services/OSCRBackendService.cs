@@ -377,8 +377,12 @@ namespace StoDamageMeter.Services
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.StandardInputEncoding = Encoding.UTF8;
             process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+            
+            // Erzwinge UTF-8 für Python I/O
+            process.StartInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
 
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
@@ -456,6 +460,9 @@ namespace StoDamageMeter.Services
                 {
                     throw new OSCRBackendException("Backend returned empty response");
                 }
+
+                // Entferne UTF-8 BOM falls vorhanden (U+FEFF)
+                output = output.TrimStart('\uFEFF');
 
                 // JSON-Response parsen
                 var response = JsonSerializer.Deserialize<T>(output, _jsonOptions);

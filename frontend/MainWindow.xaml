@@ -338,21 +338,205 @@
                                 Margin="0,0,0,4">
                         <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="3*"/>      <!-- Player/Ability: mehr Platz -->
+                                    <ColumnDefinition Width="1*"/>      <!-- DPS -->
+                                    <ColumnDefinition Width="1.2*"/>    <!-- Total Damage -->
+                                    <ColumnDefinition Width="1*"/>      <!-- Max Hit -->
+                                    <ColumnDefinition Width="0.7*"/>    <!-- Crit % -->
+                                    <ColumnDefinition Width="0.7*"/>    <!-- Acc % -->
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Player / Ability" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}"/>
-                                <TextBlock Grid.Column="1" Text="DPS" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="2" Text="Total Damage" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="3" Text="Debuff" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="4" Text="Max Hit" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="5" Text="Crit %" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="6" Text="Acc %" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                
+                                <!-- Player/Ability Header (nicht sortierbar, keine Trennlinie) -->
+                                <TextBlock Grid.Column="0"
+                                           Text="Player / Ability" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource StarTrekBlue}"
+                                           Padding="0,0,8,0"/>
+                                
+                                <!-- DPS Header (sortierbar) -->
+                                <Button x:Name="DpsHeaderButton"
+                                        Grid.Column="1"
+                                        Content="DPS"
+                                        Tag="DpsWithCompanions"
+                                        Click="OnColumnHeaderClick"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StarTrekBlue}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Right"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#20FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                
+                                <!-- Total Damage Header (sortierbar) -->
+                                <Button x:Name="TotalDamageHeaderButton"
+                                        Grid.Column="2"
+                                        Content="Total Damage"
+                                        Tag="TotalDamageWithCompanions"
+                                        Click="OnColumnHeaderClick"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StarTrekBlue}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Right"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#20FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                
+                                <!-- Max Hit Header (sortierbar) -->
+                                <Button x:Name="MaxHitHeaderButton"
+                                        Grid.Column="3"
+                                        Content="Max Hit"
+                                        Tag="MaxOneHit"
+                                        Click="OnColumnHeaderClick"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StarTrekBlue}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Right"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#20FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                
+                                <!-- Crit % Header (sortierbar) -->
+                                <Button x:Name="CritHeaderButton"
+                                        Grid.Column="4"
+                                        Content="Crit %"
+                                        Tag="CritPercent"
+                                        Click="OnColumnHeaderClick"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StarTrekBlue}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Right"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#20FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                
+                                <!-- Acc % Header (sortierbar) -->
+                                <Button x:Name="AccHeaderButton"
+                                        Grid.Column="5"
+                                        Content="Acc %"
+                                        Tag="AccuracyPercent"
+                                        Click="OnColumnHeaderClick"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StarTrekBlue}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Right"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#20FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                         </Grid>
                     </Border>
                     

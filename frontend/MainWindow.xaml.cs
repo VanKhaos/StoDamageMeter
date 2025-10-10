@@ -28,6 +28,10 @@ public partial class MainWindow : FluentWindow
     private List<CombatInfo>? _loadedCombats;
     private CombatData? _currentCombatData;
     private string? _currentLogPath;
+    
+    // Sorting state
+    private string _currentSortColumn = "DpsWithCompanions"; // Default
+    private bool _sortAscending = false; // Default: descending
 
     public MainWindow()
     {
@@ -291,6 +295,9 @@ public partial class MainWindow : FluentWindow
 
             // Populate TreeView
             PopulateCombatStatsTreeView(_currentCombatData);
+            
+            // Update column header indicators to show initial sort
+            UpdateColumnHeaderIndicators();
 
             // Show data
             LoadingCombatStatsPanel.Visibility = Visibility.Collapsed;
@@ -317,10 +324,11 @@ public partial class MainWindow : FluentWindow
     {
         CombatStatsItemsControl.Items.Clear();
 
-        // Sortiere Players nach DPS (inkl. Companions, absteigend)
-        var sortedPlayers = combatData.Players.Values
-            .OrderByDescending(p => p.DpsWithCompanions)
-            .ToList();
+        // Sortiere Players nach aktuellem Sortier-Status
+        var sortedPlayers = SortPlayerStatistics(
+            combatData.Players.Values,
+            _currentSortColumn,
+            _sortAscending);
 
         foreach (var player in sortedPlayers)
         {
@@ -346,15 +354,14 @@ public partial class MainWindow : FluentWindow
                 Background = new SolidColorBrush(Color.FromRgb(26, 26, 26))
             };
             
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });     // Player/Ability
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });     // DPS
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });   // Total Damage
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });     // Max Hit
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });   // Crit %
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });   // Acc %
 
-            // Player Name mit Icon
+            // Player Name mit Icon (in Border für konsistente Trennlinien)
             var playerNamePanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -382,15 +389,15 @@ public partial class MainWindow : FluentWindow
             playerNamePanel.Children.Add(expandIcon);
             playerNamePanel.Children.Add(playerNameText);
             
+            // Player-Name ohne Border (keine Trennlinie)
             Grid.SetColumn(playerNamePanel, 0);
             playerHeaderGrid.Children.Add(playerNamePanel);
 
-            // Player Stats (mit Companions)
+            // Player Stats (mit Companions) - ohne Debuff
             var playerStats = new[]
             {
                 CreateTableCell($"{player.DpsWithCompanions:N0}", false),
                 CreateTableCell($"{player.TotalDamageWithCompanions:N0}", false),
-                CreateTableCell($"{player.Debuff:F1}%", false),
                 CreateTableCell($"{player.MaxOneHit:N0}", false),
                 CreateTableCell($"{player.CritPercent:F1}%", false),
                 CreateTableCell($"{player.AccuracyPercent:F1}%", false)
@@ -443,37 +450,52 @@ public partial class MainWindow : FluentWindow
                     var abilityContainer = new Border
                     {
                         Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
-                        Margin = new Thickness(0, 1, 0, 0),
-                        Padding = new Thickness(32, 0, 0, 0) // Links-Einrückung
+                        Margin = new Thickness(0, 1, 0, 0)
                     };
                     
                     var abilityGrid = new Grid();
                     
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
                     abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
                     abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
 
+                    // StackPanel für Ability-Name mit Spacer (um Icon-Platz zu reservieren)
+                    var abilityNamePanel = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Margin = new Thickness(8, 6, 8, 6)
+                    };
+                    
+                    // Spacer für Icon-Platz (gleiche Breite wie expandIcon: ~10px + 8px Margin = 18px)
+                    var abilitySpacer = new System.Windows.Controls.TextBlock
+                    {
+                        Width = 18, // Platz für Icon
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    
                     var abilityNameText = new System.Windows.Controls.TextBlock
                     {
                         Text = ability.Name,
                         FontSize = 11,
                         Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
                         VerticalAlignment = VerticalAlignment.Center,
-                        Padding = new Thickness(8, 6, 8, 6),
                         Opacity = 0.9
                     };
-                    Grid.SetColumn(abilityNameText, 0);
-                    abilityGrid.Children.Add(abilityNameText);
+                    
+                    abilityNamePanel.Children.Add(abilitySpacer);
+                    abilityNamePanel.Children.Add(abilityNameText);
+                    
+                    // Ability-Name ohne Border (keine Trennlinie)
+                    Grid.SetColumn(abilityNamePanel, 0);
+                    abilityGrid.Children.Add(abilityNamePanel);
 
                     var abilityStats = new[]
                     {
                         CreateTableCell($"{ability.Dps:N0}", false, 0.85),
                         CreateTableCell($"{ability.TotalDamage:N0}", false, 0.85),
-                        CreateTableCell("-", false, 0.85),
                         CreateTableCell($"{ability.MaxHit:N0}", false, 0.85),
                         CreateTableCell($"{ability.CritPercent:F1}%", false, 0.85),
                         CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.85)
@@ -493,7 +515,7 @@ public partial class MainWindow : FluentWindow
                     // Companion
                     var companion = (CompanionStatistics)item;
                     
-                    // Companion Expander (eingerückt wie Abilities)
+                    // Companion Expander
                     var companionExpander = new Expander
                 {
                     IsExpanded = false,
@@ -501,7 +523,7 @@ public partial class MainWindow : FluentWindow
                     BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
                     BorderThickness = new Thickness(0, 1, 0, 0),
                     Padding = new Thickness(0),
-                    Margin = new Thickness(32, 1, 0, 0) // Einrückung wie Abilities
+                    Margin = new Thickness(0, 1, 0, 0)
                 };
 
                 // Companion Header Grid
@@ -510,19 +532,18 @@ public partial class MainWindow : FluentWindow
                     Background = new SolidColorBrush(Color.FromRgb(20, 20, 20))
                 };
                 
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
                 companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
                 companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
 
                 // Companion Name mit Icon
                 var companionNamePanel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(8, 6, 8, 6)
+                    Margin = new Thickness(32, 6, 8, 6) // Links-Einrückung: 32px für Companions
                 };
                 
                 var companionExpandIcon = new System.Windows.Controls.TextBlock
@@ -547,15 +568,15 @@ public partial class MainWindow : FluentWindow
                 companionNamePanel.Children.Add(companionExpandIcon);
                 companionNamePanel.Children.Add(companionNameText);
                 
+                // Companion-Name ohne Border (keine Trennlinie)
                 Grid.SetColumn(companionNamePanel, 0);
                 companionHeaderGrid.Children.Add(companionNamePanel);
 
-                // Companion Stats
+                // Companion Stats - ohne Debuff
                 var companionStats = new[]
                 {
                     CreateTableCell($"{companion.Dps:N0}", false, 0.8),
                     CreateTableCell($"{companion.TotalDamage:N0}", false, 0.8),
-                    CreateTableCell($"{companion.Debuff:F1}%", false, 0.8),
                     CreateTableCell($"{companion.MaxOneHit:N0}", false, 0.8),
                     CreateTableCell($"{companion.CritPercent:F1}%", false, 0.8),
                     CreateTableCell($"{companion.AccuracyPercent:F1}%", false, 0.8)
@@ -591,37 +612,52 @@ public partial class MainWindow : FluentWindow
                         var abilityContainer = new Border
                         {
                             Background = new SolidColorBrush(Color.FromRgb(12, 12, 12)),
-                            Margin = new Thickness(0, 1, 0, 0),
-                            Padding = new Thickness(32, 0, 0, 0) // Zusätzliche Einrückung (relativ zum Companion)
+                            Margin = new Thickness(0, 1, 0, 0)
                         };
                         
                         var abilityGrid = new Grid();
                         
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
                         abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
                         abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
 
+                        // StackPanel für Companion-Ability-Name mit Spacer
+                        var companionAbilityNamePanel = new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Margin = new Thickness(40, 5, 8, 5) // 32px Companion-Einrückung + 8px normal
+                        };
+                        
+                        // Spacer für Icon-Platz (gleiche Breite wie companionExpandIcon: ~9px + 6px Margin = 15px)
+                        var companionAbilitySpacer = new System.Windows.Controls.TextBlock
+                        {
+                            Width = 15, // Platz für Companion-Icon
+                            VerticalAlignment = VerticalAlignment.Center
+                        };
+                        
                         var abilityNameText = new System.Windows.Controls.TextBlock
                         {
                             Text = ability.Name,
                             FontSize = 10,
                             Foreground = new SolidColorBrush(Color.FromRgb(156, 156, 156)),
                             VerticalAlignment = VerticalAlignment.Center,
-                            Padding = new Thickness(8, 5, 8, 5),
                             Opacity = 0.85
                         };
-                        Grid.SetColumn(abilityNameText, 0);
-                        abilityGrid.Children.Add(abilityNameText);
+                        
+                        companionAbilityNamePanel.Children.Add(companionAbilitySpacer);
+                        companionAbilityNamePanel.Children.Add(abilityNameText);
+                        
+                        // Ability-Name ohne Border (keine Trennlinie)
+                        Grid.SetColumn(companionAbilityNamePanel, 0);
+                        abilityGrid.Children.Add(companionAbilityNamePanel);
 
                         var abilityStats = new[]
                         {
                             CreateTableCell($"{ability.Dps:N0}", false, 0.75),
                             CreateTableCell($"{ability.TotalDamage:N0}", false, 0.75),
-                            CreateTableCell("-", false, 0.75),
                             CreateTableCell($"{ability.MaxHit:N0}", false, 0.75),
                             CreateTableCell($"{ability.CritPercent:F1}%", false, 0.75),
                             CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.75)
@@ -651,9 +687,9 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private System.Windows.Controls.TextBlock CreateTableCell(string text, bool isHeader, double opacity = 1.0)
+    private Border CreateTableCell(string text, bool isHeader, double opacity = 1.0, bool showLeftBorder = true)
     {
-        return new System.Windows.Controls.TextBlock
+        var textBlock = new System.Windows.Controls.TextBlock
         {
             Text = text,
             FontSize = isHeader ? 12 : 11,
@@ -666,6 +702,126 @@ public partial class MainWindow : FluentWindow
             Opacity = opacity,
             FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal
         };
+
+        return new Border
+        {
+            Child = textBlock,
+            BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)), // StarTrekBorderGray
+            BorderThickness = showLeftBorder ? new Thickness(1, 0, 0, 0) : new Thickness(0)
+        };
+    }
+
+    /// <summary>
+    /// Sortiert Player-Statistiken basierend auf der gewählten Spalte
+    /// </summary>
+    private List<PlayerStatistics> SortPlayerStatistics(
+        IEnumerable<PlayerStatistics> players,
+        string sortColumn,
+        bool ascending)
+    {
+        IOrderedEnumerable<PlayerStatistics> orderedPlayers = sortColumn switch
+        {
+            "DpsWithCompanions" => ascending 
+                ? players.OrderBy(p => p.DpsWithCompanions)
+                : players.OrderByDescending(p => p.DpsWithCompanions),
+            
+            "TotalDamageWithCompanions" => ascending
+                ? players.OrderBy(p => p.TotalDamageWithCompanions)
+                : players.OrderByDescending(p => p.TotalDamageWithCompanions),
+            
+            "MaxOneHit" => ascending
+                ? players.OrderBy(p => p.MaxOneHit)
+                : players.OrderByDescending(p => p.MaxOneHit),
+            
+            "CritPercent" => ascending
+                ? players.OrderBy(p => p.CritPercent)
+                : players.OrderByDescending(p => p.CritPercent),
+            
+            "AccuracyPercent" => ascending
+                ? players.OrderBy(p => p.AccuracyPercent)
+                : players.OrderByDescending(p => p.AccuracyPercent),
+            
+            _ => ascending 
+                ? players.OrderBy(p => p.DpsWithCompanions)
+                : players.OrderByDescending(p => p.DpsWithCompanions)
+        };
+
+        return orderedPlayers.ToList();
+    }
+
+    /// <summary>
+    /// Event-Handler für Spalten-Header-Klicks
+    /// </summary>
+    private void OnColumnHeaderClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button button || button.Tag is not string columnName)
+            return;
+
+        // Toggle Richtung wenn gleiche Spalte, sonst absteigend als Default
+        if (_currentSortColumn == columnName)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _currentSortColumn = columnName;
+            _sortAscending = false; // Neue Spalte startet mit absteigend
+        }
+
+        // Aktualisiere Visual Indicators
+        UpdateColumnHeaderIndicators();
+
+        // Re-render mit neuer Sortierung
+        if (_currentCombatData != null)
+        {
+            PopulateCombatStatsTreeView(_currentCombatData);
+        }
+    }
+
+    /// <summary>
+    /// Aktualisiert die visuellen Sortier-Indikatoren in den Spalten-Headern
+    /// </summary>
+    private void UpdateColumnHeaderIndicators()
+    {
+        // Liste der Header-Buttons mit ihren Tag-Namen (ohne Debuff)
+        var headerButtons = new[]
+        {
+            (Button: DpsHeaderButton, Column: "DpsWithCompanions"),
+            (Button: TotalDamageHeaderButton, Column: "TotalDamageWithCompanions"),
+            (Button: MaxHitHeaderButton, Column: "MaxOneHit"),
+            (Button: CritHeaderButton, Column: "CritPercent"),
+            (Button: AccHeaderButton, Column: "AccuracyPercent")
+        };
+
+        foreach (var (button, column) in headerButtons)
+        {
+            if (button == null) continue;
+
+            bool isActive = _currentSortColumn == column;
+            
+            // Pfeil-Symbol
+            string arrow = isActive ? (_sortAscending ? " ▲" : " ▼") : "";
+            
+            // Text-Basis (ohne Pfeil)
+            string baseText = column switch
+            {
+                "DpsWithCompanions" => "DPS",
+                "TotalDamageWithCompanions" => "Total Damage",
+                "MaxOneHit" => "Max Hit",
+                "CritPercent" => "Crit %",
+                "AccuracyPercent" => "Acc %",
+                _ => ""
+            };
+
+            button.Content = baseText + arrow;
+            
+            // Farbe und FontWeight für aktive Spalte
+            button.Foreground = isActive
+                ? new SolidColorBrush(Color.FromRgb(91, 155, 213)) // Star Trek Blue
+                : new SolidColorBrush(Color.FromRgb(176, 176, 176)); // Gray
+            
+            button.FontWeight = isActive ? FontWeights.Bold : FontWeights.SemiBold;
+        }
     }
 
     protected override void OnClosed(EventArgs e)

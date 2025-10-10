@@ -812,3 +812,632 @@ for new_id, combat in enumerate(reversed_combats):
 
 ---
 **Nächste Session:** DPS-Graph implementieren, Spalten-Sortierung, Filter-Funktionalität
+
+## Session 5: Spalten-Sortierung für Combat-Statistiken
+
+**Datum:** 2025-10-10  
+**Dauer:** ~30 Minuten  
+**Fokus:** Click-to-Sort Funktionalität für Combat-Statistik-Tabelle
+
+### 🎯 **Was wir erreicht haben:**
+
+#### ✅ **Erfolgreich implementiert:**
+
+1. **Klickbare Spalten-Header**
+   - TextBlocks durch Button-Controls ersetzt
+   - Alle Spalten sortierbar: DPS, Total Damage, Debuff, Max Hit, Crit %, Acc %
+   - Custom Button-Style mit transparentem Hintergrund
+   - Hover-Effekt: Leichte Hintergrund-Farbe (#20FFFFFF)
+   - Hand-Cursor für bessere UX
+
+2. **Dynamische Sortier-Logik**
+   - Private Felder für Sortier-Status:
+     - `_currentSortColumn` (Default: "DpsWithCompanions")
+     - `_sortAscending` (Default: false = absteigend)
+   - Toggle-Funktion: Gleiche Spalte → Richtung wechseln
+   - Neue Spalte: Immer absteigend als Start
+
+3. **SortPlayerStatistics Methode**
+   - Switch-Statement für flexible Spalten-Auswahl
+   - Unterstützt alle 6 Spalten (DPS, Total Damage, Debuff, Max Hit, Crit %, Acc %)
+   - Erweiterbar: Neue Spalten können einfach hinzugefügt werden
+   - Aufsteigend/Absteigend-Sortierung
+
+4. **Visuelle Sortier-Indikatoren**
+   - Pfeil-Symbole: ▲ (aufsteigend) / ▼ (absteigend)
+   - Nur bei aktiver Sortier-Spalte sichtbar
+   - Aktive Spalte: Star Trek Blue (#5B9BD5), FontWeight Bold
+   - Inaktive Spalten: Gray (#B0B0B0), FontWeight SemiBold
+
+5. **UpdateColumnHeaderIndicators Methode**
+   - Aktualisiert alle Header-Buttons dynamisch
+   - Zeigt Sortier-Pfeil und Farb-Highlighting
+   - Wird automatisch nach jedem Klick aufgerufen
+   - Initial-Sortierung wird beim ersten Combat-Laden angezeigt
+
+### 🔧 **Technische Details:**
+
+#### **XAML-Änderungen (MainWindow.xaml):**
+```xml
+<!-- Vorher: TextBlock -->
+<TextBlock Grid.Column="1" Text="DPS" .../>
+
+<!-- Nachher: Button mit Custom Style -->
+<Button x:Name="DpsHeaderButton"
+        Content="DPS"
+        Tag="DpsWithCompanions"
+        Click="OnColumnHeaderClick"
+        Cursor="Hand">
+    <Button.Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Right"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#20FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Button.Style>
+</Button>
+```
+
+#### **Code-Behind-Änderungen (MainWindow.xaml.cs):**
+
+**Neue Felder:**
+```csharp
+private string _currentSortColumn = "DpsWithCompanions";
+private bool _sortAscending = false;
+```
+
+**Sortier-Logik:**
+```csharp
+private List<PlayerStatistics> SortPlayerStatistics(
+    IEnumerable<PlayerStatistics> players,
+    string sortColumn,
+    bool ascending)
+{
+    IOrderedEnumerable<PlayerStatistics> orderedPlayers = sortColumn switch
+    {
+        "DpsWithCompanions" => ascending 
+            ? players.OrderBy(p => p.DpsWithCompanions)
+            : players.OrderByDescending(p => p.DpsWithCompanions),
+        // ... weitere Spalten
+    };
+    return orderedPlayers.ToList();
+}
+```
+
+**Event-Handler:**
+```csharp
+private void OnColumnHeaderClick(object sender, RoutedEventArgs e)
+{
+    if (sender is not Button button || button.Tag is not string columnName)
+        return;
+
+    // Toggle oder neue Spalte
+    if (_currentSortColumn == columnName)
+        _sortAscending = !_sortAscending;
+    else
+    {
+        _currentSortColumn = columnName;
+        _sortAscending = false;
+    }
+
+    UpdateColumnHeaderIndicators();
+    if (_currentCombatData != null)
+        PopulateCombatStatsTreeView(_currentCombatData);
+}
+```
+
+**Visual Update:**
+```csharp
+private void UpdateColumnHeaderIndicators()
+{
+    foreach (var (button, column) in headerButtons)
+    {
+        bool isActive = _currentSortColumn == column;
+        string arrow = isActive ? (_sortAscending ? " ▲" : " ▼") : "";
+        button.Content = baseText + arrow;
+        button.Foreground = isActive ? StarTrekBlue : Gray;
+        button.FontWeight = isActive ? Bold : SemiBold;
+    }
+}
+```
+
+### 📁 **Dateien geändert:**
+
+**Aktualisiert:**
+- `frontend/MainWindow.xaml` - Spalten-Header zu Buttons konvertiert
+- `frontend/MainWindow.xaml.cs` - Sortier-Logik und Event-Handler hinzugefügt
+
+**Keine neuen Dateien erstellt**
+
+### ✅ **Features:**
+
+**Sortierbare Spalten:**
+- ✅ DPS (mit Companions)
+- ✅ Total Damage (mit Companions)
+- ✅ Debuff
+- ✅ Max Hit
+- ✅ Crit %
+- ✅ Acc %
+
+**Sortier-Verhalten:**
+- ✅ Initial-Sortierung: DPS absteigend (beibehalten)
+- ✅ Klick auf gleiche Spalte: Toggle auf-/absteigend
+- ✅ Klick auf neue Spalte: Absteigend als Default
+- ✅ Visuelle Indikatoren: Pfeil + Farbe + Bold
+
+**Performance:**
+- ✅ Sortierung im Memory (keine Backend-Anfrage)
+- ✅ Nur UI-Neurendering
+- ✅ Keine Lags auch bei vielen Spielern
+
+### 🎨 **UI-Verbesserungen:**
+
+**Vorher:**
+- Statische TextBlock-Header
+- Keine visuelle Rückmeldung
+- Sortierung fix nach DPS
+
+**Nachher:**
+- Klickbare Button-Header mit Hand-Cursor
+- Hover-Effekt für bessere UX
+- Sortier-Pfeile zeigen aktuelle Richtung
+- Farbiges Highlighting der aktiven Spalte
+- Flexibel sortierbar nach allen wichtigen Spalten
+
+### 💡 **Lessons Learned:**
+
+1. **Button-Styling in WPF:** Custom ControlTemplates ermöglichen vollständige Kontrolle über Aussehen
+2. **Switch Expressions:** Eleganter Code für Multi-Case-Logik (C# 8.0+)
+3. **Tag-Property:** Perfekt für Metadaten an UI-Controls (hier: Spaltenname)
+4. **Performance:** In-Memory-Sortierung ist schnell genug für Hunderte von Spielern
+5. **UX-Details:** Kleine Dinge wie Cursor-Änderung und Hover-Effekte machen großen Unterschied
+
+### 🔄 **Build-Status:**
+
+- ✅ Keine Linter-Fehler
+- ✅ Code kompiliert erfolgreich
+- ✅ Keine Breaking Changes
+- ✅ Abwärtskompatibel (bestehende Funktionalität intakt)
+
+### 🎯 **Erweiterbarkeit:**
+
+**Um weitere Spalten sortierbar zu machen:**
+1. Spalten-Header von TextBlock zu Button ändern
+2. `Tag` mit Spaltenname setzen
+3. `OnColumnHeaderClick` Event-Handler zuweisen
+4. Case zum Switch-Statement in `SortPlayerStatistics` hinzufügen
+5. Entry zu `headerButtons` Array in `UpdateColumnHeaderIndicators` hinzufügen
+
+→ Keine Änderung der Kernlogik erforderlich! ✅
+
+### 📊 **Code-Umfang:**
+
+**Neue Zeilen:**
+- MainWindow.xaml: ~220 Zeilen (Header-Buttons mit Styles)
+- MainWindow.xaml.cs: ~120 Zeilen (3 neue Methoden + Felder)
+
+**Geänderte Methoden:**
+- `PopulateCombatStatsTreeView`: Verwendet jetzt `SortPlayerStatistics`
+- `LoadCombatDetailsAsync`: Ruft `UpdateColumnHeaderIndicators` auf
+
+### 🚨 **Bekannte Einschränkungen:**
+
+**Keine:**
+- Feature funktioniert wie geplant
+- Alle gewünschten Spalten sind sortierbar
+- Erweiterung ist einfach möglich
+
+---
+**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität
+
+## Session 6: Spalten-Trennlinien für bessere Lesbarkeit
+
+**Datum:** 2025-10-10  
+**Dauer:** ~20 Minuten  
+**Fokus:** Vertikale Trennlinien zwischen Spalten für alle Ebenen
+
+### 🎯 **Was wir erreicht haben:**
+
+#### ✅ **Erfolgreich implementiert:**
+
+1. **Durchgängige vertikale Trennlinien**
+   - Linien zwischen allen Spalten sichtbar
+   - Durchgehend von Header bis durch alle Ebenen:
+     - Player-Ebene
+     - Companion-Ebene  
+     - Ability-Ebene (Player und Companion)
+   - Konsistente Farbe: StarTrekBorderGray (#333333)
+   - Dünne 1px-Linien für subtile Abgrenzung
+
+2. **CreateTableCell Refactoring**
+   - Rückgabewert: `Border` statt `TextBlock`
+   - TextBlock wird in Border gewrappt
+   - `BorderThickness`: `1,0,0,0` (linker Border)
+   - Neuer Parameter `showLeftBorder` für Flexibilität
+   - Alle Daten-Zellen nutzen die gleiche Methode
+
+3. **Name-Spalten angepasst**
+   - Player-Namen in Border gewrappt
+   - Companion-Namen in Border gewrappt  
+   - Ability-Namen in Border gewrappt (2 Stellen)
+   - Rechter Border (`0,0,1,0`) für Trennlinie zur DPS-Spalte
+
+4. **Header-Buttons mit Borders**
+   - Alle Header-Buttons haben `BorderThickness="1,0,0,0"`
+   - Player/Ability Header als Border mit rechtem BorderThickness
+   - `HorizontalAlignment="Stretch"` für volle Spalten-Breite
+   - Hover-Effekt bleibt erhalten
+
+### 🔧 **Technische Details:**
+
+#### **CreateTableCell - Vorher/Nachher:**
+
+**Vorher:**
+```csharp
+private TextBlock CreateTableCell(string text, bool isHeader, double opacity = 1.0)
+{
+    return new TextBlock { Text = text, ... };
+}
+```
+
+**Nachher:**
+```csharp
+private Border CreateTableCell(string text, bool isHeader, double opacity = 1.0, bool showLeftBorder = true)
+{
+    var textBlock = new TextBlock { Text = text, ... };
+    return new Border
+    {
+        Child = textBlock,
+        BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+        BorderThickness = showLeftBorder ? new Thickness(1, 0, 0, 0) : new Thickness(0)
+    };
+}
+```
+
+#### **Name-Spalten Border-Wrapping:**
+```csharp
+// Beispiel: Player-Name
+var playerNameBorder = new Border
+{
+    Child = playerNamePanel,
+    BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+    BorderThickness = new Thickness(0, 0, 1, 0) // Rechter Border
+};
+Grid.SetColumn(playerNameBorder, 0);
+playerHeaderGrid.Children.Add(playerNameBorder);
+```
+
+#### **XAML Header mit Borders:**
+```xml
+<!-- Player/Ability Header -->
+<Border Grid.Column="0"
+        BorderBrush="{DynamicResource StarTrekBorderGray}"
+        BorderThickness="0,0,1,0">
+    <TextBlock Text="Player / Ability" ... />
+</Border>
+
+<!-- DPS Header (Button) -->
+<Button ... HorizontalAlignment="Stretch">
+    <Button.Template>
+        <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{DynamicResource StarTrekBorderGray}"
+                    BorderThickness="1,0,0,0">
+                <ContentPresenter ... />
+            </Border>
+        </ControlTemplate>
+    </Button.Template>
+</Button>
+```
+
+### 📁 **Dateien geändert:**
+
+**Aktualisiert:**
+- `frontend/MainWindow.xaml.cs` - CreateTableCell refactored, alle Name-Spalten mit Border
+- `frontend/MainWindow.xaml` - Header-Buttons mit BorderThickness, Player/Ability Header als Border
+
+### ✅ **Visuelle Verbesserungen:**
+
+**Vorher:**
+- Keine Spalten-Abgrenzung
+- Daten schwer zuzuordnen bei vielen Spalten
+- Unklare Spalten-Grenzen
+
+**Nachher:**
+- Klare vertikale Trennlinien
+- Durchgängig von Header bis Ability-Ebene
+- Bessere Lesbarkeit und Orientierung
+- Professionelles Tabellen-Layout
+
+### 💡 **Lessons Learned:**
+
+1. **Border-Wrapping:** Flexibler als direkte BorderThickness auf Controls
+2. **Konsistenz:** Gleiche Border-Lösung für alle Ebenen erhöht Wartbarkeit
+3. **XAML Template-Borders:** BorderThickness im ControlTemplate für klickbare Elemente
+4. **Type-Ambiguität:** `System.Windows.Controls.Button` vs. `Wpf.Ui.Controls.Button` explizit auflösen
+
+### 🔄 **Build-Status:**
+
+- ✅ Keine Linter-Fehler
+- ✅ Ambiguous Button-Referenz aufgelöst
+- ✅ Code kompiliert erfolgreich
+- ✅ Visuelle Verbesserung ohne Breaking Changes
+
+### 🎨 **UI-Qualität:**
+
+- ✅ Durchgängige Trennlinien (Header → Player → Companion → Ability)
+- ✅ Subtile 1px-Linien stören nicht
+- ✅ Star Trek Theme konsistent (#333333)
+- ✅ Bessere Daten-Zuordnung in breiten Tabellen
+- ✅ Professionelles Table-Layout
+
+---
+**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität
+
+## Session 7: Spalten-Layout-Optimierung und Sonderzeichen-Handling
+
+**Datum:** 2025-10-10  
+**Dauer:** ~1.5 Stunden  
+**Fokus:** Spalten-Breiten anpassen, Einrückung optimieren, Sonderzeichen-Probleme lösen
+
+### 🎯 **Was wir erreicht haben:**
+
+#### ✅ **Erfolgreich implementiert:**
+
+1. **Spalten-Layout-Optimierung**
+   - Player/Ability-Spalte deutlich verbreitert (`3*` statt `2*`)
+   - Crit % und Acc % Spalten verschmälert (`0.7*` statt `1*`)
+   - Debuff-Spalte komplett entfernt (nicht benötigt)
+   - Total Damage Spalte leicht vergrößert (`1.2*` statt `1*`)
+   - Optimierte Raumnutzung für längere Spieler- und Ability-Namen
+
+2. **Einrückung-Fixes für bessere Alignment**
+   - Player Abilities: Padding von `new Thickness(20, 6, 8, 6)` → `new Thickness(16, 6, 8, 6)`
+   - Companion Abilities: Padding von `new Thickness(52, 5, 8, 5)` → `new Thickness(48, 5, 8, 5)`
+   - Companion-Namen: Margin angepasst auf `new Thickness(32, 6, 8, 6)`
+   - Alle Container-Paddings entfernt für präzise Kontrolle
+
+3. **Expander-Icon-Alignment mit Spacer-Elementen**
+   - **Problem:** Zeilen mit Expander-Icons (Player, Companion) waren breiter als Ability-Zeilen ohne Icons
+   - **Lösung:** Unsichtbare Spacer-Elemente in Ability-Zeilen hinzugefügt
+   - Player Ability Spacer: `Width=18` (reserviert Platz für Player-Expander)
+   - Companion Ability Spacer: `Width=15` (reserviert Platz für Companion-Expander)
+   - Resultat: Perfekte vertikale Ausrichtung aller Spalten-Trennlinien
+
+4. **Sonderzeichen-Problem gelöst (Umlaute: ä, ü, ö)**
+   - **Problem:** Umlaute wurden als "?" angezeigt
+   - **Ursache 1:** HTML-Entities im Combat-Log (z.B. `&lt;` statt `<`)
+   - **Lösung 1:** `html.unescape()` in `clean_name()` Methode im Backend
+   - **Ursache 2:** UTF-8 Encoding nicht explizit gesetzt
+   - **Lösung 2:** 
+     - Frontend: `process.StartInfo.StandardInputEncoding = Encoding.UTF8;`
+     - Frontend: `process.StartInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";`
+   - Resultat: Alle Sonderzeichen werden korrekt angezeigt
+
+5. **UTF-8 BOM-Handling**
+   - **Problem:** "Unexpected UTF-8 BOM (decode using utf-8-sig)" beim Combat-Laden
+   - **Ursache:** Windows fügt Byte Order Mark (BOM) `\uFEFF` zum JSON-Input hinzu
+   - **Lösung (Frontend):** `output = output.TrimStart('\uFEFF');` vor JSON-Deserialisierung
+   - **Lösung (Backend):** `input_json = input_json.lstrip('\ufeff')` nach `sys.stdin.read()`
+   - Resultat: Keine JSON-Parse-Fehler mehr, Combat-Liste lädt ohne Probleme
+
+### 🔧 **Technische Details:**
+
+#### **Spalten-Breiten (Grid.ColumnDefinitions):**
+```xml
+<!-- Neue Verteilung -->
+<ColumnDefinition Width="3*"/>      <!-- Player/Ability -->
+<ColumnDefinition Width="1*"/>      <!-- DPS -->
+<ColumnDefinition Width="1.2*"/>    <!-- Total Damage -->
+<ColumnDefinition Width="1*"/>      <!-- Max Hit -->
+<ColumnDefinition Width="0.7*"/>    <!-- Crit % -->
+<ColumnDefinition Width="0.7*"/>    <!-- Acc % -->
+<!-- Debuff entfernt -->
+```
+
+#### **Spacer-Element für Alignment:**
+```csharp
+// Player Ability - Spacer für Player-Expander-Icon
+var abilitySpacer = new Rectangle
+{
+    Width = 18,
+    Fill = Brushes.Transparent
+};
+abilityNamePanel.Children.Add(abilitySpacer);
+
+// Companion Ability - Spacer für Companion-Expander-Icon
+var companionAbilitySpacer = new Rectangle
+{
+    Width = 15,
+    Fill = Brushes.Transparent
+};
+companionAbilityNamePanel.Children.Add(companionAbilitySpacer);
+```
+
+#### **HTML-Entity-Decoding im Backend:**
+```python
+import html
+
+def clean_name(self, name: str) -> str:
+    """Entfernt HTML-Tags UND decodiert HTML-Entities"""
+    if not name:
+        return ""
+    
+    # Erst HTML-Entities decodieren (&lt; → <, &uuml; → ü, etc.)
+    name = html.unescape(name)
+    
+    # Dann HTML-Tags entfernen
+    name = re.sub(r'<[^>]+>', '', name)
+    
+    return name.strip()
+```
+
+#### **UTF-8 Encoding im Frontend:**
+```csharp
+// OSCRBackendService.cs
+process.StartInfo.StandardInputEncoding = Encoding.UTF8;
+process.StartInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+
+// BOM entfernen vor JSON-Parse
+output = output.TrimStart('\uFEFF');
+var result = JsonSerializer.Deserialize<T>(output, _jsonOptions);
+```
+
+#### **UTF-8 BOM-Handling im Backend:**
+```python
+# working_oscr_backend.py
+input_json = sys.stdin.read()
+input_json = input_json.lstrip('\ufeff')  # BOM entfernen
+data = json.loads(input_json)
+```
+
+### 🚨 **Gelöste Probleme:**
+
+#### **Problem 1: Spalten-Misalignment trotz Trennlinien**
+- **Symptom:** Vertikale Trennlinien waren nicht perfekt ausgerichtet zwischen Ebenen
+- **Ursache:** 
+  - Expander-Icons in Player/Companion-Zeilen vergrößerten die erste Spalte
+  - Ability-Zeilen ohne Icons waren schmaler
+  - Padding in Containern verschob alle Spalten
+- **Lösung:**
+  - Alle Container-Paddings entfernt
+  - Padding nur auf individuelle TextBlocks angewendet
+  - Spacer-Elemente in Ability-Zeilen hinzugefügt (Width 18/15)
+- **Resultat:** Perfekt ausgerichtete vertikale Linien über alle 4 Ebenen
+
+#### **Problem 2: Umlaute als "?" angezeigt**
+- **Symptom:** Deutsche Umlaute (ä, ö, ü) wurden als "?" dargestellt
+- **Ursache:** 
+  - Combat-Log enthält HTML-Entities (`&auml;` statt `ä`)
+  - UTF-8 Encoding war nicht explizit gesetzt (Python defaultet zu ASCII)
+- **Lösung:**
+  - `html.unescape()` vor HTML-Tag-Entfernung
+  - `StandardInputEncoding = Encoding.UTF8` im Frontend
+  - `PYTHONIOENCODING=utf-8` Environment Variable für Python
+- **Resultat:** Alle Sonderzeichen korrekt angezeigt
+
+#### **Problem 3: "Unexpected UTF-8 BOM" JSON-Fehler**
+- **Symptom:** Combat-Liste lädt nicht, Fehler "BOM (decode using utf-8-sig)"
+- **Ursache:** Windows fügt BOM-Character `\uFEFF` zum JSON-Input hinzu
+- **Lösung:** 
+  - Frontend: BOM aus Backend-Output entfernen vor Deserialisierung
+  - Backend: BOM aus stdin-Input entfernen vor JSON-Parsing
+- **Resultat:** Combat-Liste lädt ohne Fehler
+
+#### **Problem 4: Player-Namen benötigen mehr Platz**
+- **Symptom:** Lange Spieler- und Ability-Namen wurden abgeschnitten
+- **Lösung:** Player/Ability-Spalte von `2*` auf `3*` verbreitert
+- **Resultat:** Alle Namen lesbar, keine Truncation mehr
+
+### 📁 **Wichtige Dateien:**
+
+**Aktualisiert:**
+- `frontend/MainWindow.xaml` - Grid.ColumnDefinitions angepasst, Debuff entfernt
+- `frontend/MainWindow.xaml.cs` - Spacer-Elemente, Padding-Anpassungen
+- `frontend/Services/OSCRBackendService.cs` - UTF-8 Encoding, BOM-Handling
+- `Deploy/working_oscr_backend.py` - HTML-Entity-Decoding, BOM-Handling
+
+**Keine neuen Dateien erstellt**
+
+### 📊 **Vor/Nach Vergleich:**
+
+#### **Spalten-Breiten:**
+```
+VORHER:
+Player/Ability: 2*  (zu schmal)
+DPS: 1*
+Total Damage: 1*
+Debuff: 1*  (unnötig)
+Max Hit: 1*
+Crit %: 1*  (zu breit für Prozent-Werte)
+Acc %: 1*   (zu breit für Prozent-Werte)
+
+NACHHER:
+Player/Ability: 3*  (deutlich mehr Platz)
+DPS: 1*
+Total Damage: 1.2*  (leicht größer)
+Max Hit: 1*
+Crit %: 0.7*  (kompakter)
+Acc %: 0.7*   (kompakter)
+Debuff: ENTFERNT
+```
+
+#### **Sonderzeichen:**
+```
+VORHER:
+Spielername: "M?ller"
+Ability: "Photonen-Torpedo-Salvø"
+
+NACHHER:
+Spielername: "Müller"
+Ability: "Photonen-Torpedo-Salvø"
+```
+
+### 💡 **Lessons Learned:**
+
+1. **Expander-Icon-Alignment:** Invisible Spacer-Elemente sind die sauberste Lösung für Icon-bedingte Breiten-Unterschiede
+2. **HTML-Entities vs. UTF-8:** Beides muss gehandhabt werden - erst Entities decodieren, dann Tags entfernen
+3. **Windows BOM:** Bei stdin/stdout zwischen C# und Python immer BOM-Handling implementieren
+4. **Python Encoding:** `PYTHONIOENCODING` Environment Variable überschreibt Python's Default-Encoding zuverlässig
+5. **Container-Padding:** Für präzise Alignment besser kein Padding auf Container, nur auf Children
+6. **Spalten-Breiten:** Relative Breiten (`*`) ermöglichen flexible, aber proportionale Layouts
+
+### 🔄 **Build-Status:**
+
+- ✅ Frontend kompiliert erfolgreich
+- ✅ Backend kompiliert erfolgreich
+- ✅ Keine Linter-Fehler
+- ✅ Sonderzeichen werden korrekt angezeigt
+- ✅ BOM-Fehler behoben
+- ✅ Spalten perfekt ausgerichtet
+- ✅ Layout optimiert
+
+### 🎨 **UI-Qualität:**
+
+**Spalten-Alignment:**
+- ✅ Vertikale Trennlinien perfekt ausgerichtet (Header → Player → Companion → Ability)
+- ✅ Spacer-Elemente kompensieren Expander-Icons
+- ✅ Keine verschobenen Spalten mehr
+
+**Lesbarkeit:**
+- ✅ Player/Ability-Spalte hat ausreichend Platz
+- ✅ Prozent-Spalten kompakt und übersichtlich
+- ✅ Debuff-Spalte entfernt (war leer)
+- ✅ Sonderzeichen korrekt dargestellt
+
+**Stabilität:**
+- ✅ Keine JSON-Parse-Fehler mehr
+- ✅ UTF-8 durchgängig korrekt gehandhabt
+- ✅ BOM-tolerantes Parsing
+
+### 🎯 **Nächste Schritte:**
+
+**Implementiert:**
+- ✅ Combat-Statistiken-Tabelle mit 3-Level-Hierarchie
+- ✅ Spalten-Sortierung (Click-to-Sort)
+- ✅ Spalten-Trennlinien
+- ✅ Optimiertes Spalten-Layout
+- ✅ Sonderzeichen-Support
+- ✅ Combat-Type-Erkennung (Space/Ground)
+- ✅ Companion-Parsing
+
+**Ausstehend:**
+- ⏳ DPS-Graph-Visualisierung
+- ⏳ Filter-Funktionalität (Damage Out/In, Heal, etc.)
+- ⏳ Export-Funktion
+- ⏳ Live-Parsing-Modus
+
+---
+**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität
