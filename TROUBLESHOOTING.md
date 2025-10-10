@@ -18,14 +18,17 @@ Die Anwendung erstellt automatisch Log-Dateien für die Fehlersuche:
 ```
 Im gleichen Ordner wie StoDamageMeter.exe:
 ├── StoDamageMeter.exe
-├── oscr_backend.log      ← Backend-Fehler (Python)
-└── frontend_debug.log    ← Frontend-Fehler (C#)
+└── logs/
+    ├── oscr_backend.log      ← Backend-Fehler (Python)
+    ├── frontend_debug.log    ← Frontend-Fehler (C#)
+    ├── backend_debug.log     ← Backend-Kommunikation
+    └── backend_service_debug.log ← Backend-Service-Details
 ```
 
 ### **Log-Dateien öffnen:**
 1. Navigiere zum Ordner wo `StoDamageMeter.exe` liegt
-2. Öffne `oscr_backend.log` mit Notepad
-3. Öffne `frontend_debug.log` mit Notepad
+2. Öffne den `logs/` Unterordner
+3. Öffne `oscr_backend.log` oder `frontend_debug.log` mit Notepad
 4. Scrolle nach unten (neueste Einträge sind am Ende)
 
 ---
@@ -49,7 +52,7 @@ Im gleichen Ordner wie StoDamageMeter.exe:
    - Lösung: Führe die Anwendung als Administrator aus (Rechtsklick → "Als Administrator ausführen")
 
 **Debug-Schritte:**
-1. Öffne `oscr_backend.log`
+1. Öffne `logs/oscr_backend.log`
 2. Suche nach der letzten Fehlermeldung (am Ende der Datei)
 3. Häufige Fehler:
    - `FileNotFoundError` → Datei nicht gefunden
@@ -95,12 +98,12 @@ Im gleichen Ordner wie StoDamageMeter.exe:
 
 ## 🐍 Backend-Fehler
 
-### **Backend-Log analysieren (`oscr_backend.log`):**
+### **Backend-Log analysieren (`logs/oscr_backend.log`):**
 
 **Wichtige Log-Einträge:**
 ```
 === OSCR Backend Started ===
-Log file: C:\...\oscr_backend.log
+Log file: C:\...\logs\oscr_backend.log
 ```
 → Backend hat erfolgreich gestartet
 
@@ -132,7 +135,7 @@ JSONDecodeError: ...
 **Ursache:** Kommunikations-Problem zwischen Frontend und Backend  
 **Lösung:**
 - Schließe die Anwendung komplett
-- Lösche `oscr_backend.log`
+- Lösche `logs/oscr_backend.log`
 - Starte die Anwendung neu
 
 **3. Memory-Fehler**
@@ -209,8 +212,9 @@ MemoryError: ...
 ### **Problem nicht gelöst?**
 
 1. **Log-Dateien sammeln:**
-   - `oscr_backend.log`
-   - `frontend_debug.log`
+   - `logs/oscr_backend.log`
+   - `logs/frontend_debug.log`
+   - `logs/backend_debug.log`
 
 2. **GitHub Issue erstellen:**
    - https://github.com/VanKhaos/StoDamageMeter/issues
@@ -230,12 +234,12 @@ MemoryError: ...
 ### **Erweiterte Fehlersuche:**
 
 **Frontend-Log aktivieren:**
-1. Die Datei `frontend_debug.log` wird automatisch erstellt
+1. Die Datei `logs/frontend_debug.log` wird automatisch erstellt
 2. Enthält alle Frontend-Aktivitäten
 3. Zeigt Backend-Kommunikation
 
 **Backend-Log lesen:**
-1. `oscr_backend.log` wird automatisch erstellt
+1. `logs/oscr_backend.log` wird automatisch erstellt
 2. Enthält alle Backend-Aktivitäten
 3. Zeigt Combat-Parsing-Details
 
@@ -249,7 +253,7 @@ Falls du das nicht möchtest, anonymisiere die Namen vor dem Teilen.
 
 ## ✅ Checkliste bei Problemen
 
-- [ ] Beide Log-Dateien vorhanden? (`oscr_backend.log`, `frontend_debug.log`)
+- [ ] Log-Dateien vorhanden? (im `logs/` Ordner)
 - [ ] Combat-Logging in STO aktiviert? (`/combatlog 1`)
 - [ ] Richtiger Pfad zur `combatlog.log`?
 - [ ] Alle Dateien aus der ZIP entpackt?

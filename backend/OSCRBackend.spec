@@ -2,28 +2,17 @@
 
 
 a = Analysis(
-    ['OSCR\\real_api.py'],
+    ['working_oscr_backend.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[
-        'OSCR',
-        'OSCR.main',
-        'OSCR.datamodels',
-        'OSCR.combat',
-        'OSCR.parser',
-        'OSCR.detection',
-        'OSCR.iofunc',
-        'OSCR.utilities',
-        'OSCR.constants',
-        'OSCR.oscr_read_file_backwards',
-    ],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', 'matplotlib', 'pandas', 'scipy', 'PIL', 'cv2', 'tensorflow', 'torch', 'jupyter', 'notebook', 'IPython', 'test', 'unittest', 'doctest'],
+    excludes=[],
     noarchive=False,
-    optimize=2,
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 
@@ -32,7 +21,7 @@ exe = EXE(
     a.scripts,
     a.binaries,
     a.datas,
-    [('O', None, 'OPTION'), ('O', None, 'OPTION')],
+    [],
     name='OSCRBackend',
     debug=False,
     bootloader_ignore_signals=False,

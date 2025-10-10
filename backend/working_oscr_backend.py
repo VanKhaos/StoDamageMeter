@@ -11,6 +11,13 @@ import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict
+import io
+
+# Erzwinge UTF-8 für stdout/stderr (wichtig für PyInstaller .exe)
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Logging konfigurieren
 # Logger mit File-Handler konfigurieren
@@ -21,7 +28,7 @@ logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# File Handler - schreibt neben die .exe
+# File Handler - schreibt ins logs/ Unterverzeichnis
 # Bestimme das Verzeichnis der .exe (oder des Scripts)
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
@@ -30,7 +37,11 @@ else:
     # Running as script
     exe_dir = os.path.dirname(os.path.abspath(__file__))
 
-log_file_path = os.path.join(exe_dir, 'oscr_backend.log')
+# Erstelle logs/ Unterverzeichnis falls es nicht existiert
+logs_dir = os.path.join(exe_dir, 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
+log_file_path = os.path.join(logs_dir, 'oscr_backend.log')
 file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 

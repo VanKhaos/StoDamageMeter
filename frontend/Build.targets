@@ -29,12 +29,22 @@
   <Target Name="CopyBackend" AfterTargets="Build">
     <Message Text="Copying Backend to Output..." Importance="high" />
     
-    <!-- Backend in Output-Verzeichnis kopieren -->
+    <!-- Backend zu Deploy/ kopieren (für Entwicklung) -->
     <Copy SourceFiles="$(BackendSourcePath)" 
           DestinationFiles="$(BackendTargetPath)"
           SkipUnchangedFiles="true" />
     
+    <!-- Backend auch in Output-Verzeichnis kopieren (für direktes Testen) -->
+    <PropertyGroup>
+      <OutputBackendPath>$(OutputPath)OSCRBackend.exe</OutputBackendPath>
+    </PropertyGroup>
+    
+    <Copy SourceFiles="$(BackendSourcePath)" 
+          DestinationFiles="$(OutputBackendPath)"
+          SkipUnchangedFiles="true" />
+    
     <Message Text="Backend copied to: $(BackendTargetPath)" Importance="high" />
+    <Message Text="Backend copied to: $(OutputBackendPath)" Importance="high" />
   </Target>
 
   <!-- Target: Backend für Publish kopieren -->

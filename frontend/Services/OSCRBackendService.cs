@@ -374,11 +374,10 @@ namespace StoDamageMeter.Services
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.StandardInputEncoding = Encoding.UTF8;
             process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
             
-            // Erzwinge UTF-8 für Python I/O
+            // Erzwinge UTF-8 nur für Python's Output (stdout/stderr), nicht für Input
             process.StartInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
 
             var outputBuilder = new StringBuilder();
@@ -419,8 +418,10 @@ namespace StoDamageMeter.Services
                 LogToFile("Process started. Sending JSON input...");
                 _logger.LogInformation("Process started. Sending JSON input...");
                 
-                // JSON-Input senden
-                await process.StandardInput.WriteAsync(jsonInput);
+                // JSON-Input als UTF-8 Bytes senden
+                var jsonBytes = Encoding.UTF8.GetBytes(jsonInput);
+                await process.StandardInput.BaseStream.WriteAsync(jsonBytes, 0, jsonBytes.Length);
+                await process.StandardInput.BaseStream.FlushAsync();
                 process.StandardInput.Close();
                 
                 LogToFile("JSON input sent. Waiting for process to exit...");
@@ -442,32 +443,59 @@ namespace StoDamageMeter.Services
                 var output = outputBuilder.ToString();
                 var error = errorBuilder.ToString();
 
-                _logger.LogDebug("Backend output: {Output}", output);
+                // Erweitertes Logging für Debugging
+                _logger.LogInformation("=== Backend Response Debug ===");
+                _logger.LogInformation("Exit Code: {ExitCode}", process.ExitCode);
+                _logger.LogInformation("Output Length: {Length} chars", output?.Length ?? 0);
+                _logger.LogInformation("Error Length: {Length} chars", error?.Length ?? 0);
+                
+                if (!string.IsNullOrEmpty(output))
+                {
+                    _logger.LogDebug("Backend stdout: {Output}", output.Length > 500 ? output.Substring(0, 500) + "..." : output);
+                }
+                
                 if (!string.IsNullOrEmpty(error))
                 {
-                    _logger.LogDebug("Backend error output: {Error}", error);
-                    // Debug-Logs auch in Konsole und Datei schreiben
-                    System.Diagnostics.Debug.WriteLine($"=== BACKEND DEBUG ===");
-                    System.Diagnostics.Debug.WriteLine(error);
-                    System.Diagnostics.Debug.WriteLine($"=== END DEBUG ===");
+                    _logger.LogWarning("Backend stderr: {Error}", error);
                     
-                    // In Log-Datei schreiben
+                    // In Log-Datei schreiben (vollständig)
                     try
                     {
-                        var logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backend_debug.log");
-                        File.AppendAllText(logFile, $"\n=== {DateTime.Now} ===\n{error}\n");
+                        var logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                        Directory.CreateDirectory(logsDir);
+                        var logFile = Path.Combine(logsDir, "backend_debug.log");
+                        File.AppendAllText(logFile, $"\n=== {DateTime.Now} ===\n");
+                        File.AppendAllText(logFile, $"Command: {_backendPath} {_backendArgs}\n");
+                        File.AppendAllText(logFile, $"Exit Code: {process.ExitCode}\n");
+                        File.AppendAllText(logFile, $"STDOUT ({output?.Length ?? 0} chars): {output}\n");
+                        File.AppendAllText(logFile, $"STDERR ({error?.Length ?? 0} chars): {error}\n");
+                        File.AppendAllText(logFile, "=== END ===\n\n");
                     }
                     catch { }
                 }
 
                 if (process.ExitCode != 0)
                 {
-                    throw new OSCRBackendException($"Backend process failed with exit code {process.ExitCode}. Error: {error}");
+                    var errorMsg = $"Backend process failed with exit code {process.ExitCode}.";
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        errorMsg += $"\nBackend stderr: {error}";
+                    }
+                    if (!string.IsNullOrEmpty(output))
+                    {
+                        errorMsg += $"\nBackend stdout: {output}";
+                    }
+                    throw new OSCRBackendException(errorMsg);
                 }
 
                 if (string.IsNullOrEmpty(output))
                 {
-                    throw new OSCRBackendException("Backend returned empty response");
+                    var errorMsg = "Backend returned empty response.";
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        errorMsg += $"\nBackend stderr: {error}";
+                    }
+                    throw new OSCRBackendException(errorMsg);
                 }
 
                 // Entferne UTF-8 BOM falls vorhanden (U+FEFF)
@@ -518,7 +546,9 @@ namespace StoDamageMeter.Services
         {
             try
             {
-                var logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backend_service_debug.log");
+                var logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                Directory.CreateDirectory(logsDir);
+                var logFile = Path.Combine(logsDir, "backend_service_debug.log");
                 File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss.fff}] {message}{Environment.NewLine}");
             }
             catch

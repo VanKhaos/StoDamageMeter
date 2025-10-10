@@ -129,7 +129,9 @@ public partial class MainWindow : FluentWindow
         // In Log-Datei schreiben
         try
         {
-            var logFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frontend_debug.log");
+            var logsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            System.IO.Directory.CreateDirectory(logsDir);
+            var logFile = System.IO.Path.Combine(logsDir, "frontend_debug.log");
             System.IO.File.AppendAllText(logFile, logMessage + Environment.NewLine);
         }
         catch
@@ -236,9 +238,9 @@ public partial class MainWindow : FluentWindow
                 $"Die Combat-Log-Datei konnte nicht gelesen werden.\n\n" +
                 $"{errorDetails}\n\n" +
                 $"Log-Dateien zur Fehlersuche:\n" +
-                $"- oscr_backend.log (Backend-Fehler)\n" +
-                $"- frontend_debug.log (Frontend-Fehler)\n\n" +
-                $"Beide Dateien befinden sich im Anwendungsordner.",
+                $"- logs/oscr_backend.log (Backend-Fehler)\n" +
+                $"- logs/frontend_debug.log (Frontend-Fehler)\n\n" +
+                $"Beide Dateien befinden sich im logs/ Ordner der Anwendung.",
                 "Fehler beim Laden",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);

@@ -20,6 +20,13 @@
     <PackageReference Include="WPF-UI" Version="3.0.5" />
   </ItemGroup>
 
+  <!-- appsettings.json ins Output kopieren -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- Build-Targets für Backend-Integration importieren -->
   <Import Project="Build.targets" />
 
