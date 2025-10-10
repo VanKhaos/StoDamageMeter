@@ -86,4 +86,54 @@
     <Message Text="Python is available." Importance="high" />
   </Target>
 
+  <!-- Target: Release-Struktur reorganisieren (nur für Publish) -->
+  <Target Name="ReorganizeReleaseStructure" AfterTargets="Publish">
+    <Message Text="Reorganizing release structure..." Importance="high" />
+    
+    <PropertyGroup>
+      <PublishDir>$(PublishDir.TrimEnd('\'))\</PublishDir>
+      <AppDir>$(PublishDir)App\</AppDir>
+      <LanguageDir>$(PublishDir)Language\</LanguageDir>
+    </PropertyGroup>
+
+    <!-- App-Verzeichnis erstellen -->
+    <MakeDir Directories="$(AppDir)" Condition="!Exists('$(AppDir)')" />
+    
+    <!-- Language-Verzeichnis erstellen -->
+    <MakeDir Directories="$(LanguageDir)" Condition="!Exists('$(LanguageDir)')" />
+
+    <!-- Alle DLL-Dateien finden -->
+    <ItemGroup>
+      <AllDlls Include="$(PublishDir)*.dll" />
+      <AllExes Include="$(PublishDir)*.exe" />
+      <AllRuntimeFiles Include="$(PublishDir)*.json" />
+    </ItemGroup>
+
+    <!-- Core-App und alle DLLs nach App/ verschieben (inkl. OSCRBackend.exe und appsettings.json) -->
+    <Move SourceFiles="@(AllDlls)" DestinationFolder="$(AppDir)" />
+    <Move SourceFiles="@(AllExes)" DestinationFolder="$(AppDir)" />
+    <Move SourceFiles="@(AllRuntimeFiles)" DestinationFolder="$(AppDir)" />
+
+    <!-- StoDamageMeter.exe nach StoDamageMeter.Core.exe umbenennen -->
+    <PropertyGroup>
+      <CoreAppOldPath>$(AppDir)StoDamageMeter.exe</CoreAppOldPath>
+      <CoreAppNewPath>$(AppDir)StoDamageMeter.Core.exe</CoreAppNewPath>
+    </PropertyGroup>
+    <Move SourceFiles="$(CoreAppOldPath)" DestinationFiles="$(CoreAppNewPath)" Condition="Exists('$(CoreAppOldPath)')" />
+
+    <!-- Sprachordner nach Language/ verschieben -->
+    <ItemGroup>
+      <LanguageFolders Include="$(PublishDir)cs;$(PublishDir)de;$(PublishDir)es;$(PublishDir)fr;$(PublishDir)it;$(PublishDir)ja;$(PublishDir)ko;$(PublishDir)pl;$(PublishDir)pt-BR;$(PublishDir)ru;$(PublishDir)tr;$(PublishDir)zh-Hans;$(PublishDir)zh-Hant" />
+    </ItemGroup>
+    
+    <Exec Command="if exist &quot;%(LanguageFolders.Identity)&quot; move /Y &quot;%(LanguageFolders.Identity)&quot; &quot;$(LanguageDir)&quot;" 
+          Condition="Exists('%(LanguageFolders.Identity)')" 
+          IgnoreExitCode="true"
+          ContinueOnError="true" />
+
+    <Message Text="Release structure reorganized successfully!" Importance="high" />
+    <Message Text="  - Core app and DLLs moved to: $(AppDir)" Importance="high" />
+    <Message Text="  - Language folders moved to: $(LanguageDir)" Importance="high" />
+  </Target>
+
 </Project>

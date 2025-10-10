@@ -19,26 +19,52 @@ $ReleasePath = Join-Path $ProjectRoot "Releases"
 $ReleaseVersionPath = Join-Path $ReleasePath "StoDamageMeter_v$Version"
 
 # 1. Alte Release-Dateien löschen
-Write-Host "[1/6] Cleaning old release files..." -ForegroundColor Yellow
+Write-Host "[1/7] Cleaning old release files..." -ForegroundColor Yellow
 if (Test-Path $ReleaseVersionPath) {
     Remove-Item -Path $ReleaseVersionPath -Recurse -Force
 }
 New-Item -ItemType Directory -Path $ReleaseVersionPath -Force | Out-Null
 
-# 2. Backend bauen
-Write-Host "[2/6] Building Python Backend..." -ForegroundColor Yellow
-Push-Location $BackendPath
+# 2. Backend prüfen/bauen
+Write-Host "[2/7] Checking Python Backend..." -ForegroundColor Yellow
+$BackendExe = Join-Path $BackendPath "dist\OSCRBackend.exe"
+if (Test-Path $BackendExe) {
+    Write-Host "Backend already built: $BackendExe" -ForegroundColor Green
+} else {
+    Write-Host "Building Python Backend..." -ForegroundColor Yellow
+    Push-Location $BackendPath
+    try {
+        python build_backend.py
+        if ($LASTEXITCODE -ne 0) {
+            throw "Backend build failed"
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+# 3. Launcher bauen
+Write-Host "[3/7] Building Launcher..." -ForegroundColor Yellow
+$LauncherPath = Join-Path $ProjectRoot "Launcher"
+$LauncherOutputPath = Join-Path $ProjectRoot "temp_launcher"
+Push-Location $LauncherPath
 try {
-    python build_backend.py
+    dotnet publish -c Release -r win-x64 --self-contained true `
+        -p:PublishSingleFile=true `
+        -p:DebugType=none `
+        -p:DebugSymbols=false `
+        -p:PublishTrimmed=false `
+        -o "$LauncherOutputPath"
+    
     if ($LASTEXITCODE -ne 0) {
-        throw "Backend build failed"
+        throw "Launcher build failed"
     }
 } finally {
     Pop-Location
 }
 
-# 3. Frontend als Self-Contained Release bauen
-Write-Host "[3/6] Building Frontend (Self-Contained Release)..." -ForegroundColor Yellow
+# 4. Frontend als Self-Contained Release bauen
+Write-Host "[4/7] Building Frontend (Self-Contained Release)..." -ForegroundColor Yellow
 Push-Location $FrontendPath
 try {
     # Self-contained Build für Windows x64
@@ -55,21 +81,32 @@ try {
     Pop-Location
 }
 
-# 4. Backend in Release kopieren
-Write-Host "[4/6] Copying Backend..." -ForegroundColor Yellow
+# 5. Launcher ins Release kopieren
+Write-Host "[5/7] Copying Launcher..." -ForegroundColor Yellow
+$LauncherSource = Join-Path $LauncherOutputPath "Launcher.exe"
+$LauncherDest = Join-Path $ReleaseVersionPath "StoDamageMeter.exe"
+if (Test-Path $LauncherSource) {
+    Copy-Item -Path $LauncherSource -Destination $LauncherDest -Force
+    Write-Host "Launcher copied and renamed to StoDamageMeter.exe" -ForegroundColor Green
+} else {
+    throw "Launcher executable not found at $LauncherSource"
+}
+
+# 6. Backend in den App/ Ordner kopieren
+Write-Host "[6/7] Copying Backend to App directory..." -ForegroundColor Yellow
+$AppDir = Join-Path $ReleaseVersionPath "App"
 $BackendSource = Join-Path $BackendPath "dist\OSCRBackend.exe"
-$BackendDest = Join-Path $ReleaseVersionPath "OSCRBackend.exe"
+$BackendDest = Join-Path $AppDir "OSCRBackend.exe"
+
+if (-not (Test-Path $AppDir)) {
+    New-Item -ItemType Directory -Path $AppDir -Force | Out-Null
+}
+
 Copy-Item -Path $BackendSource -Destination $BackendDest -Force
+Write-Host "Backend copied to App directory" -ForegroundColor Green
 
-# 5. Zusätzliche Dateien kopieren
-Write-Host "[5/6] Copying additional files..." -ForegroundColor Yellow
-
-# appsettings.json
-$AppSettingsSource = Join-Path $FrontendPath "appsettings.json"
-Copy-Item -Path $AppSettingsSource -Destination $ReleaseVersionPath -Force
-
-# 6. README für Endbenutzer erstellen
-Write-Host "[6/6] Creating README..." -ForegroundColor Yellow
+# 7. README für Endbenutzer erstellen
+Write-Host "[7/7] Creating README..." -ForegroundColor Yellow
 $ReadmeContent = @"
 # STO Damage Meter v$Version
 
@@ -144,9 +181,55 @@ https://github.com/VanKhaos/StoDamageMeter/issues
 $ReadmePath = Join-Path $ReleaseVersionPath "README.txt"
 Set-Content -Path $ReadmePath -Value $ReadmeContent -Encoding UTF8
 
-# 7. PDB-Dateien löschen (falls vorhanden)
-Write-Host "[Cleanup] Removing debug files..." -ForegroundColor Yellow
-Get-ChildItem -Path $ReleaseVersionPath -Filter "*.pdb" -Recurse | Remove-Item -Force
+# Cleanup
+Write-Host "[Cleanup] Removing debug files and temporary files..." -ForegroundColor Yellow
+Get-ChildItem -Path $ReleaseVersionPath -Filter "*.pdb" -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
+
+# Temporären Launcher-Ordner löschen
+if (Test-Path $LauncherOutputPath) {
+    Remove-Item -Path $LauncherOutputPath -Recurse -Force
+}
+
+# Struktur validieren
+Write-Host "[Validation] Checking release structure..." -ForegroundColor Yellow
+$AppDir = Join-Path $ReleaseVersionPath "App"
+$LanguageDir = Join-Path $ReleaseVersionPath "Language"
+$CoreApp = Join-Path $AppDir "StoDamageMeter.Core.exe"
+$LauncherApp = Join-Path $ReleaseVersionPath "StoDamageMeter.exe"
+$BackendInApp = Join-Path $AppDir "OSCRBackend.exe"
+$AppSettingsInApp = Join-Path $AppDir "appsettings.json"
+
+$ValidationErrors = @()
+
+if (-not (Test-Path $LauncherApp)) {
+    $ValidationErrors += "Launcher not found: $LauncherApp"
+}
+if (-not (Test-Path $AppDir)) {
+    $ValidationErrors += "App directory not found: $AppDir"
+}
+if (-not (Test-Path $CoreApp)) {
+    $ValidationErrors += "Core application not found: $CoreApp"
+}
+if (-not (Test-Path $LanguageDir)) {
+    $ValidationErrors += "Language directory not found: $LanguageDir"
+}
+if (-not (Test-Path $BackendInApp)) {
+    $ValidationErrors += "Backend not found in App directory: $BackendInApp"
+}
+if (-not (Test-Path $AppSettingsInApp)) {
+    $ValidationErrors += "appsettings.json not found in App directory: $AppSettingsInApp"
+}
+
+if ($ValidationErrors.Count -gt 0) {
+    Write-Host ""
+    Write-Host "=== Validation Errors ===" -ForegroundColor Red
+    foreach ($error in $ValidationErrors) {
+        Write-Host "  - $error" -ForegroundColor Red
+    }
+    throw "Release structure validation failed"
+}
+
+Write-Host "Release structure validated successfully!" -ForegroundColor Green
 
 # Zusammenfassung
 Write-Host ""
@@ -166,9 +249,17 @@ $FileCount = (Get-ChildItem -Path $ReleaseVersionPath -File -Recurse).Count
 Write-Host "Dateien: $FileCount" -ForegroundColor Cyan
 Write-Host ""
 
+Write-Host "Release-Struktur:" -ForegroundColor Cyan
+Write-Host "  Root:" -ForegroundColor White
+Write-Host "    - StoDamageMeter.exe (Launcher)" -ForegroundColor Gray
+Write-Host "    - README.txt" -ForegroundColor Gray
+Write-Host "    - App/ (Core-Anwendung + Backend + Config + alle DLLs)" -ForegroundColor Gray
+Write-Host "    - Language/ (Sprachressourcen)" -ForegroundColor Gray
+Write-Host ""
+
 Write-Host "Nächste Schritte:" -ForegroundColor Yellow
 Write-Host "  1. Teste das Release: Führe 'StoDamageMeter.exe' im Release-Ordner aus" -ForegroundColor White
-Write-Host "  2. Erstelle ZIP: Rechtsklick auf Ordner -> 'Senden an' -> 'ZIP-komprimierter Ordner'" -ForegroundColor White
+Write-Host "  2. Erstelle ZIP: .\create_release_zip.ps1 -Version '$Version'" -ForegroundColor White
 Write-Host "  3. Verteile die ZIP-Datei an andere Spieler" -ForegroundColor White
 Write-Host ""
 Write-Host "Fertig! 🎉" -ForegroundColor Green

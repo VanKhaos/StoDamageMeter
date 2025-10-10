@@ -48,6 +48,7 @@ Thumbs.db
 # Release artifacts
 # Releases/ - Build-Artefakte, werden nicht committed
 Releases/*/
+Releases/*.zip
 !Releases/README.md
 
 # Temporary files
