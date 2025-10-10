@@ -9,6 +9,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     
+    <!-- Disable automatic Main generation from App.xaml -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    
     <!-- Single-File Publishing -->
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>

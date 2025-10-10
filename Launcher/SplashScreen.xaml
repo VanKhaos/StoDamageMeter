@@ -1,0 +1,136 @@
+<Window x:Class="StoDamageMeter.Launcher.SplashScreen"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="STO Damage Meter"
+        Height="400" Width="600"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ShowInTaskbar="False">
+    
+    <Window.Resources>
+        <!-- Star Trek Blue Color -->
+        <SolidColorBrush x:Key="StarTrekBlue" Color="#5B9BD5"/>
+        <SolidColorBrush x:Key="StarTrekDeepBlack" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="StarTrekDarkGray" Color="#1A1A1A"/>
+        <SolidColorBrush x:Key="StarTrekTextGray" Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="StarTrekBorderGray" Color="#333333"/>
+        
+        <!-- Fade In Animation -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1"
+                           Duration="0:0:0.5"/>
+        </Storyboard>
+        
+        <!-- Loading Bar Animation -->
+        <Storyboard x:Key="LoadingAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="LoadingBar"
+                           Storyboard.TargetProperty="(Rectangle.RenderTransform).(TranslateTransform.X)"
+                           From="-100" To="600"
+                           Duration="0:0:1.5"
+                           AutoReverse="False"/>
+        </Storyboard>
+    </Window.Resources>
+    
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource FadeInAnimation}"/>
+            <BeginStoryboard Storyboard="{StaticResource LoadingAnimation}"/>
+        </EventTrigger>
+    </Window.Triggers>
+    
+    <Border Background="{StaticResource StarTrekDeepBlack}"
+            BorderBrush="{StaticResource StarTrekBlue}"
+            BorderThickness="2"
+            CornerRadius="10"
+            Padding="40">
+        <Border.Effect>
+            <DropShadowEffect Color="#5B9BD5" 
+                            BlurRadius="20" 
+                            ShadowDepth="0" 
+                            Opacity="0.5"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Logo/Title Area -->
+            <StackPanel Grid.Row="1" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center">
+                
+                <!-- Main Title -->
+                <TextBlock Text="STO DAMAGE METER"
+                          FontSize="42"
+                          FontWeight="Bold"
+                          Foreground="{StaticResource StarTrekBlue}"
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,10">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#5B9BD5" 
+                                        BlurRadius="10" 
+                                        ShadowDepth="0" 
+                                        Opacity="0.8"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+                
+                <!-- Subtitle -->
+                <TextBlock Text="STAR TREK ONLINE COMBAT PARSER"
+                          FontSize="14"
+                          FontWeight="SemiBold"
+                          Foreground="{StaticResource StarTrekTextGray}"
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,5"/>
+                
+                <!-- Version -->
+                <TextBlock Text="Version 1.2.0"
+                          FontSize="12"
+                          Foreground="{StaticResource StarTrekTextGray}"
+                          HorizontalAlignment="Center"
+                          Opacity="0.7"/>
+            </StackPanel>
+            
+            <!-- Loading Bar Container -->
+            <Border Grid.Row="2"
+                   Height="4"
+                   Margin="0,60,0,20"
+                   Background="{StaticResource StarTrekDarkGray}"
+                   CornerRadius="2"
+                   ClipToBounds="True">
+                
+                <!-- Animated Loading Bar -->
+                <Rectangle x:Name="LoadingBar"
+                          Width="100"
+                          Height="4"
+                          HorizontalAlignment="Left"
+                          Fill="{StaticResource StarTrekBlue}">
+                    <Rectangle.RenderTransform>
+                        <TranslateTransform X="-100"/>
+                    </Rectangle.RenderTransform>
+                    <Rectangle.Effect>
+                        <BlurEffect Radius="5"/>
+                    </Rectangle.Effect>
+                </Rectangle>
+            </Border>
+            
+            <!-- Status Text -->
+            <TextBlock x:Name="StatusText"
+                      Grid.Row="3"
+                      Text="Starting STO Damage Meter..."
+                      FontSize="14"
+                      Foreground="{StaticResource StarTrekTextGray}"
+                      HorizontalAlignment="Center"
+                      Opacity="0.8"/>
+        </Grid>
+    </Border>
+</Window>
+
