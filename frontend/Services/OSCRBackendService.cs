@@ -94,53 +94,50 @@ namespace StoDamageMeter.Services
             // Backend-Pfad relativ zum Deploy-Verzeichnis
             // BaseDirectory ist z.B.: D:\Projekte\StoDamageMeter\frontend\bin\Debug\net9.0-windows\
             // Wir müssen 4 Ebenen hoch zum Projekt-Root
-            var frontendDir = AppDomain.CurrentDomain.BaseDirectory;
-            var projectRoot = Path.GetFullPath(Path.Combine(frontendDir, "..", "..", "..", ".."));
+            var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var backendFileName = configuration["OSCRBackendPath"] ?? "OSCRBackend.exe";
+            
+            // 1. Versuch: Backend im gleichen Verzeichnis wie die .exe (Release/Publish)
+            var backendPathSameDir = Path.Combine(appDirectory, backendFileName);
+            
+            // 2. Versuch: Backend im Deploy-Verzeichnis (Development)
+            var projectRoot = Path.GetFullPath(Path.Combine(appDirectory, "..", "..", "..", ".."));
             var deployDir = Path.Combine(projectRoot, "Deploy");
-            
-            // Versuche zuerst Batch-Backend, dann arbeitendes OSCR-Backend, dann echtes OSCR-Backend, dann Python-Backend, dann Executable
-            var batchBackendPath = Path.Combine(deployDir, "start_backend.bat");
             var workingOscrBackendPath = Path.Combine(deployDir, "working_oscr_backend.py");
-            var realOscrBackendPath = Path.Combine(deployDir, "real_oscr_backend.py");
-            var pythonBackendPath = Path.Combine(deployDir, "python_backend.py");
-            var executableBackendPath = Path.Combine(deployDir, configuration["OSCRBackendPath"] ?? "OSCRBackend.exe");
+            var executableBackendPath = Path.Combine(deployDir, backendFileName);
             
-            if (File.Exists(batchBackendPath))
+            if (File.Exists(backendPathSameDir))
             {
-                _backendPath = batchBackendPath;
-                _backendArgs = "";
-                _logger.LogInformation("Using batch backend: {BackendPath}", batchBackendPath);
+                // Release-Modus: Backend liegt neben der .exe
+                _backendPath = backendPathSameDir;
+                _backendArgs = "--api";
+                _logger.LogInformation("Using release backend from application directory: {BackendPath}", _backendPath);
             }
             else if (File.Exists(workingOscrBackendPath))
             {
+                // Development-Modus: Python Backend
                 _backendPath = "python";
                 _backendArgs = $"\"{workingOscrBackendPath}\" --api";
-                _logger.LogInformation("Using working OSCR backend: {BackendPath}", workingOscrBackendPath);
-            }
-            else if (File.Exists(realOscrBackendPath))
-            {
-                _backendPath = "python";
-                _backendArgs = $"\"{realOscrBackendPath}\" --api";
-                _logger.LogInformation("Using real OSCR backend: {BackendPath}", realOscrBackendPath);
-            }
-            else if (File.Exists(pythonBackendPath))
-            {
-                _backendPath = "python";
-                _backendArgs = $"\"{pythonBackendPath}\" --api";
-                _logger.LogInformation("Using Python backend: {BackendPath}", pythonBackendPath);
+                _logger.LogInformation("Using development backend (Python): {BackendPath}", workingOscrBackendPath);
             }
             else if (File.Exists(executableBackendPath))
             {
+                // Development-Modus: Executable Backend
                 _backendPath = executableBackendPath;
                 _backendArgs = "--api";
-                _logger.LogInformation("Using executable backend: {BackendPath}", executableBackendPath);
+                _logger.LogInformation("Using development backend (Executable): {BackendPath}", executableBackendPath);
             }
             else
             {
-                _backendPath = executableBackendPath;
+                // Fallback: Verwende den Pfad aus dem gleichen Verzeichnis (auch wenn er nicht existiert)
+                _backendPath = backendPathSameDir;
                 _backendArgs = "--api";
-                _logger.LogWarning("Backend not found, using default path: {BackendPath}", executableBackendPath);
+                _logger.LogWarning("Backend not found! Tried: {Path1} and {Path2}", backendPathSameDir, executableBackendPath);
+                _logger.LogWarning("Using fallback path: {BackendPath}", _backendPath);
             }
+            
+            _logger.LogInformation("Final backend configuration - Path: {Path}, Args: {Args}", _backendPath, _backendArgs);
+            _logger.LogInformation("Backend exists: {Exists}", File.Exists(_backendPath));
             
             _jsonOptions = new JsonSerializerOptions
             {
