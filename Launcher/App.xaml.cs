@@ -9,10 +9,8 @@ public partial class App : Application
     private const string CoreAppRelativePath = @"App\StoDamageMeter.Core.exe";
     private SplashScreen? _splashScreen;
     
-    protected override void OnStartup(StartupEventArgs e)
+    private void Application_Startup(object sender, StartupEventArgs e)
     {
-        base.OnStartup(e);
-        
         // Show splash screen
         _splashScreen = new SplashScreen();
         _splashScreen.Show();
@@ -83,8 +81,33 @@ public partial class App : Application
                 return;
             }
 
-            // Wait a bit to ensure core app window appears
-            await Task.Delay(1500);
+            // Wait for core app to fully load and become visible
+            // Check if process has a main window handle
+            var maxWaitTime = TimeSpan.FromSeconds(10);
+            var startTime = DateTime.Now;
+            
+            while ((DateTime.Now - startTime) < maxWaitTime)
+            {
+                await Task.Delay(500);
+                
+                try
+                {
+                    process.Refresh();
+                    
+                    // Check if main window is visible
+                    if (process.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(process.MainWindowTitle))
+                    {
+                        // Window is visible, wait a bit more for it to fully render
+                        await Task.Delay(800);
+                        break;
+                    }
+                }
+                catch
+                {
+                    // Process might have exited or not responding yet
+                    break;
+                }
+            }
             
             // Close splash screen and shutdown launcher
             Dispatcher.Invoke(() =>

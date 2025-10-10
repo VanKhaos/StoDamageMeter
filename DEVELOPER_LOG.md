@@ -2331,5 +2331,63 @@ private async Task StartCoreApplication(string[] args)
 - ZIP: 119.22 MB
 - Launcher: ~12 MB (Single-File, Self-Contained)
 
+### 🚨 **Gelöste Probleme (Post-Release):**
+
+#### **Problem 1: DllNotFoundException beim Launcher-Start**
+- **Symptom:** `System.DllNotFoundException: Dll was not found`
+- **Ursache:** WPF funktioniert nicht mit `PublishSingleFile=true`
+- **Lösung:** `PublishSingleFile=false` → Multi-File-Deployment mit WPF-DLLs
+- **Resultat:** ✅ Launcher startet korrekt, 6 WPF-DLLs im Root
+
+#### **Problem 2: App.xaml StartupUri Konflikt**
+- **Symptom:** Launcher zeigte nichts an
+- **Ursache:** `StartupUri="SplashScreen.xaml"` und manuelle `Show()` im Code
+- **Lösung:** `StartupUri` entfernt, `Startup="Application_Startup"` Event verwendet
+- **Resultat:** ✅ Splashscreen erscheint korrekt
+
+#### **Problem 3: Splashscreen verschwindet zu früh**
+- **Symptom:** Splashscreen schließt bevor Hauptfenster sichtbar ist
+- **Ursache:** Feste Wartezeit (1500ms) reicht nicht
+- **Lösung:** Intelligente Fenster-Erkennung mit `MainWindowHandle` und `MainWindowTitle` Check
+- **Polling:** Alle 500ms prüfen ob Hauptfenster vorhanden, max. 10 Sekunden Timeout
+- **Resultat:** ✅ Splashscreen bleibt bis App vollständig geladen ist
+
+### 📊 **Finale Release-Struktur v1.2.0:**
+
+```
+Root/
+├── StoDamageMeter.exe         (Launcher - 11 MB)
+├── D3DCompiler_47_cor3.dll    (WPF)
+├── PenImc_cor3.dll            (WPF)
+├── PresentationNative_cor3.dll (WPF)
+├── vcruntime140_cor3.dll      (WPF)
+├── wpfgfx_cor3.dll            (WPF)
+├── README.txt
+├── App/                       (257 Dateien, 252 MB)
+│   ├── StoDamageMeter.Core.exe
+│   ├── OSCRBackend.exe
+│   ├── appsettings.json
+│   └── [Runtime + DLLs]
+└── Language/                  (13 Sprachordner)
+```
+
+**Größen:**
+- Entpackt: 276.84 MB (420 Dateien)
+- ZIP: ~120 MB
+- Root: 7 Dateien (Launcher + 6 WPF-DLLs)
+
+### ⚡ **Performance-Hinweis:**
+
+**Warum die App langsam startet (3-5 Sekunden):**
+1. **Self-Contained .NET Runtime** (~150 MB muss geladen werden)
+2. **WPF Framework-Initialisierung**
+3. **WPF-UI Bibliothek** (Fluent Design Components)
+4. **Windows 11 Mica/Backdrop-Effekte**
+
+**Alternative (nicht implementiert):**
+- Framework-Dependent Deployment → < 1 Sekunde Start
+- Nachteil: Benutzer muss .NET 9 Runtime installieren
+- Entscheidung: Self-Contained für bessere Benutzerfreundlichkeit
+
 ---
-**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität
+**Nächste Session:** Live-Parsing-Modus (FileWatcher für Combat-Log), DPS-Graph

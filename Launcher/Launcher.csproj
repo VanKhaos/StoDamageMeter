@@ -12,8 +12,8 @@
     <!-- Disable automatic Main generation from App.xaml -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     
-    <!-- Single-File Publishing -->
-    <PublishSingleFile>true</PublishSingleFile>
+    <!-- WPF kann nicht als Single-File gebaut werden - Multi-File Publishing -->
+    <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     

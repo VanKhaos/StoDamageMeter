@@ -81,15 +81,23 @@ try {
     Pop-Location
 }
 
-# 5. Launcher ins Release kopieren
+# 5. Launcher ins Release kopieren (alle Dateien wegen Multi-File WPF)
 Write-Host "[5/7] Copying Launcher..." -ForegroundColor Yellow
-$LauncherSource = Join-Path $LauncherOutputPath "Launcher.exe"
-$LauncherDest = Join-Path $ReleaseVersionPath "StoDamageMeter.exe"
-if (Test-Path $LauncherSource) {
-    Copy-Item -Path $LauncherSource -Destination $LauncherDest -Force
-    Write-Host "Launcher copied and renamed to StoDamageMeter.exe" -ForegroundColor Green
+if (Test-Path $LauncherOutputPath) {
+    # Alle Launcher-Dateien ins Root kopieren
+    Copy-Item -Path "$LauncherOutputPath\*" -Destination $ReleaseVersionPath -Recurse -Force
+    
+    # Launcher.exe zu StoDamageMeter.exe umbenennen
+    $LauncherExe = Join-Path $ReleaseVersionPath "Launcher.exe"
+    $RenamedLauncher = Join-Path $ReleaseVersionPath "StoDamageMeter.exe"
+    if (Test-Path $LauncherExe) {
+        Rename-Item -Path $LauncherExe -NewName "StoDamageMeter.exe" -Force
+        Write-Host "Launcher files copied and Launcher.exe renamed to StoDamageMeter.exe" -ForegroundColor Green
+    } else {
+        throw "Launcher.exe not found after copy"
+    }
 } else {
-    throw "Launcher executable not found at $LauncherSource"
+    throw "Launcher output directory not found at $LauncherOutputPath"
 }
 
 # 6. Backend in den App/ Ordner kopieren
