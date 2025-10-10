@@ -99,7 +99,7 @@ namespace StoDamageMeter.Services
             expandIcon = new TextBlock
             {
                 Text = "▶",
-                FontSize = 10,
+                FontSize = 13,
                 Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0)
@@ -108,7 +108,7 @@ namespace StoDamageMeter.Services
             var playerNameText = new TextBlock
             {
                 Text = player.Name ?? "Unknown",
-                FontSize = 12,
+                FontSize = 15,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Colors.White),
                 VerticalAlignment = VerticalAlignment.Center
@@ -126,7 +126,8 @@ namespace StoDamageMeter.Services
                 CreateTableCell($"{player.TotalDamageWithCompanions:N0}"),
                 CreateTableCell($"{player.MaxOneHit:N0}"),
                 CreateTableCell($"{player.CritPercent:F1}%"),
-                CreateTableCell($"{player.AccuracyPercent:F1}%")
+                CreateDamageTypeCell("-", "Mixed"), // Player hat mixed types
+                CreateTableCell($"{player.Abilities.Sum(a => a.Attacks)}") // Summe aller Player-Abilities
             };
 
             for (int i = 0; i < playerStats.Length; i++)
@@ -212,7 +213,7 @@ namespace StoDamageMeter.Services
             var abilityNameText = new TextBlock
             {
                 Text = ability.Name,
-                FontSize = 11,
+                FontSize = 14,
                 Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Opacity = 0.9
@@ -230,7 +231,8 @@ namespace StoDamageMeter.Services
                 CreateTableCell($"{ability.TotalDamage:N0}", 0.85),
                 CreateTableCell($"{ability.MaxHit:N0}", 0.85),
                 CreateTableCell($"{ability.CritPercent:F1}%", 0.85),
-                CreateTableCell($"{ability.AccuracyPercent:F1}%", 0.85)
+                CreateDamageTypeCell(GetDamageTypeIcon(ability.DamageType), ability.DamageType ?? "Unknown", 0.85),
+                CreateTableCell($"{ability.Attacks}", 0.85)
             };
 
             for (int i = 0; i < abilityStats.Length; i++)
@@ -299,7 +301,7 @@ namespace StoDamageMeter.Services
             expandIcon = new TextBlock
             {
                 Text = "▶",
-                FontSize = 9,
+                FontSize = 12,
                 Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 6, 0)
@@ -307,8 +309,8 @@ namespace StoDamageMeter.Services
 
             var companionNameText = new TextBlock
             {
-                Text = $"🤖 {companion.Name ?? "Unknown"}",
-                FontSize = 11,
+                Text = companion.Name ?? "Unknown",
+                FontSize = 14,
                 FontWeight = FontWeights.Normal,
                 Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
                 VerticalAlignment = VerticalAlignment.Center,
@@ -327,7 +329,8 @@ namespace StoDamageMeter.Services
                 CreateTableCell($"{companion.TotalDamage:N0}", 0.8),
                 CreateTableCell($"{companion.MaxOneHit:N0}", 0.8),
                 CreateTableCell($"{companion.CritPercent:F1}%", 0.8),
-                CreateTableCell($"{companion.AccuracyPercent:F1}%", 0.8)
+                CreateDamageTypeCell("-", "Mixed", 0.8), // Companion hat mixed types
+                CreateTableCell($"{companion.Abilities.Sum(a => a.Attacks)}", 0.8) // Summe aller Companion-Abilities
             };
 
             for (int i = 0; i < companionStats.Length; i++)
@@ -382,7 +385,7 @@ namespace StoDamageMeter.Services
                 var abilityNameText = new TextBlock
                 {
                     Text = ability.Name,
-                    FontSize = 10,
+                    FontSize = 13,
                     Foreground = new SolidColorBrush(Color.FromRgb(156, 156, 156)),
                     VerticalAlignment = VerticalAlignment.Center,
                     Opacity = 0.85
@@ -400,7 +403,8 @@ namespace StoDamageMeter.Services
                     CreateTableCell($"{ability.TotalDamage:N0}", 0.75),
                     CreateTableCell($"{ability.MaxHit:N0}", 0.75),
                     CreateTableCell($"{ability.CritPercent:F1}%", 0.75),
-                    CreateTableCell($"{ability.AccuracyPercent:F1}%", 0.75)
+                    CreateDamageTypeCell(GetDamageTypeIcon(ability.DamageType), ability.DamageType ?? "Unknown", 0.75),
+                    CreateTableCell($"{ability.Attacks}", 0.75)
                 };
 
                 for (int i = 0; i < abilityStats.Length; i++)
@@ -422,11 +426,74 @@ namespace StoDamageMeter.Services
         private void AddColumnDefinitions(Grid grid)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.8, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.8, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
+        }
+        
+        /// <summary>
+        /// Gibt das Icon für einen Damage-Type zurück
+        /// </summary>
+        private string GetDamageTypeIcon(string? damageType)
+        {
+            if (string.IsNullOrEmpty(damageType))
+                return "";
+            
+            return damageType switch
+            {
+                "Physical" => "⚔",
+                "Energy" => "⚡",
+                "Kinetic" => "●",
+                "Exotic" => "✦",
+                "Plasma" => "▲",
+                "Disruptor" => "◆",
+                "Phaser" => "◉",
+                "Tetryon" => "◈",
+                "Polaron" => "◘",
+                "Proton" => "◐",
+                "Antiproton" => "◆",
+                "AntiProton" => "◆",
+                "Radiation" => "☢",
+                "Electrical" => "⚡",
+                "Toxic" => "☠",
+                "Psionic" => "◉",
+                "Shield" => "◙",
+                _ => ""  // Leerer String für unbekannte Types
+            };
+        }
+        
+        /// <summary>
+        /// Gibt die Farbe für einen Damage-Type zurück
+        /// </summary>
+        private Color GetDamageTypeColor(string? damageType)
+        {
+            if (string.IsNullOrEmpty(damageType))
+                return Color.FromRgb(176, 176, 176);
+            
+            return damageType switch
+            {
+                "Physical" => Color.FromRgb(192, 192, 192),      // Silber
+                "Energy" => Color.FromRgb(255, 215, 0),          // Gold
+                "Kinetic" => Color.FromRgb(139, 69, 19),         // Braun
+                "Exotic" => Color.FromRgb(138, 43, 226),         // Violett
+                "Plasma" => Color.FromRgb(255, 69, 0),           // Orange-Rot
+                "Disruptor" => Color.FromRgb(0, 255, 127),       // Grün
+                "Phaser" => Color.FromRgb(255, 140, 0),          // Orange
+                "Tetryon" => Color.FromRgb(0, 191, 255),         // Hellblau
+                "Polaron" => Color.FromRgb(147, 112, 219),       // Lila
+                "Proton" => Color.FromRgb(100, 149, 237),        // Kornblumenblau
+                "Antiproton" => Color.FromRgb(220, 20, 60),      // Rot
+                "AntiProton" => Color.FromRgb(220, 20, 60),      // Rot
+                "Radiation" => Color.FromRgb(173, 255, 47),      // Gelbgrün
+                "Electrical" => Color.FromRgb(255, 255, 0),      // Gelb
+                "Toxic" => Color.FromRgb(50, 205, 50),           // Giftgrün
+                "Psionic" => Color.FromRgb(255, 0, 255),         // Magenta
+                "Shield" => Color.FromRgb(135, 206, 250),        // Hellblau
+                _ => Color.FromRgb(176, 176, 176)                // Grau für Unbekannt
+            };
         }
 
         /// <summary>
@@ -437,7 +504,7 @@ namespace StoDamageMeter.Services
             var textBlock = new TextBlock
             {
                 Text = text,
-                FontSize = 11,
+                FontSize = 14,
                 Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -446,6 +513,34 @@ namespace StoDamageMeter.Services
                 FontWeight = FontWeights.Normal
             };
 
+            return new Border
+            {
+                Child = textBlock,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+                BorderThickness = new Thickness(1, 0, 0, 0)
+            };
+        }
+        
+        /// <summary>
+        /// Erstellt eine Damage-Type-Zelle mit Icon und Tooltip
+        /// </summary>
+        private Border CreateDamageTypeCell(string icon, string? tooltipText, double opacity = 1.0)
+        {
+            var color = GetDamageTypeColor(tooltipText);
+            
+            var textBlock = new TextBlock
+            {
+                Text = icon,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(color),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(4, 6, 4, 6),
+                Opacity = opacity,
+                ToolTip = string.IsNullOrEmpty(tooltipText) ? null : tooltipText
+            };
+            
             return new Border
             {
                 Child = textBlock,
@@ -483,6 +578,10 @@ namespace StoDamageMeter.Services
                 "AccuracyPercent" => ascending
                     ? players.OrderBy(p => p.AccuracyPercent)
                     : players.OrderByDescending(p => p.AccuracyPercent),
+
+                "Attacks" => ascending
+                    ? players.OrderBy(p => p.Abilities.Sum(a => a.Attacks))
+                    : players.OrderByDescending(p => p.Abilities.Sum(a => a.Attacks)),
 
                 _ => ascending
                     ? players.OrderBy(p => p.DpsWithCompanions)

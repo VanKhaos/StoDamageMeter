@@ -17,42 +17,12 @@
         WindowCornerPreference="Round">
     
     <ui:FluentWindow.Resources>
-        <!-- Custom Expander Style: Kein Toggle-Icon + Padding wie Header -->
-        <Style x:Key="NoToggleIconExpanderStyle" TargetType="Expander">
-            <Setter Property="Padding" Value="12,8"/>  <!-- GLEICH WIE HEADER! -->
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Expander">
-                        <DockPanel>
-                            <ToggleButton DockPanel.Dock="Top"
-                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                          OverridesDefaultStyle="True"
-                                          Cursor="Hand">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border Background="{TemplateBinding Background}"
-                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                Padding="{TemplateBinding Padding}">
-                                            <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
-                                                              HorizontalAlignment="Stretch"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-                            <ContentPresenter x:Name="ExpanderContent"
-                                              DockPanel.Dock="Top"
-                                              Visibility="Collapsed"/>
-                        </DockPanel>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsExpanded" Value="True">
-                                <Setter TargetName="ExpanderContent" Property="Visibility" Value="Visible"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <!-- Import Styles -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/ExpanderStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </ui:FluentWindow.Resources>
     
     <Grid>
@@ -186,22 +156,7 @@
                         <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    
-                        <!-- Header -->
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                            <TextBlock Text="Combat Statistics - Damage Out" 
-                                       FontSize="16" 
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource StarTrekBlue}"
-                                       VerticalAlignment="Center"/>
-                            
-                            <ui:Button Content="Export"
-                                       Icon="{ui:SymbolIcon Save24}"
-                                       Appearance="Secondary"
-                                       Margin="16,0,0,0"
-                                       FontSize="12"/>
-                        </StackPanel>
-                        
+                                            
                         <!-- Column Headers Component -->
                         <combat:CombatStatsHeader x:Name="StatsHeaderComponent" 
                                                   Grid.Row="1" 

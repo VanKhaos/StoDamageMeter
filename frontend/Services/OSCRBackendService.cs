@@ -449,6 +449,18 @@ namespace StoDamageMeter.Services
                 if (!string.IsNullOrEmpty(error))
                 {
                     _logger.LogDebug("Backend error output: {Error}", error);
+                    // Debug-Logs auch in Konsole und Datei schreiben
+                    System.Diagnostics.Debug.WriteLine($"=== BACKEND DEBUG ===");
+                    System.Diagnostics.Debug.WriteLine(error);
+                    System.Diagnostics.Debug.WriteLine($"=== END DEBUG ===");
+                    
+                    // In Log-Datei schreiben
+                    try
+                    {
+                        var logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backend_debug.log");
+                        File.AppendAllText(logFile, $"\n=== {DateTime.Now} ===\n{error}\n");
+                    }
+                    catch { }
                 }
 
                 if (process.ExitCode != 0)

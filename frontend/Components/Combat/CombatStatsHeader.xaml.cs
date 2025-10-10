@@ -50,7 +50,7 @@ namespace StoDamageMeter.Components.Combat
                 (TotalDamageHeaderButton, "TotalDamageWithCompanions", "Total Damage"),
                 (MaxHitHeaderButton, "MaxOneHit", "Max Hit"),
                 (CritHeaderButton, "CritPercent", "Crit %"),
-                (AccHeaderButton, "AccuracyPercent", "Acc %")
+                (AttacksHeaderButton, "Attacks", "Attacks")
             };
 
             var starTrekBlue = new SolidColorBrush(Color.FromRgb(91, 155, 213));

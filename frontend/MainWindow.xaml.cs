@@ -184,6 +184,12 @@ public partial class MainWindow : FluentWindow
             Dispatcher.Invoke(() =>
             {
                 CombatListViewComponent.SetCombats(sortedCombats);
+                
+                // Automatisch ersten Combat auswählen
+                if (sortedCombats.Count > 0)
+                {
+                    CombatListViewComponent.SelectFirst();
+                }
             });
 
             AppendResult($"Loaded {sortedCombats.Count} combats from log file");

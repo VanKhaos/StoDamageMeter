@@ -152,6 +152,12 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("accuracyPercent")]
         public double AccuracyPercent { get; set; }
+
+        [JsonPropertyName("attacks")]
+        public int Attacks { get; set; }
+
+        [JsonPropertyName("damageType")]
+        public string? DamageType { get; set; }
     }
 
     /// <summary>
