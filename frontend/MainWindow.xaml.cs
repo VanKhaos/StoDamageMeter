@@ -90,7 +90,35 @@ public partial class MainWindow : FluentWindow
         });
     }
 
-    private void AppendResult(string message)
+        private string GetDetailedErrorMessage(Exception ex)
+        {
+            var details = new System.Text.StringBuilder();
+            details.AppendLine($"Error: {ex.Message}");
+            
+            if (ex.InnerException != null)
+            {
+                details.AppendLine($"\nDetails: {ex.InnerException.Message}");
+                
+                if (ex.InnerException.InnerException != null)
+                {
+                    details.AppendLine($"\nAdditional Info: {ex.InnerException.InnerException.Message}");
+                }
+            }
+            
+            // Wenn es ein Backend-Fehler ist, extrahiere die echte Fehlermeldung
+            if (ex.Message.Contains("Backend returned error:"))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(ex.Message, @"Backend returned error:\s*(.+)");
+                if (match.Success)
+                {
+                    details.AppendLine($"\nBackend Error: {match.Groups[1].Value}");
+                }
+            }
+            
+            return details.ToString();
+        }
+
+        private void AppendResult(string message)
     {
         // Results werden später in der Data Table angezeigt
         var logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
@@ -200,20 +228,17 @@ public partial class MainWindow : FluentWindow
         }
         catch (Exception ex)
         {
-            var errorMessage = ex.Message;
-            var innerException = ex.InnerException?.Message ?? "";
+            string errorDetails = GetDetailedErrorMessage(ex);
             
-            AppendResult($"Failed to load combat list: {errorMessage}");
-            if (!string.IsNullOrEmpty(innerException))
-            {
-                AppendResult($"Inner exception: {innerException}");
-            }
+            AppendResult($"Failed to load combat list: {errorDetails}");
             
             System.Windows.MessageBox.Show(
                 $"Die Combat-Log-Datei konnte nicht gelesen werden.\n\n" +
-                $"Fehler: {errorMessage}\n\n" +
-                $"{(!string.IsNullOrEmpty(innerException) ? $"Details: {innerException}\n\n" : "")}" +
-                $"Bitte prüfe die Datei oscr_api.log im Deploy-Ordner für weitere Details.",
+                $"{errorDetails}\n\n" +
+                $"Log-Dateien zur Fehlersuche:\n" +
+                $"- oscr_backend.log (Backend-Fehler)\n" +
+                $"- frontend_debug.log (Frontend-Fehler)\n\n" +
+                $"Beide Dateien befinden sich im Anwendungsordner.",
                 "Fehler beim Laden",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
