@@ -53,7 +53,7 @@ Dieses Dokument beschreibt die geplante Benutzeroberfläche für die STO Damage 
   - Aktiver Eintrag: Orange linke Umrandung
 - **Footer-Info**: Log-Dauer, Player-Dauer, Map Detection Link
 
-#### Rechter Datenbereich (70-75% Breite | DPS Graph 20% höhe)
+#### Rechter Datenbereich (70-75% Breite | DPS Graph 20% höhe | Combat Statistik tabelle direkt unter DPS Graphen, egal welche proportionen die Anwendung hat)
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [Damage Out] [Damage Taken] [Heals Out] [Heals In] [Selection ▼] [⚏] │

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,6 +26,8 @@ public partial class MainWindow : FluentWindow
     private readonly IOSCRBackendService _backendService;
     private CancellationTokenSource? _loadingCancellation;
     private List<CombatInfo>? _loadedCombats;
+    private CombatData? _currentCombatData;
+    private string? _currentLogPath;
 
     public MainWindow()
     {
@@ -122,6 +125,9 @@ public partial class MainWindow : FluentWindow
             AppendResult($"=== Starting LoadCombatListAsync ===");
             AppendResult($"Log path: {logPath}");
             
+            // Store log path for combat details loading
+            _currentLogPath = logPath;
+            
             // Cancel previous loading
             _loadingCancellation?.Cancel();
             _loadingCancellation = new CancellationTokenSource();
@@ -137,7 +143,7 @@ public partial class MainWindow : FluentWindow
             // Get available combats
             var response = await _backendService.GetAvailableCombatsWithProgressAsync(
                 logPath, 
-                maxCombats: 100, 
+                maxCombats: 20, 
                 _loadingCancellation.Token);
             
             AppendResult($"Response received. Success: {response.Success}");
@@ -244,9 +250,422 @@ public partial class MainWindow : FluentWindow
     {
         if (CombatListView.SelectedItem is CombatInfo selectedCombat)
         {
-            // Hier später die Combat-Details anzeigen
             System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
+            _ = LoadCombatDetailsAsync(selectedCombat);
         }
+    }
+
+    private async Task LoadCombatDetailsAsync(CombatInfo combat)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(_currentLogPath))
+            {
+                System.Windows.MessageBox.Show("No log file selected", "Error", 
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            // Show loading state
+            EmptyCombatStatsPanel.Visibility = Visibility.Collapsed;
+            LoadingCombatStatsPanel.Visibility = Visibility.Visible;
+            CombatStatsScrollViewer.Visibility = Visibility.Collapsed;
+            LoadingCombatStatsText.Text = $"Loading combat {combat.Id} statistics...";
+
+            // Cancel previous loading if any
+            _loadingCancellation?.Cancel();
+            _loadingCancellation = new CancellationTokenSource();
+
+            // Analyze single combat
+            var response = await _backendService.AnalyzeSingleCombatAsync(
+                _currentLogPath, 
+                combat.Id,
+                _loadingCancellation.Token);
+
+            if (!response.Success || response.Combats.Count == 0)
+            {
+                throw new Exception(response.Error ?? "No combat data received");
+            }
+
+            _currentCombatData = response.Combats[0];
+
+            // Populate TreeView
+            PopulateCombatStatsTreeView(_currentCombatData);
+
+            // Show data
+            LoadingCombatStatsPanel.Visibility = Visibility.Collapsed;
+            CombatStatsScrollViewer.Visibility = Visibility.Visible;
+        }
+        catch (OperationCanceledException)
+        {
+            // User cancelled - ignore
+        }
+        catch (Exception ex)
+        {
+            LoadingCombatStatsPanel.Visibility = Visibility.Collapsed;
+            EmptyCombatStatsPanel.Visibility = Visibility.Visible;
+
+            System.Windows.MessageBox.Show(
+                $"Failed to load combat statistics:\n\n{ex.Message}", 
+                "Error", 
+                System.Windows.MessageBoxButton.OK, 
+                System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    private void PopulateCombatStatsTreeView(CombatData combatData)
+    {
+        CombatStatsItemsControl.Items.Clear();
+
+        // Sortiere Players nach DPS (inkl. Companions, absteigend)
+        var sortedPlayers = combatData.Players.Values
+            .OrderByDescending(p => p.DpsWithCompanions)
+            .ToList();
+
+        foreach (var player in sortedPlayers)
+        {
+            // Container für Player und Abilities
+            var playerContainer = new StackPanel
+            {
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+
+            // Player Row mit Expander
+            var playerExpander = new Expander
+            {
+                IsExpanded = false,
+                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(0)
+            };
+
+            // Player Header Grid (sichtbar auch wenn collapsed)
+            var playerHeaderGrid = new Grid
+            {
+                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26))
+            };
+            
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // Player Name mit Icon
+            var playerNamePanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(8, 8, 8, 8)
+            };
+            
+            var expandIcon = new System.Windows.Controls.TextBlock
+            {
+                Text = "▶",
+                FontSize = 10,
+                Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            
+            var playerNameText = new System.Windows.Controls.TextBlock
+            {
+                Text = player.Name ?? "Unknown",
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Colors.White),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            
+            playerNamePanel.Children.Add(expandIcon);
+            playerNamePanel.Children.Add(playerNameText);
+            
+            Grid.SetColumn(playerNamePanel, 0);
+            playerHeaderGrid.Children.Add(playerNamePanel);
+
+            // Player Stats (mit Companions)
+            var playerStats = new[]
+            {
+                CreateTableCell($"{player.DpsWithCompanions:N0}", false),
+                CreateTableCell($"{player.TotalDamageWithCompanions:N0}", false),
+                CreateTableCell($"{player.Debuff:F1}%", false),
+                CreateTableCell($"{player.MaxOneHit:N0}", false),
+                CreateTableCell($"{player.CritPercent:F1}%", false),
+                CreateTableCell($"{player.AccuracyPercent:F1}%", false)
+            };
+
+            for (int i = 0; i < playerStats.Length; i++)
+            {
+                Grid.SetColumn(playerStats[i], i + 1);
+                playerHeaderGrid.Children.Add(playerStats[i]);
+            }
+
+            // Expander Icon ändern bei Expand/Collapse
+            playerExpander.Expanded += (s, e) => expandIcon.Text = "▼";
+            playerExpander.Collapsed += (s, e) => expandIcon.Text = "▶";
+
+            playerExpander.Header = playerHeaderGrid;
+
+            // Player Content: Abilities + Companions (gemischt nach Total Damage sortiert)
+            var playerContentPanel = new StackPanel
+            {
+                Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
+                Margin = new Thickness(0)
+            };
+
+            // Erstelle eine Liste aller Items (Abilities + Companions) mit Total Damage zum Sortieren
+            var allItems = new List<(double totalDamage, bool isCompanion, object item)>();
+            
+            // Füge Abilities hinzu
+            foreach (var ability in player.Abilities)
+            {
+                allItems.Add((ability.TotalDamage, false, ability));
+            }
+            
+            // Füge Companions hinzu
+            foreach (var companion in player.Companions)
+            {
+                allItems.Add((companion.TotalDamage, true, companion));
+            }
+            
+            // Sortiere alles nach Total Damage
+            var sortedItems = allItems.OrderByDescending(x => x.totalDamage).ToList();
+
+            // Rendere Items in sortierter Reihenfolge
+            foreach (var (totalDamage, isCompanion, item) in sortedItems)
+            {
+                if (!isCompanion)
+                {
+                    // Ability
+                    var ability = (AbilityStatistics)item;
+                    var abilityContainer = new Border
+                    {
+                        Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
+                        Margin = new Thickness(0, 1, 0, 0),
+                        Padding = new Thickness(32, 0, 0, 0) // Links-Einrückung
+                    };
+                    
+                    var abilityGrid = new Grid();
+                    
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                    var abilityNameText = new System.Windows.Controls.TextBlock
+                    {
+                        Text = ability.Name,
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Padding = new Thickness(8, 6, 8, 6),
+                        Opacity = 0.9
+                    };
+                    Grid.SetColumn(abilityNameText, 0);
+                    abilityGrid.Children.Add(abilityNameText);
+
+                    var abilityStats = new[]
+                    {
+                        CreateTableCell($"{ability.Dps:N0}", false, 0.85),
+                        CreateTableCell($"{ability.TotalDamage:N0}", false, 0.85),
+                        CreateTableCell("-", false, 0.85),
+                        CreateTableCell($"{ability.MaxHit:N0}", false, 0.85),
+                        CreateTableCell($"{ability.CritPercent:F1}%", false, 0.85),
+                        CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.85)
+                    };
+
+                    for (int i = 0; i < abilityStats.Length; i++)
+                    {
+                        Grid.SetColumn(abilityStats[i], i + 1);
+                        abilityGrid.Children.Add(abilityStats[i]);
+                    }
+
+                    abilityContainer.Child = abilityGrid;
+                    playerContentPanel.Children.Add(abilityContainer);
+                }
+                else
+                {
+                    // Companion
+                    var companion = (CompanionStatistics)item;
+                    
+                    // Companion Expander (eingerückt wie Abilities)
+                    var companionExpander = new Expander
+                {
+                    IsExpanded = false,
+                    Background = new SolidColorBrush(Color.FromRgb(20, 20, 20)),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+                    BorderThickness = new Thickness(0, 1, 0, 0),
+                    Padding = new Thickness(0),
+                    Margin = new Thickness(32, 1, 0, 0) // Einrückung wie Abilities
+                };
+
+                // Companion Header Grid
+                var companionHeaderGrid = new Grid
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(20, 20, 20))
+                };
+                
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                // Companion Name mit Icon
+                var companionNamePanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(8, 6, 8, 6)
+                };
+                
+                var companionExpandIcon = new System.Windows.Controls.TextBlock
+                {
+                    Text = "▶",
+                    FontSize = 9,
+                    Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 6, 0)
+                };
+                
+                var companionNameText = new System.Windows.Controls.TextBlock
+                {
+                    Text = $"🤖 {companion.Name ?? "Unknown"}",
+                    FontSize = 11,
+                    FontWeight = FontWeights.Normal,
+                    Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Opacity = 0.95
+                };
+                
+                companionNamePanel.Children.Add(companionExpandIcon);
+                companionNamePanel.Children.Add(companionNameText);
+                
+                Grid.SetColumn(companionNamePanel, 0);
+                companionHeaderGrid.Children.Add(companionNamePanel);
+
+                // Companion Stats
+                var companionStats = new[]
+                {
+                    CreateTableCell($"{companion.Dps:N0}", false, 0.8),
+                    CreateTableCell($"{companion.TotalDamage:N0}", false, 0.8),
+                    CreateTableCell($"{companion.Debuff:F1}%", false, 0.8),
+                    CreateTableCell($"{companion.MaxOneHit:N0}", false, 0.8),
+                    CreateTableCell($"{companion.CritPercent:F1}%", false, 0.8),
+                    CreateTableCell($"{companion.AccuracyPercent:F1}%", false, 0.8)
+                };
+
+                for (int i = 0; i < companionStats.Length; i++)
+                {
+                    Grid.SetColumn(companionStats[i], i + 1);
+                    companionHeaderGrid.Children.Add(companionStats[i]);
+                }
+
+                // Expander Icon ändern
+                companionExpander.Expanded += (s, e) => companionExpandIcon.Text = "▼";
+                companionExpander.Collapsed += (s, e) => companionExpandIcon.Text = "▶";
+
+                companionExpander.Header = companionHeaderGrid;
+
+                // Companion Abilities
+                if (companion.Abilities.Count > 0)
+                {
+                    var companionAbilitiesPanel = new StackPanel
+                    {
+                        Background = new SolidColorBrush(Color.FromRgb(12, 12, 12)),
+                        Margin = new Thickness(0)
+                    };
+
+                    var sortedCompanionAbilities = companion.Abilities
+                        .OrderByDescending(a => a.Dps)
+                        .ToList();
+
+                    foreach (var ability in sortedCompanionAbilities)
+                    {
+                        var abilityContainer = new Border
+                        {
+                            Background = new SolidColorBrush(Color.FromRgb(12, 12, 12)),
+                            Margin = new Thickness(0, 1, 0, 0),
+                            Padding = new Thickness(32, 0, 0, 0) // Zusätzliche Einrückung (relativ zum Companion)
+                        };
+                        
+                        var abilityGrid = new Grid();
+                        
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                        var abilityNameText = new System.Windows.Controls.TextBlock
+                        {
+                            Text = ability.Name,
+                            FontSize = 10,
+                            Foreground = new SolidColorBrush(Color.FromRgb(156, 156, 156)),
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Padding = new Thickness(8, 5, 8, 5),
+                            Opacity = 0.85
+                        };
+                        Grid.SetColumn(abilityNameText, 0);
+                        abilityGrid.Children.Add(abilityNameText);
+
+                        var abilityStats = new[]
+                        {
+                            CreateTableCell($"{ability.Dps:N0}", false, 0.75),
+                            CreateTableCell($"{ability.TotalDamage:N0}", false, 0.75),
+                            CreateTableCell("-", false, 0.75),
+                            CreateTableCell($"{ability.MaxHit:N0}", false, 0.75),
+                            CreateTableCell($"{ability.CritPercent:F1}%", false, 0.75),
+                            CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.75)
+                        };
+
+                        for (int i = 0; i < abilityStats.Length; i++)
+                        {
+                            Grid.SetColumn(abilityStats[i], i + 1);
+                            abilityGrid.Children.Add(abilityStats[i]);
+                        }
+
+                        abilityContainer.Child = abilityGrid;
+                        companionAbilitiesPanel.Children.Add(abilityContainer);
+                    }
+
+                    companionExpander.Content = companionAbilitiesPanel;
+                }
+
+                    playerContentPanel.Children.Add(companionExpander);
+                }
+            }
+
+            playerExpander.Content = playerContentPanel;
+
+            playerContainer.Children.Add(playerExpander);
+            CombatStatsItemsControl.Items.Add(playerContainer);
+        }
+    }
+
+    private System.Windows.Controls.TextBlock CreateTableCell(string text, bool isHeader, double opacity = 1.0)
+    {
+        return new System.Windows.Controls.TextBlock
+        {
+            Text = text,
+            FontSize = isHeader ? 12 : 11,
+            Foreground = isHeader 
+                ? new SolidColorBrush(Colors.White) 
+                : new SolidColorBrush(Color.FromRgb(176, 176, 176)),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(8, 6, 8, 6),
+            Opacity = opacity,
+            FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal
+        };
     }
 
     protected override void OnClosed(EventArgs e)

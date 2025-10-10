@@ -41,6 +41,11 @@ namespace StoDamageMeter.Services
         Task<CombatAnalysisResponse> AnalyzeCombatLogAsync(string logPath, int maxCombats = 10, AnalysisSettings? settings = null);
 
         /// <summary>
+        /// Analysiert einen einzelnen Combat
+        /// </summary>
+        Task<CombatAnalysisResponse> AnalyzeSingleCombatAsync(string logPath, int combatId, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Prüft ob das Backend verfügbar ist
         /// </summary>
         Task<bool> IsBackendAvailableAsync();
@@ -238,6 +243,42 @@ namespace StoDamageMeter.Services
                 _logger.LogError(ex, "Combat analysis failed for: {LogPath}", logPath);
                 OnAnalysisProgress($"Analysis failed: {ex.Message}", 0, true);
                 throw new OSCRBackendException($"Combat analysis failed for {logPath}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Analysiert einen einzelnen Combat basierend auf ID
+        /// </summary>
+        public async Task<CombatAnalysisResponse> AnalyzeSingleCombatAsync(
+            string logPath, 
+            int combatId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _logger.LogInformation("Analyzing single combat ID {CombatId} from: {LogPath}", combatId, logPath);
+                
+                if (!File.Exists(logPath))
+                {
+                    throw new FileNotFoundException($"Log file not found: {logPath}");
+                }
+
+                var request = new SingleCombatAnalysisRequest
+                {
+                    LogPath = logPath,
+                    CombatId = combatId,
+                    Settings = new AnalysisSettings()
+                };
+
+                var response = await ExecuteBackendCommandWithProgressAsync<CombatAnalysisResponse>(request, cancellationToken);
+                
+                _logger.LogInformation("Single combat analysis completed for ID {CombatId}", combatId);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Single combat analysis failed for ID {CombatId}: {LogPath}", combatId, logPath);
+                throw new OSCRBackendException($"Single combat analysis failed for combat {combatId}", ex);
             }
         }
 

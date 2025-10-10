@@ -83,6 +83,18 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("byteEnd")]
         public long ByteEnd { get; set; }
+
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
+        
+        /// <summary>
+        /// Icon basierend auf Combat-Type (Space oder Ground)
+        /// </summary>
+        public string Icon => Type switch
+        {
+            "Ground" => "🏃",
+            _ => "🚀" // Default ist Space
+        };
     }
 
     /// <summary>
@@ -116,6 +128,60 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("critters")]
         public Dictionary<string, CritterData> Critters { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Ability-Statistiken für einen Spieler
+    /// </summary>
+    public class AbilityStatistics
+    {
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("totalDamage")]
+        public double TotalDamage { get; set; }
+
+        [JsonPropertyName("dps")]
+        public double Dps { get; set; }
+
+        [JsonPropertyName("maxHit")]
+        public double MaxHit { get; set; }
+
+        [JsonPropertyName("critPercent")]
+        public double CritPercent { get; set; }
+
+        [JsonPropertyName("accuracyPercent")]
+        public double AccuracyPercent { get; set; }
+    }
+
+    /// <summary>
+    /// Companion-Statistiken (Pets, Drohnen, Außenteam)
+    /// </summary>
+    public class CompanionStatistics
+    {
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("dps")]
+        public double Dps { get; set; }
+
+        [JsonPropertyName("totalDamage")]
+        public double TotalDamage { get; set; }
+
+        [JsonPropertyName("debuff")]
+        public double Debuff { get; set; }
+
+        [JsonPropertyName("maxOneHit")]
+        public double MaxOneHit { get; set; }
+
+        [JsonPropertyName("critPercent")]
+        public double CritPercent { get; set; }
+
+        [JsonPropertyName("accuracyPercent")]
+        public double AccuracyPercent { get; set; }
+
+        [JsonPropertyName("abilities")]
+        public List<AbilityStatistics> Abilities { get; set; } = new();
     }
 
     /// <summary>
@@ -155,6 +221,24 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("deaths")]
         public int Deaths { get; set; }
+
+        [JsonPropertyName("critPercent")]
+        public double CritPercent { get; set; }
+
+        [JsonPropertyName("accuracyPercent")]
+        public double AccuracyPercent { get; set; }
+
+        [JsonPropertyName("abilities")]
+        public List<AbilityStatistics> Abilities { get; set; } = new();
+
+        [JsonPropertyName("companions")]
+        public List<CompanionStatistics> Companions { get; set; } = new();
+
+        [JsonPropertyName("dpsWithCompanions")]
+        public double DpsWithCompanions { get; set; }
+
+        [JsonPropertyName("totalDamageWithCompanions")]
+        public double TotalDamageWithCompanions { get; set; }
     }
 
     /// <summary>
@@ -203,6 +287,24 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("maxCombats")]
         public int MaxCombats { get; set; } = 10;
+
+        [JsonPropertyName("settings")]
+        public AnalysisSettings? Settings { get; set; }
+    }
+
+    /// <summary>
+    /// Request-Parameter für einzelnen Combat
+    /// </summary>
+    public class SingleCombatAnalysisRequest
+    {
+        [JsonPropertyName("action")]
+        public string Action { get; set; } = "analyze_single";
+
+        [JsonPropertyName("logPath")]
+        public string? LogPath { get; set; }
+
+        [JsonPropertyName("combatId")]
+        public int CombatId { get; set; }
 
         [JsonPropertyName("settings")]
         public AnalysisSettings? Settings { get; set; }

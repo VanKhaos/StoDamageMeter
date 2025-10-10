@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:StoDamageMeter"
+               xmlns:local="clr-namespace:StoDamageMeter"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="STO Damage Meter" 
@@ -63,8 +63,8 @@
                                                Appearance="Secondary"
                                                Margin="0,0,8,0"
                                                Click="BrowseButton_Click"/>
-                                </StackPanel>
-                                
+                    </StackPanel>
+                    
                                 <!-- Progress Bar -->
                                 <ProgressBar x:Name="LoadingProgressBar"
                                              Visibility="Collapsed"
@@ -149,15 +149,26 @@
                                                 <DataTemplate>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
+                                                        <!-- Combat Type Icon -->
                                                         <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Icon}" 
+                                                                   FontSize="16"
+                                                                   Foreground="{DynamicResource StarTrekBlue}"
+                                                                   Margin="0,0,8,0"
+                                                                   VerticalAlignment="Center"
+                                                                   ToolTip="{Binding Type}"/>
+                                                        <!-- Date -->
+                                                        <TextBlock Grid.Column="1"
                                                                    Text="{Binding Date}" 
                                                                    Foreground="White"
                                                                    FontSize="12"
                                                                    HorizontalAlignment="Left"/>
-                                                        <TextBlock Grid.Column="1"
+                                                        <!-- Time -->
+                                                        <TextBlock Grid.Column="2"
                                                                    Text="{Binding Time}" 
                                                                    Foreground="{DynamicResource StarTrekTextGray}"
                                                                    FontSize="12"
@@ -167,7 +178,7 @@
                                             </ListView.ItemTemplate>
                                         </ListView>
                                     </Grid>
-                                </Border>
+                        </Border>
                             </StackPanel>
                         </ui:Card>
                         
@@ -189,8 +200,8 @@
                                                Text="0s" 
                                                Foreground="White"
                                                FontWeight="SemiBold"/>
-                                </StackPanel>
-                                
+                    </StackPanel>
+                    
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                     <ui:SymbolIcon Symbol="Person24" FontSize="16" Margin="0,0,8,0"/>
                                     <TextBlock Text="Player Duration:" 
@@ -259,10 +270,10 @@
                 
                 <!-- DPS Graph Area -->
                 <ui:Card Grid.Row="1" Margin="16,8,16,8" Padding="20">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
                         <TextBlock Grid.Row="0" 
@@ -299,11 +310,13 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
+                    </Grid.RowDefinitions>
+                    
+                        <!-- Header -->
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                            <TextBlock Text="Combat Statistics" 
+                            <TextBlock Text="Combat Statistics - Damage Out" 
                                        FontSize="16" 
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource StarTrekBlue}"
@@ -316,34 +329,91 @@
                                        FontSize="12"/>
                         </StackPanel>
                         
-                        <Border Grid.Row="1"
+                        <!-- Column Headers -->
+                        <Border Grid.Row="1" 
+                                Background="{DynamicResource StarTrekDeepBlack}"
+                                BorderBrush="{DynamicResource StarTrekBorderGray}"
+                                BorderThickness="0,0,0,1"
+                                Padding="12,8"
+                                Margin="0,0,0,4">
+                        <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Player / Ability" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}"/>
+                                <TextBlock Grid.Column="1" Text="DPS" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Text="Total Damage" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Text="Debuff" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="4" Text="Max Hit" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="5" Text="Crit %" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="6" Text="Acc %" FontWeight="SemiBold" Foreground="{DynamicResource StarTrekBlue}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+                    
+                        <!-- Data Area -->
+                        <Border Grid.Row="2"
                                 Background="{DynamicResource StarTrekDarkGray}"
                                 BorderBrush="{DynamicResource StarTrekBorderGray}"
                                 BorderThickness="1"
                                 CornerRadius="4">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <StackPanel x:Name="DataTablePanel" Margin="12">
-                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40">
-                                        <ui:SymbolIcon Symbol="Table24" 
-                                                       FontSize="48" 
-                                                       Foreground="{DynamicResource StarTrekBlue}"
-                                                       Opacity="0.3"
-                                                       Margin="0,0,0,12"/>
-                                        <TextBlock Text="Combat data will be displayed here" 
-                                                   Foreground="{DynamicResource StarTrekTextGray}"
-                                                   HorizontalAlignment="Center"
-                                                   Opacity="0.6"/>
-                                        <TextBlock Text="Analyze a combat log to see detailed statistics" 
-                                                   Foreground="{DynamicResource StarTrekTextGray}"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,8,0,0"
-                                                   FontSize="11"
-                                                   Opacity="0.5"/>
-                                    </StackPanel>
+                        <Grid>
+                                <!-- Empty State -->
+                                <StackPanel x:Name="EmptyCombatStatsPanel" 
+                                            HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center" 
+                                            Margin="0,40">
+                                    <ui:SymbolIcon Symbol="Table24" 
+                                                   FontSize="48" 
+                                                   Foreground="{DynamicResource StarTrekBlue}"
+                                                   Opacity="0.3"
+                                                   Margin="0,0,0,12"/>
+                                    <TextBlock Text="Select a combat to view statistics" 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               HorizontalAlignment="Center"
+                                               Opacity="0.6"/>
+                                    <TextBlock Text="Click on a combat from the list above" 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,8,0,0"
+                                               FontSize="11"
+                                               Opacity="0.5"/>
                                 </StackPanel>
-                            </ScrollViewer>
-                        </Border>
-                    </Grid>
+                                
+                                <!-- Loading Indicator -->
+                                <StackPanel x:Name="LoadingCombatStatsPanel" 
+                                            Visibility="Collapsed"
+                                            HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center">
+                                    <ProgressBar IsIndeterminate="True" 
+                                                 Width="200" 
+                                                 Height="4"
+                                                 Margin="0,0,0,12"/>
+                                    <TextBlock x:Name="LoadingCombatStatsText"
+                                               Text="Loading combat statistics..." 
+                                               Foreground="{DynamicResource StarTrekTextGray}"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <!-- Data Table with Expandable Rows -->
+                                <ScrollViewer x:Name="CombatStatsScrollViewer"
+                                              Visibility="Collapsed"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="CombatStatsItemsControl"
+                                                  Background="Transparent"
+                                                  Padding="8">
+                                        <!-- Hier wird die Tabelle dynamisch gefüllt -->
+                                    </ItemsControl>
+                                </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
                 </ui:Card>
             </Grid>
         </Grid>
