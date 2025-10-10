@@ -1,0 +1,71 @@
+<UserControl x:Class="StoDamageMeter.Components.Combat.CombatStatsPlayerRow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    
+    <UserControl.Resources>
+        <!-- Expander Style mit gleichem Padding wie Header -->
+        <Style x:Key="TableRowExpander" TargetType="Expander">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="BorderBrush" Value="#333333"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          OverridesDefaultStyle="True"
+                                          Cursor="Hand">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
+                                                              HorizontalAlignment="Stretch"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpanderContent"
+                                              DockPanel.Dock="Top"
+                                              Visibility="Collapsed"/>
+                        </DockPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpanderContent" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <Expander x:Name="PlayerExpander"
+              IsExpanded="False"
+              Style="{StaticResource TableRowExpander}"
+              Margin="0,0,0,4">
+        <Expander.Header>
+            <Grid x:Name="PlayerHeaderGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>      <!-- Player/Ability -->
+                    <ColumnDefinition Width="1*"/>      <!-- DPS -->
+                    <ColumnDefinition Width="1.2*"/>    <!-- Total Damage -->
+                    <ColumnDefinition Width="1*"/>      <!-- Max Hit -->
+                    <ColumnDefinition Width="0.7*"/>    <!-- Crit % -->
+                    <ColumnDefinition Width="0.7*"/>    <!-- Acc % -->
+                </Grid.ColumnDefinitions>
+                
+                <!-- Content wird im Code-Behind dynamisch hinzugefügt -->
+            </Grid>
+        </Expander.Header>
+        
+        <StackPanel x:Name="PlayerContentPanel" Background="#101010"/>
+    </Expander>
+</UserControl>

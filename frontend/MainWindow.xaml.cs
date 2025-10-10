@@ -24,6 +24,7 @@ namespace StoDamageMeter;
 public partial class MainWindow : FluentWindow
 {
     private readonly IOSCRBackendService _backendService;
+    private readonly CombatStatsRenderer _statsRenderer;
     private CancellationTokenSource? _loadingCancellation;
     private List<CombatInfo>? _loadedCombats;
     private CombatData? _currentCombatData;
@@ -40,8 +41,15 @@ public partial class MainWindow : FluentWindow
         // Backend Service aus DI Container holen
         _backendService = App.ServiceProvider.GetRequiredService<IOSCRBackendService>();
         
+        // Stats Renderer initialisieren
+        _statsRenderer = new CombatStatsRenderer((Style)this.FindResource("NoToggleIconExpanderStyle"));
+        
         // Progress Event abonnieren
         _backendService.AnalysisProgress += OnAnalysisProgress;
+        
+        // Component Events verbinden
+        CombatListViewComponent.CombatSelected += OnCombatSelected;
+        StatsHeaderComponent.ColumnHeaderClicked += OnColumnHeaderClicked;
         
         // Initial Status Check
         _ = CheckBackendStatusAsync();
@@ -102,8 +110,6 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    // CheckStatusButton_Click entfernt - Button existiert nicht mehr in der neuen UI
-
     private async void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         var openFileDialog = new OpenFileDialog
@@ -139,7 +145,6 @@ public partial class MainWindow : FluentWindow
             // Show progress UI
             LoadingProgressBar.Visibility = Visibility.Visible;
             LoadingStatusText.Visibility = Visibility.Visible;
-            EmptyCombatListText.Visibility = Visibility.Collapsed;
             BrowseButton.IsEnabled = false;
 
             AppendResult($"Calling GetAvailableCombatsWithProgressAsync...");
@@ -178,13 +183,7 @@ public partial class MainWindow : FluentWindow
             // Update UI
             Dispatcher.Invoke(() =>
             {
-                CombatListView.ItemsSource = sortedCombats;
-                
-                if (sortedCombats.Count == 0)
-                {
-                    EmptyCombatListText.Text = "No combats found in this log file.";
-                    EmptyCombatListText.Visibility = Visibility.Visible;
-                }
+                CombatListViewComponent.SetCombats(sortedCombats);
             });
 
             AppendResult($"Loaded {sortedCombats.Count} combats from log file");
@@ -225,8 +224,6 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    // HealthCheckButton_Click und ListCombatsButton_Click entfernt - Buttons existieren nicht mehr in der neuen UI
-
     private async void AnalyzeButton_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -250,13 +247,10 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private void CombatListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnCombatSelected(object? sender, CombatInfo selectedCombat)
     {
-        if (CombatListView.SelectedItem is CombatInfo selectedCombat)
-        {
-            System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
-            _ = LoadCombatDetailsAsync(selectedCombat);
-        }
+        System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
+        _ = LoadCombatDetailsAsync(selectedCombat);
     }
 
     private async Task LoadCombatDetailsAsync(CombatInfo combat)
@@ -293,11 +287,15 @@ public partial class MainWindow : FluentWindow
 
             _currentCombatData = response.Combats[0];
 
-            // Populate TreeView
-            PopulateCombatStatsTreeView(_currentCombatData);
+            // Render Stats mit Service
+            _statsRenderer.RenderCombatStats(
+                CombatStatsItemsControl,
+                _currentCombatData,
+                _currentSortColumn,
+                _sortAscending);
             
             // Update column header indicators to show initial sort
-            UpdateColumnHeaderIndicators();
+            StatsHeaderComponent.SetSortColumn(_currentSortColumn, _sortAscending);
 
             // Show data
             LoadingCombatStatsPanel.Visibility = Visibility.Collapsed;
@@ -320,443 +318,50 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private void PopulateCombatStatsTreeView(CombatData combatData)
+    private string FindDefaultCombatLogPath()
     {
-        CombatStatsItemsControl.Items.Clear();
-
-        // Sortiere Players nach aktuellem Sortier-Status
-        var sortedPlayers = SortPlayerStatistics(
-            combatData.Players.Values,
-            _currentSortColumn,
-            _sortAscending);
-
-        foreach (var player in sortedPlayers)
+        try
         {
-            // Container für Player und Abilities
-            var playerContainer = new StackPanel
+            // Search in common STO installation directories
+            var possiblePaths = new[]
             {
-                Margin = new Thickness(0, 0, 0, 4)
+                @"C:\Program Files (x86)\Steam\steamapps\common\Star Trek Online\Star Trek Online\Live\logs\GameClient\combatlog.log",
+                @"C:\Program Files\Steam\steamapps\common\Star Trek Online\Star Trek Online\Live\logs\GameClient\combatlog.log",
+                @"D:\Steam\steamapps\common\Star Trek Online\Star Trek Online\Live\logs\GameClient\combatlog.log",
+                @"E:\Steam\steamapps\common\Star Trek Online\Star Trek Online\Live\logs\GameClient\combatlog.log"
             };
 
-            // Player Row mit Expander
-            var playerExpander = new Expander
+            // Check all drives for SteamLibrary
+            foreach (var drive in System.IO.DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == System.IO.DriveType.Fixed))
             {
-                IsExpanded = false,
-                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(0)
-            };
-
-            // Player Header Grid (sichtbar auch wenn collapsed)
-            var playerHeaderGrid = new Grid
-            {
-                Background = new SolidColorBrush(Color.FromRgb(26, 26, 26))
-            };
-            
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });     // Player/Ability
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });     // DPS
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });   // Total Damage
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });     // Max Hit
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });   // Crit %
-            playerHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });   // Acc %
-
-            // Player Name mit Icon (in Border für konsistente Trennlinien)
-            var playerNamePanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Margin = new Thickness(8, 8, 8, 8)
-            };
-            
-            var expandIcon = new System.Windows.Controls.TextBlock
-            {
-                Text = "▶",
-                FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0)
-            };
-            
-            var playerNameText = new System.Windows.Controls.TextBlock
-            {
-                Text = player.Name ?? "Unknown",
-                FontSize = 12,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Colors.White),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            
-            playerNamePanel.Children.Add(expandIcon);
-            playerNamePanel.Children.Add(playerNameText);
-            
-            // Player-Name ohne Border (keine Trennlinie)
-            Grid.SetColumn(playerNamePanel, 0);
-            playerHeaderGrid.Children.Add(playerNamePanel);
-
-            // Player Stats (mit Companions) - ohne Debuff
-            var playerStats = new[]
-            {
-                CreateTableCell($"{player.DpsWithCompanions:N0}", false),
-                CreateTableCell($"{player.TotalDamageWithCompanions:N0}", false),
-                CreateTableCell($"{player.MaxOneHit:N0}", false),
-                CreateTableCell($"{player.CritPercent:F1}%", false),
-                CreateTableCell($"{player.AccuracyPercent:F1}%", false)
-            };
-
-            for (int i = 0; i < playerStats.Length; i++)
-            {
-                Grid.SetColumn(playerStats[i], i + 1);
-                playerHeaderGrid.Children.Add(playerStats[i]);
-            }
-
-            // Expander Icon ändern bei Expand/Collapse
-            playerExpander.Expanded += (s, e) => expandIcon.Text = "▼";
-            playerExpander.Collapsed += (s, e) => expandIcon.Text = "▶";
-
-            playerExpander.Header = playerHeaderGrid;
-
-            // Player Content: Abilities + Companions (gemischt nach Total Damage sortiert)
-            var playerContentPanel = new StackPanel
-            {
-                Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
-                Margin = new Thickness(0)
-            };
-
-            // Erstelle eine Liste aller Items (Abilities + Companions) mit Total Damage zum Sortieren
-            var allItems = new List<(double totalDamage, bool isCompanion, object item)>();
-            
-            // Füge Abilities hinzu
-            foreach (var ability in player.Abilities)
-            {
-                allItems.Add((ability.TotalDamage, false, ability));
-            }
-            
-            // Füge Companions hinzu
-            foreach (var companion in player.Companions)
-            {
-                allItems.Add((companion.TotalDamage, true, companion));
-            }
-            
-            // Sortiere alles nach Total Damage
-            var sortedItems = allItems.OrderByDescending(x => x.totalDamage).ToList();
-
-            // Rendere Items in sortierter Reihenfolge
-            foreach (var (totalDamage, isCompanion, item) in sortedItems)
-            {
-                if (!isCompanion)
+                var steamLibraryPath = System.IO.Path.Combine(drive.RootDirectory.FullName, @"SteamLibrary\steamapps\common\Star Trek Online\Star Trek Online\Live\logs\GameClient\combatlog.log");
+                if (System.IO.File.Exists(steamLibraryPath))
                 {
-                    // Ability
-                    var ability = (AbilityStatistics)item;
-                    var abilityContainer = new Border
-                    {
-                        Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
-                        Margin = new Thickness(0, 1, 0, 0)
-                    };
-                    
-                    var abilityGrid = new Grid();
-                    
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-                    abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-
-                    // StackPanel für Ability-Name mit Spacer (um Icon-Platz zu reservieren)
-                    var abilityNamePanel = new StackPanel
-                    {
-                        Orientation = Orientation.Horizontal,
-                        Margin = new Thickness(8, 6, 8, 6)
-                    };
-                    
-                    // Spacer für Icon-Platz (gleiche Breite wie expandIcon: ~10px + 8px Margin = 18px)
-                    var abilitySpacer = new System.Windows.Controls.TextBlock
-                    {
-                        Width = 18, // Platz für Icon
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    
-                    var abilityNameText = new System.Windows.Controls.TextBlock
-                    {
-                        Text = ability.Name,
-                        FontSize = 11,
-                        Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Opacity = 0.9
-                    };
-                    
-                    abilityNamePanel.Children.Add(abilitySpacer);
-                    abilityNamePanel.Children.Add(abilityNameText);
-                    
-                    // Ability-Name ohne Border (keine Trennlinie)
-                    Grid.SetColumn(abilityNamePanel, 0);
-                    abilityGrid.Children.Add(abilityNamePanel);
-
-                    var abilityStats = new[]
-                    {
-                        CreateTableCell($"{ability.Dps:N0}", false, 0.85),
-                        CreateTableCell($"{ability.TotalDamage:N0}", false, 0.85),
-                        CreateTableCell($"{ability.MaxHit:N0}", false, 0.85),
-                        CreateTableCell($"{ability.CritPercent:F1}%", false, 0.85),
-                        CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.85)
-                    };
-
-                    for (int i = 0; i < abilityStats.Length; i++)
-                    {
-                        Grid.SetColumn(abilityStats[i], i + 1);
-                        abilityGrid.Children.Add(abilityStats[i]);
-                    }
-
-                    abilityContainer.Child = abilityGrid;
-                    playerContentPanel.Children.Add(abilityContainer);
-                }
-                else
-                {
-                    // Companion
-                    var companion = (CompanionStatistics)item;
-                    
-                    // Companion Expander
-                    var companionExpander = new Expander
-                {
-                    IsExpanded = false,
-                    Background = new SolidColorBrush(Color.FromRgb(20, 20, 20)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
-                    BorderThickness = new Thickness(0, 1, 0, 0),
-                    Padding = new Thickness(0),
-                    Margin = new Thickness(0, 1, 0, 0)
-                };
-
-                // Companion Header Grid
-                var companionHeaderGrid = new Grid
-                {
-                    Background = new SolidColorBrush(Color.FromRgb(20, 20, 20))
-                };
-                
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-                companionHeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-
-                // Companion Name mit Icon
-                var companionNamePanel = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(32, 6, 8, 6) // Links-Einrückung: 32px für Companions
-                };
-                
-                var companionExpandIcon = new System.Windows.Controls.TextBlock
-                {
-                    Text = "▶",
-                    FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromRgb(91, 155, 213)),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 6, 0)
-                };
-                
-                var companionNameText = new System.Windows.Controls.TextBlock
-                {
-                    Text = $"🤖 {companion.Name ?? "Unknown"}",
-                    FontSize = 11,
-                    FontWeight = FontWeights.Normal,
-                    Foreground = new SolidColorBrush(Color.FromRgb(176, 176, 176)),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Opacity = 0.95
-                };
-                
-                companionNamePanel.Children.Add(companionExpandIcon);
-                companionNamePanel.Children.Add(companionNameText);
-                
-                // Companion-Name ohne Border (keine Trennlinie)
-                Grid.SetColumn(companionNamePanel, 0);
-                companionHeaderGrid.Children.Add(companionNamePanel);
-
-                // Companion Stats - ohne Debuff
-                var companionStats = new[]
-                {
-                    CreateTableCell($"{companion.Dps:N0}", false, 0.8),
-                    CreateTableCell($"{companion.TotalDamage:N0}", false, 0.8),
-                    CreateTableCell($"{companion.MaxOneHit:N0}", false, 0.8),
-                    CreateTableCell($"{companion.CritPercent:F1}%", false, 0.8),
-                    CreateTableCell($"{companion.AccuracyPercent:F1}%", false, 0.8)
-                };
-
-                for (int i = 0; i < companionStats.Length; i++)
-                {
-                    Grid.SetColumn(companionStats[i], i + 1);
-                    companionHeaderGrid.Children.Add(companionStats[i]);
-                }
-
-                // Expander Icon ändern
-                companionExpander.Expanded += (s, e) => companionExpandIcon.Text = "▼";
-                companionExpander.Collapsed += (s, e) => companionExpandIcon.Text = "▶";
-
-                companionExpander.Header = companionHeaderGrid;
-
-                // Companion Abilities
-                if (companion.Abilities.Count > 0)
-                {
-                    var companionAbilitiesPanel = new StackPanel
-                    {
-                        Background = new SolidColorBrush(Color.FromRgb(12, 12, 12)),
-                        Margin = new Thickness(0)
-                    };
-
-                    var sortedCompanionAbilities = companion.Abilities
-                        .OrderByDescending(a => a.Dps)
-                        .ToList();
-
-                    foreach (var ability in sortedCompanionAbilities)
-                    {
-                        var abilityContainer = new Border
-                        {
-                            Background = new SolidColorBrush(Color.FromRgb(12, 12, 12)),
-                            Margin = new Thickness(0, 1, 0, 0)
-                        };
-                        
-                        var abilityGrid = new Grid();
-                        
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-                        abilityGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });
-
-                        // StackPanel für Companion-Ability-Name mit Spacer
-                        var companionAbilityNamePanel = new StackPanel
-                        {
-                            Orientation = Orientation.Horizontal,
-                            Margin = new Thickness(40, 5, 8, 5) // 32px Companion-Einrückung + 8px normal
-                        };
-                        
-                        // Spacer für Icon-Platz (gleiche Breite wie companionExpandIcon: ~9px + 6px Margin = 15px)
-                        var companionAbilitySpacer = new System.Windows.Controls.TextBlock
-                        {
-                            Width = 15, // Platz für Companion-Icon
-                            VerticalAlignment = VerticalAlignment.Center
-                        };
-                        
-                        var abilityNameText = new System.Windows.Controls.TextBlock
-                        {
-                            Text = ability.Name,
-                            FontSize = 10,
-                            Foreground = new SolidColorBrush(Color.FromRgb(156, 156, 156)),
-                            VerticalAlignment = VerticalAlignment.Center,
-                            Opacity = 0.85
-                        };
-                        
-                        companionAbilityNamePanel.Children.Add(companionAbilitySpacer);
-                        companionAbilityNamePanel.Children.Add(abilityNameText);
-                        
-                        // Ability-Name ohne Border (keine Trennlinie)
-                        Grid.SetColumn(companionAbilityNamePanel, 0);
-                        abilityGrid.Children.Add(companionAbilityNamePanel);
-
-                        var abilityStats = new[]
-                        {
-                            CreateTableCell($"{ability.Dps:N0}", false, 0.75),
-                            CreateTableCell($"{ability.TotalDamage:N0}", false, 0.75),
-                            CreateTableCell($"{ability.MaxHit:N0}", false, 0.75),
-                            CreateTableCell($"{ability.CritPercent:F1}%", false, 0.75),
-                            CreateTableCell($"{ability.AccuracyPercent:F1}%", false, 0.75)
-                        };
-
-                        for (int i = 0; i < abilityStats.Length; i++)
-                        {
-                            Grid.SetColumn(abilityStats[i], i + 1);
-                            abilityGrid.Children.Add(abilityStats[i]);
-                        }
-
-                        abilityContainer.Child = abilityGrid;
-                        companionAbilitiesPanel.Children.Add(abilityContainer);
-                    }
-
-                    companionExpander.Content = companionAbilitiesPanel;
-                }
-
-                    playerContentPanel.Children.Add(companionExpander);
+                    return steamLibraryPath;
                 }
             }
 
-            playerExpander.Content = playerContentPanel;
-
-            playerContainer.Children.Add(playerExpander);
-            CombatStatsItemsControl.Items.Add(playerContainer);
+            foreach (var path in possiblePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    return path;
+                }
+            }
         }
-    }
-
-    private Border CreateTableCell(string text, bool isHeader, double opacity = 1.0, bool showLeftBorder = true)
-    {
-        var textBlock = new System.Windows.Controls.TextBlock
+        catch (Exception ex)
         {
-            Text = text,
-            FontSize = isHeader ? 12 : 11,
-            Foreground = isHeader 
-                ? new SolidColorBrush(Colors.White) 
-                : new SolidColorBrush(Color.FromRgb(176, 176, 176)),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center,
-            Padding = new Thickness(8, 6, 8, 6),
-            Opacity = opacity,
-            FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal
-        };
+            System.Diagnostics.Debug.WriteLine($"Error finding default combat log path: {ex.Message}");
+        }
 
-        return new Border
-        {
-            Child = textBlock,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)), // StarTrekBorderGray
-            BorderThickness = showLeftBorder ? new Thickness(1, 0, 0, 0) : new Thickness(0)
-        };
-    }
-
-    /// <summary>
-    /// Sortiert Player-Statistiken basierend auf der gewählten Spalte
-    /// </summary>
-    private List<PlayerStatistics> SortPlayerStatistics(
-        IEnumerable<PlayerStatistics> players,
-        string sortColumn,
-        bool ascending)
-    {
-        IOrderedEnumerable<PlayerStatistics> orderedPlayers = sortColumn switch
-        {
-            "DpsWithCompanions" => ascending 
-                ? players.OrderBy(p => p.DpsWithCompanions)
-                : players.OrderByDescending(p => p.DpsWithCompanions),
-            
-            "TotalDamageWithCompanions" => ascending
-                ? players.OrderBy(p => p.TotalDamageWithCompanions)
-                : players.OrderByDescending(p => p.TotalDamageWithCompanions),
-            
-            "MaxOneHit" => ascending
-                ? players.OrderBy(p => p.MaxOneHit)
-                : players.OrderByDescending(p => p.MaxOneHit),
-            
-            "CritPercent" => ascending
-                ? players.OrderBy(p => p.CritPercent)
-                : players.OrderByDescending(p => p.CritPercent),
-            
-            "AccuracyPercent" => ascending
-                ? players.OrderBy(p => p.AccuracyPercent)
-                : players.OrderByDescending(p => p.AccuracyPercent),
-            
-            _ => ascending 
-                ? players.OrderBy(p => p.DpsWithCompanions)
-                : players.OrderByDescending(p => p.DpsWithCompanions)
-        };
-
-        return orderedPlayers.ToList();
+        return string.Empty;
     }
 
     /// <summary>
     /// Event-Handler für Spalten-Header-Klicks
     /// </summary>
-    private void OnColumnHeaderClick(object sender, RoutedEventArgs e)
+    private void OnColumnHeaderClicked(object? sender, string columnName)
     {
-        if (sender is not System.Windows.Controls.Button button || button.Tag is not string columnName)
-            return;
-
         // Toggle Richtung wenn gleiche Spalte, sonst absteigend als Default
         if (_currentSortColumn == columnName)
         {
@@ -768,59 +373,17 @@ public partial class MainWindow : FluentWindow
             _sortAscending = false; // Neue Spalte startet mit absteigend
         }
 
-        // Aktualisiere Visual Indicators
-        UpdateColumnHeaderIndicators();
+        // Update header component
+        StatsHeaderComponent.SetSortColumn(_currentSortColumn, _sortAscending);
 
         // Re-render mit neuer Sortierung
         if (_currentCombatData != null)
         {
-            PopulateCombatStatsTreeView(_currentCombatData);
-        }
-    }
-
-    /// <summary>
-    /// Aktualisiert die visuellen Sortier-Indikatoren in den Spalten-Headern
-    /// </summary>
-    private void UpdateColumnHeaderIndicators()
-    {
-        // Liste der Header-Buttons mit ihren Tag-Namen (ohne Debuff)
-        var headerButtons = new[]
-        {
-            (Button: DpsHeaderButton, Column: "DpsWithCompanions"),
-            (Button: TotalDamageHeaderButton, Column: "TotalDamageWithCompanions"),
-            (Button: MaxHitHeaderButton, Column: "MaxOneHit"),
-            (Button: CritHeaderButton, Column: "CritPercent"),
-            (Button: AccHeaderButton, Column: "AccuracyPercent")
-        };
-
-        foreach (var (button, column) in headerButtons)
-        {
-            if (button == null) continue;
-
-            bool isActive = _currentSortColumn == column;
-            
-            // Pfeil-Symbol
-            string arrow = isActive ? (_sortAscending ? " ▲" : " ▼") : "";
-            
-            // Text-Basis (ohne Pfeil)
-            string baseText = column switch
-            {
-                "DpsWithCompanions" => "DPS",
-                "TotalDamageWithCompanions" => "Total Damage",
-                "MaxOneHit" => "Max Hit",
-                "CritPercent" => "Crit %",
-                "AccuracyPercent" => "Acc %",
-                _ => ""
-            };
-
-            button.Content = baseText + arrow;
-            
-            // Farbe und FontWeight für aktive Spalte
-            button.Foreground = isActive
-                ? new SolidColorBrush(Color.FromRgb(91, 155, 213)) // Star Trek Blue
-                : new SolidColorBrush(Color.FromRgb(176, 176, 176)); // Gray
-            
-            button.FontWeight = isActive ? FontWeights.Bold : FontWeights.SemiBold;
+            _statsRenderer.RenderCombatStats(
+                CombatStatsItemsControl,
+                _currentCombatData,
+                _currentSortColumn,
+                _sortAscending);
         }
     }
 

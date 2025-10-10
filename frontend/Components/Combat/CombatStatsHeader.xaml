@@ -1,0 +1,208 @@
+<UserControl x:Class="StoDamageMeter.Components.Combat.CombatStatsHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d">
+    
+    <Border Background="#0A0A0A"
+            BorderBrush="#333333"
+            BorderThickness="0,0,0,1"
+            Padding="12,8"
+            Margin="0,0,0,4">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>      <!-- Player/Ability -->
+                <ColumnDefinition Width="1*"/>      <!-- DPS -->
+                <ColumnDefinition Width="1.2*"/>    <!-- Total Damage -->
+                <ColumnDefinition Width="1*"/>      <!-- Max Hit -->
+                <ColumnDefinition Width="0.7*"/>    <!-- Crit % -->
+                <ColumnDefinition Width="0.7*"/>    <!-- Acc % -->
+            </Grid.ColumnDefinitions>
+            
+            <!-- Player/Ability Header (nicht sortierbar) -->
+            <TextBlock Grid.Column="0"
+                       Text="Player / Ability" 
+                       FontWeight="SemiBold" 
+                       Foreground="#5B9BD5"
+                       Padding="0,0,8,0"/>
+            
+            <!-- DPS Header (sortierbar) -->
+            <Button x:Name="DpsHeaderButton"
+                    Grid.Column="1"
+                    Content="DPS"
+                    Tag="DpsWithCompanions"
+                    Click="OnColumnHeaderClick"
+                    FontWeight="SemiBold"
+                    Foreground="#5B9BD5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderThickness="0"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            
+            <!-- Total Damage Header -->
+            <Button x:Name="TotalDamageHeaderButton"
+                    Grid.Column="2"
+                    Content="Total Damage"
+                    Tag="TotalDamageWithCompanions"
+                    Click="OnColumnHeaderClick"
+                    FontWeight="SemiBold"
+                    Foreground="#5B9BD5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            
+            <!-- Max Hit Header -->
+            <Button x:Name="MaxHitHeaderButton"
+                    Grid.Column="3"
+                    Content="Max Hit"
+                    Tag="MaxOneHit"
+                    Click="OnColumnHeaderClick"
+                    FontWeight="SemiBold"
+                    Foreground="#5B9BD5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            
+            <!-- Crit % Header -->
+            <Button x:Name="CritHeaderButton"
+                    Grid.Column="4"
+                    Content="Crit %"
+                    Tag="CritPercent"
+                    Click="OnColumnHeaderClick"
+                    FontWeight="SemiBold"
+                    Foreground="#5B9BD5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            
+            <!-- Acc % Header -->
+            <Button x:Name="AccHeaderButton"
+                    Grid.Column="5"
+                    Content="Acc %"
+                    Tag="AccuracyPercent"
+                    Click="OnColumnHeaderClick"
+                    FontWeight="SemiBold"
+                    Foreground="#5B9BD5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

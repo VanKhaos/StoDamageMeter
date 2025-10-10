@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                xmlns:local="clr-namespace:StoDamageMeter"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:combat="clr-namespace:StoDamageMeter.Components.Combat"
+        xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
         mc:Ignorable="d"
         Title="STO Damage Meter" 
         Height="800" 
@@ -13,6 +15,45 @@
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
         WindowCornerPreference="Round">
+    
+    <ui:FluentWindow.Resources>
+        <!-- Custom Expander Style: Kein Toggle-Icon + Padding wie Header -->
+        <Style x:Key="NoToggleIconExpanderStyle" TargetType="Expander">
+            <Setter Property="Padding" Value="12,8"/>  <!-- GLEICH WIE HEADER! -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          OverridesDefaultStyle="True"
+                                          Cursor="Hand">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
+                                                              HorizontalAlignment="Stretch"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpanderContent"
+                                              DockPanel.Dock="Top"
+                                              Visibility="Collapsed"/>
+                        </DockPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpanderContent" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ui:FluentWindow.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -40,194 +81,63 @@
                     BorderBrush="{DynamicResource StarTrekBorderGray}" 
                     BorderThickness="0,0,1,0"
                     Padding="16">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <!-- Combat Log Selection Card -->
-                        <ui:Card Margin="0,0,0,16" Padding="16">
-                            <StackPanel>
-                                <TextBlock Text="STO Combatlog" 
-                                           FontSize="14" 
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource StarTrekBlue}"
-                                           Margin="0,0,0,12"/>
-                                
-                                <ui:TextBox x:Name="LogFilePathTextBox"
-                                            PlaceholderText="Select a combat log file..."
-                                            Icon="{ui:SymbolIcon Document24}"
-                                            Margin="0,0,0,12"/>
-                                
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                                    <ui:Button x:Name="BrowseButton"
-                                               Content="Browse"
-                                               Icon="{ui:SymbolIcon FolderOpen24}"
-                                               Appearance="Secondary"
-                                               Margin="0,0,8,0"
-                                               Click="BrowseButton_Click"/>
-                    </StackPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     
-                                <!-- Progress Bar -->
-                                <ProgressBar x:Name="LoadingProgressBar"
-                                             Visibility="Collapsed"
-                                             IsIndeterminate="False"
-                                             Minimum="0"
-                                             Maximum="100"
-                                             Height="4"
-                                             Margin="0,8,0,4"/>
-                                <TextBlock x:Name="LoadingStatusText"
-                                           Visibility="Collapsed"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource StarTrekTextGray}"
-                                           Margin="0,4,0,0"/>
+                    <!-- Combat Log Selection Card -->
+                    <ui:Card Grid.Row="0" Margin="0,0,0,16" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="STO Combatlog" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource StarTrekBlue}"
+                                       Margin="0,0,0,12"/>
+                            
+                            <ui:TextBox x:Name="LogFilePathTextBox"
+                                        PlaceholderText="Select a combat log file..."
+                                        Icon="{ui:SymbolIcon Document24}"
+                                        Margin="0,0,0,12"/>
+                            
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <ui:Button x:Name="BrowseButton"
+                                           Content="Browse"
+                                           Icon="{ui:SymbolIcon FolderOpen24}"
+                                           Appearance="Secondary"
+                                           Margin="0,0,8,0"
+                                           Click="BrowseButton_Click"/>
                             </StackPanel>
-                        </ui:Card>
-                        
-                        <!-- Combat List Card -->
-                        <ui:Card Margin="0,0,0,16" Padding="16">
-                            <StackPanel>
-                                <TextBlock Text="Combat List" 
-                                           FontSize="14" 
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource StarTrekBlue}"
-                                           Margin="0,0,0,12"/>
-                                
-                                <Border Background="{DynamicResource StarTrekDeepBlack}"
-                                        BorderBrush="{DynamicResource StarTrekBorderGray}"
-                                        BorderThickness="1"
-                                        CornerRadius="4"
-                                        Height="300">
-                                    <Grid>
-                                        <!-- Empty State -->
-                                        <TextBlock x:Name="EmptyCombatListText"
-                                                   Text="Select a combat log file to view combats..." 
-                                                   Foreground="{DynamicResource StarTrekTextGray}"
-                                                   HorizontalAlignment="Center" 
-                                                   VerticalAlignment="Center"
-                                                   Opacity="0.6"/>
-                                        
-                                        <!-- Combat List -->
-                                        <ListView x:Name="CombatListView" 
-                                                  Margin="8"
-                                                  Background="Transparent"
-                                                  BorderThickness="0"
-                                                  SelectionChanged="CombatListView_SelectionChanged">
-                                            <ListView.ItemContainerStyle>
-                                                <Style TargetType="ListViewItem">
-                                                    <Setter Property="Padding" Value="0"/>
-                                                    <Setter Property="Margin" Value="0,0,0,4"/>
-                                                    <Setter Property="Background" Value="{DynamicResource StarTrekDarkGray}"/>
-                                                    <Setter Property="BorderThickness" Value="1"/>
-                                                    <Setter Property="BorderBrush" Value="Transparent"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ListViewItem">
-                                                                <Border Background="{TemplateBinding Background}"
-                                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                                        CornerRadius="4"
-                                                                        Padding="12,8">
-                                                                    <ContentPresenter/>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                    <Style.Triggers>
-                                                        <!-- Hover Effect -->
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#2A2A2A"/>
-                                                            <Setter Property="BorderBrush" Value="{DynamicResource StarTrekBlue}"/>
-                                                            <Setter Property="Cursor" Value="Hand"/>
-                                                        </Trigger>
-                                                        <!-- Selected Effect -->
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter Property="Background" Value="#1E3A5F"/>
-                                                            <Setter Property="BorderBrush" Value="{DynamicResource StarTrekBlue}"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ListView.ItemContainerStyle>
-                                            <ListView.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <!-- Combat Type Icon -->
-                                                        <TextBlock Grid.Column="0"
-                                                                   Text="{Binding Icon}" 
-                                                                   FontSize="16"
-                                                                   Foreground="{DynamicResource StarTrekBlue}"
-                                                                   Margin="0,0,8,0"
-                                                                   VerticalAlignment="Center"
-                                                                   ToolTip="{Binding Type}"/>
-                                                        <!-- Date -->
-                                                        <TextBlock Grid.Column="1"
-                                                                   Text="{Binding Date}" 
-                                                                   Foreground="White"
-                                                                   FontSize="12"
-                                                                   HorizontalAlignment="Left"/>
-                                                        <!-- Time -->
-                                                        <TextBlock Grid.Column="2"
-                                                                   Text="{Binding Time}" 
-                                                                   Foreground="{DynamicResource StarTrekTextGray}"
-                                                                   FontSize="12"
-                                                                   HorizontalAlignment="Right"/>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ListView.ItemTemplate>
-                                        </ListView>
-                                    </Grid>
-                        </Border>
-                            </StackPanel>
-                        </ui:Card>
-                        
-                        <!-- Info Card -->
-                        <ui:Card Padding="16">
-                            <StackPanel>
-                                <TextBlock Text="Statistics" 
-                                           FontSize="14" 
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource StarTrekBlue}"
-                                           Margin="0,0,0,12"/>
-                                
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <ui:SymbolIcon Symbol="Timer24" FontSize="16" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Log Duration:" 
-                                               Foreground="{DynamicResource StarTrekTextGray}"
-                                               Margin="0,0,6,0"/>
-                                    <TextBlock x:Name="LogDurationText"
-                                               Text="0s" 
-                                               Foreground="White"
-                                               FontWeight="SemiBold"/>
-                    </StackPanel>
+                
+                            <!-- Progress Bar -->
+                            <ProgressBar x:Name="LoadingProgressBar"
+                                         Visibility="Collapsed"
+                                         IsIndeterminate="False"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Height="4"
+                                         Margin="0,8,0,4"/>
+                            <TextBlock x:Name="LoadingStatusText"
+                                       Visibility="Collapsed"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource StarTrekTextGray}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </ui:Card>
                     
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <ui:SymbolIcon Symbol="Person24" FontSize="16" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Player Duration:" 
-                                               Foreground="{DynamicResource StarTrekTextGray}"
-                                               Margin="0,0,6,0"/>
-                                    <TextBlock x:Name="PlayerDurationText"
-                                               Text="0s" 
-                                               Foreground="White"
-                                               FontWeight="SemiBold"/>
-                                </StackPanel>
-                                
-                                <ui:HyperlinkButton Content="Map Detection Details"
-                                                    Icon="{ui:SymbolIcon Info24}"
-                                                    Margin="0,8,0,0"/>
-                            </StackPanel>
-                        </ui:Card>
-                    </StackPanel>
-                </ScrollViewer>
+                    <!-- Combat List Component -->
+                    <combat:CombatListView x:Name="CombatListViewComponent" 
+                                           Grid.Row="1"
+                                           Margin="0"/>
+                </Grid>
             </Border>
             
             <!-- Right Data Area -->
             <Grid Grid.Column="1" Background="{DynamicResource StarTrekDeepBlack}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="2*"/>
-                    <RowDefinition Height="3*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
                 <!-- Filter Bar -->
@@ -268,45 +178,8 @@
                     </StackPanel>
                 </ui:Card>
                 
-                <!-- DPS Graph Area -->
-                <ui:Card Grid.Row="1" Margin="16,8,16,8" Padding="20">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <TextBlock Grid.Row="0" 
-                                   Text="DPS Over Time" 
-                                   FontSize="16" 
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource StarTrekBlue}"
-                                   Margin="0,0,0,12"/>
-                        
-                        <Border Grid.Row="1"
-                                Background="{DynamicResource StarTrekDarkGray}"
-                                BorderBrush="{DynamicResource StarTrekBorderGray}"
-                                BorderThickness="1"
-                                CornerRadius="4">
-                            <Grid>
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <ui:SymbolIcon Symbol="ChartMultiple24" 
-                                                   FontSize="48" 
-                                                   Foreground="{DynamicResource StarTrekBlue}"
-                                                   Opacity="0.3"
-                                                   Margin="0,0,0,12"/>
-                                    <TextBlock Text="DPS Graph will be displayed here" 
-                                               Foreground="{DynamicResource StarTrekTextGray}"
-                                               HorizontalAlignment="Center"
-                                               Opacity="0.6"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </ui:Card>
-                
                 <!-- Data Table Area -->
-                <ui:Card Grid.Row="2" Margin="16,8,16,16" Padding="20">
+                <ui:Card Grid.Row="1" Margin="16,8,16,16" Padding="20" VerticalAlignment="Top">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -329,216 +202,10 @@
                                        FontSize="12"/>
                         </StackPanel>
                         
-                        <!-- Column Headers -->
-                        <Border Grid.Row="1" 
-                                Background="{DynamicResource StarTrekDeepBlack}"
-                                BorderBrush="{DynamicResource StarTrekBorderGray}"
-                                BorderThickness="0,0,0,1"
-                                Padding="12,8"
-                                Margin="0,0,0,4">
-                        <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3*"/>      <!-- Player/Ability: mehr Platz -->
-                                    <ColumnDefinition Width="1*"/>      <!-- DPS -->
-                                    <ColumnDefinition Width="1.2*"/>    <!-- Total Damage -->
-                                    <ColumnDefinition Width="1*"/>      <!-- Max Hit -->
-                                    <ColumnDefinition Width="0.7*"/>    <!-- Crit % -->
-                                    <ColumnDefinition Width="0.7*"/>    <!-- Acc % -->
-                                </Grid.ColumnDefinitions>
-                                
-                                <!-- Player/Ability Header (nicht sortierbar, keine Trennlinie) -->
-                                <TextBlock Grid.Column="0"
-                                           Text="Player / Ability" 
-                                           FontWeight="SemiBold" 
-                                           Foreground="{DynamicResource StarTrekBlue}"
-                                           Padding="0,0,8,0"/>
-                                
-                                <!-- DPS Header (sortierbar) -->
-                                <Button x:Name="DpsHeaderButton"
-                                        Grid.Column="1"
-                                        Content="DPS"
-                                        Tag="DpsWithCompanions"
-                                        Click="OnColumnHeaderClick"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StarTrekBlue}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Right"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="4,0"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderThickness="0"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#20FFFFFF"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                                
-                                <!-- Total Damage Header (sortierbar) -->
-                                <Button x:Name="TotalDamageHeaderButton"
-                                        Grid.Column="2"
-                                        Content="Total Damage"
-                                        Tag="TotalDamageWithCompanions"
-                                        Click="OnColumnHeaderClick"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StarTrekBlue}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Right"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="4,0"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderThickness="0"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#20FFFFFF"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                                
-                                <!-- Max Hit Header (sortierbar) -->
-                                <Button x:Name="MaxHitHeaderButton"
-                                        Grid.Column="3"
-                                        Content="Max Hit"
-                                        Tag="MaxOneHit"
-                                        Click="OnColumnHeaderClick"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StarTrekBlue}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Right"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="4,0"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderThickness="0"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#20FFFFFF"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                                
-                                <!-- Crit % Header (sortierbar) -->
-                                <Button x:Name="CritHeaderButton"
-                                        Grid.Column="4"
-                                        Content="Crit %"
-                                        Tag="CritPercent"
-                                        Click="OnColumnHeaderClick"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StarTrekBlue}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Right"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="4,0"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderThickness="0"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#20FFFFFF"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                                
-                                <!-- Acc % Header (sortierbar) -->
-                                <Button x:Name="AccHeaderButton"
-                                        Grid.Column="5"
-                                        Content="Acc %"
-                                        Tag="AccuracyPercent"
-                                        Click="OnColumnHeaderClick"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StarTrekBlue}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Right"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="4,0"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderThickness="0"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#20FFFFFF"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                        </Grid>
-                    </Border>
+                        <!-- Column Headers Component -->
+                        <combat:CombatStatsHeader x:Name="StatsHeaderComponent" 
+                                                  Grid.Row="1" 
+                                                  Margin="0,0,0,4"/>
                     
                         <!-- Data Area -->
                         <Border Grid.Row="2"
@@ -588,10 +255,12 @@
                                 <ScrollViewer x:Name="CombatStatsScrollViewer"
                                               Visibility="Collapsed"
                                               VerticalScrollBarVisibility="Auto"
-                                              HorizontalScrollBarVisibility="Auto">
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalAlignment="Top">
                                     <ItemsControl x:Name="CombatStatsItemsControl"
                                                   Background="Transparent"
-                                                  Padding="8">
+                                                  Padding="8"
+                                                  VerticalAlignment="Top">
                                         <!-- Hier wird die Tabelle dynamisch gefüllt -->
                                     </ItemsControl>
                                 </ScrollViewer>
