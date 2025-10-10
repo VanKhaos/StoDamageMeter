@@ -21,8 +21,17 @@ logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# File Handler - schreibt in oscr_api.log
-file_handler = logging.FileHandler('oscr_api.log', mode='a', encoding='utf-8')
+# File Handler - schreibt neben die .exe
+# Bestimme das Verzeichnis der .exe (oder des Scripts)
+if getattr(sys, 'frozen', False):
+    # Running as compiled executable
+    exe_dir = os.path.dirname(sys.executable)
+else:
+    # Running as script
+    exe_dir = os.path.dirname(os.path.abspath(__file__))
+
+log_file_path = os.path.join(exe_dir, 'oscr_backend.log')
+file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 
 # Format
@@ -33,6 +42,10 @@ file_handler.setFormatter(formatter)
 # Handler hinzufügen
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
+
+# Log-Pfad ausgeben damit Benutzer weiß wo die Log-Datei ist
+logger.info(f"=== OSCR Backend Started ===")
+logger.info(f"Log file: {log_file_path}")
 
 # Echte OSCR-Funktionalität mit korrekten Combat-Patterns
 class WorkingOSCR:
@@ -70,6 +83,199 @@ class WorkingOSCR:
         except:
             return None
     
+    def _extract_primary_damage_type(self, damage_type_string: str) -> str:
+        """
+        Extrahiert den primären Damage-Type aus einem String wie "Physical|Crit|DoT"
+        Ignoriert: Crit, DoT, Immune, Miss, Shield
+        """
+        if not damage_type_string:
+            return ""
+        
+        # Nach | splitten
+        types = damage_type_string.split('|')
+        
+        # Ignorierte Types
+        ignored = {'Crit', 'Critical', 'DoT', 'Immune', 'Miss', 'Shield', 'Flank', 'Dodge'}
+        
+        # Ersten nicht-ignorierten Type finden
+        for t in types:
+            t = t.strip()
+            if t and t not in ignored:
+                return t
+        
+        return ""
+    
+    def parse_combat_log_line(self, line: str):
+        """
+        Parsed eine Combat-Log-Zeile vollständig
+        Format: YY:MM:DD:HH:MM:SS.ms::Owner,OwnerType,SourceName,SourceType,Target,TargetType,Ability,Pn.XXX,DamageType,Flags,Damage1,Damage2
+        
+        Returns: dict mit allen geparsten Feldern oder None bei Fehler
+        """
+        try:
+            if '::' not in line:
+                return None
+            
+            # Split bei ::
+            parts = line.split('::', 1)
+            if len(parts) < 2:
+                return None
+            
+            timestamp_str = parts[0]
+            timestamp = self.parse_timestamp(timestamp_str)
+            
+            # Rest der Zeile splitten - maxsplit begrenzen wegen Kommas in Namen
+            data_parts = parts[1].split(',')
+            
+            if len(data_parts) < 7:
+                return None
+            
+            return {
+                'timestamp': timestamp,
+                'owner_name': data_parts[0].strip() if len(data_parts) > 0 else '',
+                'owner_type': data_parts[1].strip() if len(data_parts) > 1 else '',
+                'source_name': data_parts[2].strip() if len(data_parts) > 2 else '',
+                'source_type': data_parts[3].strip() if len(data_parts) > 3 else '',
+                'target_name': data_parts[4].strip() if len(data_parts) > 4 else '',
+                'target_type': data_parts[5].strip() if len(data_parts) > 5 else '',
+                'ability_name': data_parts[6].strip() if len(data_parts) > 6 else '',
+                'damage_type': data_parts[8].strip() if len(data_parts) > 8 else '',
+                'flags': data_parts[9].strip() if len(data_parts) > 9 else '',
+                'damage_values': data_parts[10:] if len(data_parts) > 10 else []
+            }
+        except Exception as e:
+            return None
+    
+    def determine_combat_type_from_line(self, parsed_line: dict) -> str:
+        """
+        Ermittelt Combat-Type (Space/Ground) basierend auf Target Type (höchste Priorität), dann Source Type
+        Prüft auch S-Tags (Away Team = Ground) und C-Tags mit Ground_/Space_
+        
+        Priorität: TARGET zuerst, dann SOURCE
+        """
+        if not parsed_line:
+            return None  # Kein Default, wenn Parsing fehlschlägt
+        
+        target_type = parsed_line.get('target_type', '')
+        source_type = parsed_line.get('source_type', '')
+        
+        # ===== PRIORITÄT 1: TARGET prüfen =====
+        
+        # Target: S-Tag = Away Team = Ground Combat
+        if target_type.startswith('S['):
+            return 'Ground'
+        
+        # Target: C-Tag mit Ground_ = Ground Combat
+        if target_type.startswith('C[') and 'Ground_' in target_type:
+            return 'Ground'
+        
+        # Target: C-Tag mit Space_ = Space Combat
+        if target_type.startswith('C[') and 'Space_' in target_type:
+            return 'Space'
+        
+        # Target: Generelles String-Matching für Space_/Ground_
+        if 'Ground_' in target_type:
+            return 'Ground'
+        elif 'Space_' in target_type:
+            return 'Space'
+        
+        # ===== PRIORITÄT 2: SOURCE prüfen (nur wenn Target nichts ergab) =====
+        
+        # Source: S-Tag = Away Team = Ground Combat
+        if source_type.startswith('S['):
+            return 'Ground'
+        
+        # Source: C-Tag mit Ground_ = Ground Combat
+        if source_type.startswith('C[') and 'Ground_' in source_type:
+            return 'Ground'
+        
+        # Source: C-Tag mit Space_ = Space Combat
+        if source_type.startswith('C[') and 'Space_' in source_type:
+            return 'Space'
+        
+        # Source: Generelles String-Matching für Space_/Ground_
+        if 'Ground_' in source_type:
+            return 'Ground'
+        elif 'Space_' in source_type:
+            return 'Space'
+        
+        # Wenn nichts gefunden, gib None zurück (kein Default)
+        return None
+    
+    def clean_name(self, name: str) -> str:
+        """
+        Entfernt HTML-Tags aus Namen (z.B. <br>, <span>, etc.) 
+        und dekodiert HTML-Entities (z.B. &lt;, &gt;, &amp;)
+        """
+        import re
+        import html
+        # Erst HTML-Entities dekodieren
+        name = html.unescape(name)
+        # Dann HTML-Tags entfernen
+        return re.sub(r'<[^>]+>', '', name).strip()
+    
+    def identify_source_entity(self, parsed_line: dict) -> dict:
+        """
+        Identifiziert ob Source ein Spieler oder Companion ist
+        
+        WICHTIG: Ein Companion ist alles was NICHT der Spieler selbst ist!
+        - Spieler direkt: owner_name == source_name ODER source leer
+        - Companion: owner_name != source_name UND source hat Type (C[...] oder S[...])
+        
+        Returns:
+        {
+            'player_handle': '@handle',
+            'player_name': 'Player Name',
+            'is_companion': True/False,
+            'companion_name': 'Companion Name' oder None (HTML-bereinigt)
+        }
+        """
+        if not parsed_line:
+            return None
+        
+        owner_name = parsed_line.get('owner_name', '')
+        owner_type = parsed_line.get('owner_type', '')
+        source_name = parsed_line.get('source_name', '')
+        source_type = parsed_line.get('source_type', '')
+        
+        # Nur Player-Events verarbeiten
+        if not owner_type or 'P[' not in owner_type:
+            return None
+        
+        # Spieler-Handle extrahieren
+        handle = None
+        if '@' in owner_type:
+            try:
+                handle = owner_type.split('@')[1].split(']')[0]
+            except:
+                pass
+        
+        player_name = owner_name
+        
+        # Ist Source ein Companion?
+        # Logik:
+        # 1. Source leer oder '*' → Spieler direkt
+        # 2. Source == Owner → Spieler direkt
+        # 3. Source != Owner UND Source hat Type → Companion
+        is_companion = False
+        companion_name = None
+        
+        # Source leer oder nur Wildcard = Spieler direkt
+        if not source_name or source_name.strip() in ('', '*'):
+            is_companion = False
+        # Source gefüllt und anders als Owner = Companion
+        elif source_name != owner_name:
+            if source_type and (source_type.startswith('C[') or source_type.startswith('S[')):
+                is_companion = True
+                companion_name = self.clean_name(source_name)  # HTML-Tags entfernen!
+        
+        return {
+            'player_handle': handle,
+            'player_name': player_name,
+            'is_companion': is_companion,
+            'companion_name': companion_name
+        }
+    
     def isolate_combats(self, path: str, max_combats: int = -1):
         """Echte Combat-Isolation basierend auf Zeit-Differenzen"""
         logger.info(f"Isolating combats from: {path}")
@@ -84,12 +290,9 @@ class WorkingOSCR:
             with open(path, 'r', encoding='utf-8-sig', errors='replace') as f:
                 lines = f.readlines()
             
-            logger.info(f"Read {len(lines)} lines from log")
+            logger.info(f"Read {len(lines)} lines from log (chronological order)")
             
-            # Zeilen umkehren (neueste zuerst)
-            lines = list(reversed(lines))
-            
-            # Combat-Daten sammeln
+            # Combat-Daten sammeln (chronologisch, ältester zuerst)
             current_combat_lines = []
             current_combat_start_idx = 0
             last_timestamp = None
@@ -120,19 +323,18 @@ class WorkingOSCR:
                 if not is_combat_line:
                     continue
                 
-                # Combat-Type der aktuellen Zeile ermitteln
+                # Combat-Type der aktuellen Zeile ermitteln (mit vollständigem Parsing)
+                parsed_line = self.parse_combat_log_line(line)
                 line_combat_type = None
-                if 'Space_' in line:
-                    line_combat_type = 'Space'
-                elif 'Ground_' in line:
-                    line_combat_type = 'Ground'
+                if parsed_line:
+                    line_combat_type = self.determine_combat_type_from_line(parsed_line)
                 
                 # Prüfen ob neuer Combat (Zeitdifferenz ODER Type-Wechsel)
                 start_new_combat = False
                 
                 if last_timestamp and current_combat_lines:
-                    # Weil wir von hinten lesen, ist last_timestamp ÄLTER als current_time
-                    time_diff = abs((last_timestamp - current_time).total_seconds())
+                    # Chronologisch: last_timestamp ist früher, current_time ist später
+                    time_diff = (current_time - last_timestamp).total_seconds()
                     
                     # Neuer Combat bei Zeitdifferenz > Threshold
                     if time_diff > seconds_between_combats:
@@ -154,16 +356,26 @@ class WorkingOSCR:
                                 # Default ist Space (bei Gleichstand oder wenn keiner erkannt)
                                 combat_type = 'Space'
                             
-                            # Combat speichern (letzter Timestamp = Ende des Combats)
+                            # Combat speichern - Parse Timestamp aus der LETZTEN Zeile (neueste, chronologisch)
                             try:
-                                time_parts = current_combat_lines[0].split('::')[0].split(':')
-                                if len(time_parts) >= 6:
-                                    date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
-                                    time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                                # current_combat_lines[-1] ist die NEUESTE Zeile (chronologisch)
+                                last_line_timestamp = current_combat_lines[-1].split('::')[0]
+                                parsed_timestamp = self.parse_timestamp(last_line_timestamp)
+                                
+                                if parsed_timestamp:
+                                    date_str = parsed_timestamp.strftime("%Y-%m-%d")
+                                    time_str = parsed_timestamp.strftime("%H:%M:%S.%f")[:-5]  # Ohne letzte Mikrosekunde
                                 else:
-                                    date_str = "2025-10-09"
-                                    time_str = "00:00:00"
-                            except:
+                                    # Fallback: Manuelles Parsing
+                                    time_parts = last_line_timestamp.split(':')
+                                    if len(time_parts) >= 6:
+                                        date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
+                                        time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                                    else:
+                                        date_str = "2025-10-09"
+                                        time_str = "00:00:00"
+                            except Exception as e:
+                                logger.warning(f"Error parsing combat timestamp: {e}")
                                 date_str = "2025-10-09"
                                 time_str = "00:00:00"
                             
@@ -180,9 +392,6 @@ class WorkingOSCR:
                                 i - 1,
                                 combat_type
                             ))
-                            
-                            if max_combats > 0 and len(combats) >= max_combats:
-                                break
                         
                         # Neuen Combat starten - Counter zurücksetzen
                         current_combat_lines = []
@@ -195,18 +404,19 @@ class WorkingOSCR:
                 current_combat_lines.append(line)
                 last_timestamp = current_time
                 
-                # Combat-Type zählen und setzen
-                if 'Space_' in line:
+                # Combat-Type zählen und setzen (mit korrekter Erkennung)
+                if line_combat_type == 'Space':
                     space_count += 1
                     if not current_combat_type:
                         current_combat_type = 'Space'
-                elif 'Ground_' in line:
+                elif line_combat_type == 'Ground':
                     ground_count += 1
                     if not current_combat_type:
                         current_combat_type = 'Ground'
             
             # Letzten Combat hinzufügen falls vorhanden
-            if current_combat_lines and len(current_combat_lines) >= self._settings['combat_min_lines']:
+            if (current_combat_lines and 
+                len(current_combat_lines) >= self._settings['combat_min_lines']):
                 # Combat-Type basierend auf Mehrheit bestimmen
                 # Es gibt nur Space oder Ground, kein Unknown
                 if ground_count > space_count:
@@ -215,15 +425,26 @@ class WorkingOSCR:
                     # Default ist Space (bei Gleichstand oder wenn keiner erkannt)
                     combat_type = 'Space'
                 
+                # Combat speichern - Parse Timestamp aus der LETZTEN Zeile (neueste, chronologisch)
                 try:
-                    time_parts = current_combat_lines[0].split('::')[0].split(':')
-                    if len(time_parts) >= 6:
-                        date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
-                        time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                    # current_combat_lines[-1] ist die NEUESTE Zeile (chronologisch)
+                    last_line_timestamp = current_combat_lines[-1].split('::')[0]
+                    parsed_timestamp = self.parse_timestamp(last_line_timestamp)
+                    
+                    if parsed_timestamp:
+                        date_str = parsed_timestamp.strftime("%Y-%m-%d")
+                        time_str = parsed_timestamp.strftime("%H:%M:%S.%f")[:-5]  # Ohne letzte Mikrosekunde
                     else:
-                        date_str = "2025-10-09"
-                        time_str = "00:00:00"
-                except:
+                        # Fallback: Manuelles Parsing
+                        time_parts = last_line_timestamp.split(':')
+                        if len(time_parts) >= 6:
+                            date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
+                            time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                        else:
+                            date_str = "2025-10-09"
+                            time_str = "00:00:00"
+                except Exception as e:
+                    logger.warning(f"Error parsing combat timestamp: {e}")
                     date_str = "2025-10-09"
                     time_str = "00:00:00"
                 
@@ -241,8 +462,34 @@ class WorkingOSCR:
                     combat_type
                 ))
             
-            logger.info(f"Found {len(combats)} combats")
-            return combats
+            logger.info(f"Found {len(combats)} combats (chronological)")
+            
+            # Falls Limit gesetzt: Nur die LETZTEN N Combats nehmen (neueste)
+            if max_combats > 0 and len(combats) > max_combats:
+                combats_to_return = combats[-max_combats:]  # Letzte N = neueste
+                logger.info(f"Limiting to last {max_combats} combats (newest)")
+            else:
+                combats_to_return = combats
+            
+            # Combats umkehren, damit neueste zuerst kommen
+            reversed_combats = list(reversed(combats_to_return))
+            
+            # IDs neu zuweisen (0 = neuester Combat)
+            renumbered_combats = []
+            for new_id, (old_id, c_map, c_date, c_time, c_difficulty, c_byte_start, c_byte_end, c_type) in enumerate(reversed_combats):
+                renumbered_combats.append((
+                    new_id,  # Neue ID
+                    c_map,
+                    c_date,
+                    c_time,
+                    c_difficulty,
+                    c_byte_start,
+                    c_byte_end,
+                    c_type
+                ))
+            
+            logger.info(f"Returning {len(renumbered_combats)} combats (newest first)")
+            return renumbered_combats
             
         except Exception as e:
             logger.error(f"Error isolating combats: {e}")
@@ -277,230 +524,183 @@ class WorkingOSCR:
         
         logger.info(f"Analyzed {len(self.combats)} combats")
     
-    def _analyze_combat_players(self, log_path: str, start_byte: int, end_byte: int, combat_type: str = None, debug_log: bool = False):
-        """Echte Player-Analyse mit Ability-Tracking - filtert nach Combat-Type"""
+    def _analyze_combat_players(self, log_path: str, start_byte: int, end_byte: int, combat_type: str = None):
+        """
+        Neue Player-Analyse mit vollständigem Parsing und Companion-Support
+        """
         players = {}
-        
-        if debug_log:
-            logger.info("=" * 80)
-            logger.info(f"DEBUG: Analyzing Combat (Type: {combat_type})")
-            logger.info(f"Lines: {start_byte} to {end_byte}")
-            logger.info("=" * 80)
         
         try:
             # UTF-8 mit BOM Support
             with open(log_path, 'r', encoding='utf-8-sig', errors='replace') as f:
                 lines = f.readlines()
             
-            # Player-Namen und Damage extrahieren
-            player_damage = defaultdict(float)
-            player_attacks = defaultdict(int)
-            player_max_hit = defaultdict(float)
-            player_abilities = defaultdict(lambda: defaultdict(lambda: WorkingAbilityStats("")))
-            player_names = set()
-            player_crits = defaultdict(int)
-            player_hits = defaultdict(int)
-            player_handles = {}  # Map: display name -> handle
-            total_damage = 0
+            # Statistiken sammeln
             damage_events = 0
+            skipped_lines = 0
+            processed_lines = 0
+            
+            combat_time = 60.0  # Angenommene Combat-Zeit
             
             for i in range(start_byte, min(end_byte, len(lines))):
                 line = lines[i]
-                if '::' not in line:
+                
+                # Parse vollständig
+                parsed = self.parse_combat_log_line(line)
+                if not parsed:
+                    skipped_lines += 1
                     continue
                 
-                if debug_log:
-                    logger.info(f"\n--- Line {i} ---")
-                    logger.info(f"ORIGINAL: {line.strip()}")
-                    
-                try:
-                    parts = line.split('::')
-                    if len(parts) < 2:
-                        if debug_log:
-                            logger.info("SKIP: Less than 2 parts after splitting by '::'")
-                        continue
-                    
-                    # Parse Source (Player oder NPC)
-                    # Format: "Player Name,P[id@handle]" oder "NPC Name,C[OwnerHandle Controlled]"
-                    source_parts = parts[1].split(',', 1)
-                    if len(source_parts) < 2:
-                        if debug_log:
-                            logger.info("SKIP: Could not parse source parts")
-                        continue
-                    
-                    source_name = source_parts[0].strip()
-                    source_type = source_parts[1].strip()
-                    
-                    if debug_log:
-                        logger.info(f"PARSED Source Name: {source_name}")
-                        logger.info(f"PARSED Source Type: {source_type[:50]}...")
-                    
-                    # Bestimme den echten Player
-                    player_name = None
-                    
-                    # Echter Player: P[...]
-                    if source_type.startswith('P['):
-                        player_name = source_name
-                        # Handle extrahieren für NPC-Zuordnung
-                        handle_match = source_type.split('@')
-                        if len(handle_match) > 1:
-                            handle = handle_match[1].split(']')[0].strip()
-                            player_handles[handle] = source_name
-                        player_names.add(player_name)
-                        
-                        if debug_log:
-                            logger.info(f"PARSED Player: {player_name} (Real Player)")
-                    
-                    # NPC eines Players: C[OwnerHandle Controlled]
-                    elif source_type.startswith('C[') and 'Controlled' in source_type:
-                        # Extrahiere Owner-Handle
-                        owner_handle = source_type.split('[')[1].split(' ')[0].strip()
-                        # Finde den Spieler für dieses Handle
-                        if owner_handle in player_handles:
-                            player_name = player_handles[owner_handle]
-                            if debug_log:
-                                logger.info(f"PARSED Player: {player_name} (via NPC/Pet, Owner Handle: {owner_handle})")
-                        else:
-                            # Handle als Fallback-Name verwenden
-                            player_name = owner_handle
-                            player_names.add(player_name)
-                            if debug_log:
-                                logger.info(f"PARSED Player: {player_name} (Handle as fallback)")
-                    
-                    # Keine Player-Events - überspringe
-                    if not player_name:
-                        if debug_log:
-                            logger.info("SKIP: Not a player event (no player name)")
-                        continue
-                    
-                    # Combat-Type Filter: Nur Zeilen des richtigen Types analysieren
-                    if combat_type:
-                        line_is_space = 'Space_' in line
-                        line_is_ground = 'Ground_' in line
-                        
-                        if debug_log:
-                            logger.info(f"PARSED Combat Type in Line: Space={line_is_space}, Ground={line_is_ground}")
-                            logger.info(f"FILTER: Expected Type={combat_type}")
-                        
-                        # Überspringe Zeilen des falschen Types
-                        if combat_type == 'Space' and line_is_ground:
-                            if debug_log:
-                                logger.info("SKIP: Line is Ground but Combat is Space")
-                            continue
-                        elif combat_type == 'Ground' and line_is_space:
-                            if debug_log:
-                                logger.info("SKIP: Line is Space but Combat is Ground")
-                            continue
-                        # Wenn combat_type gesetzt aber Zeile hat keinen erkennbaren Type, auch überspringen
-                        elif not line_is_space and not line_is_ground:
-                            if debug_log:
-                                logger.info("SKIP: Line has no recognizable combat type")
-                            continue
-                    
-                    # Ability-Name extrahieren - zwischen Target und Damage-Type
-                    # Format: "...Target,Ability Name,Pn.xxx,DamageType,..."
-                    ability_name = "Unknown"
-                    if len(parts) > 1:
-                        # Suche nach Ability-Namen (vor Pn.)
-                        ability_parts = parts[1].split(',')
-                        for idx, part in enumerate(ability_parts):
-                            if 'Pn.' in part and idx > 0:
-                                ability_name = ability_parts[idx - 1].strip()
-                                break
-                        
-                        # Fallback: Versuche letzten nicht-leeren Teil vor Pn.
-                        if ability_name == "Unknown":
-                            for part in reversed(ability_parts):
-                                if part.strip() and 'Pn.' not in part and not part.startswith('['):
-                                    ability_name = part.strip()
-                                    break
-                    
-                    if debug_log:
-                        logger.info(f"PARSED Ability: {ability_name}")
-                    
-                    # Damage extrahieren
-                    if any(pattern in line for pattern in ['Damage', 'Shield', 'Electrical', 'Phaser', 
-                                                           'Plasma', 'Disruptor', 'Tetryon', 'Polaron', 
-                                                           'Antiproton', 'Kinetic', 'Physical']):
-                        damage_events += 1
-                        is_crit = 'Critical' in line or 'Crit' in line
-                        
-                        # Damage-Wert extrahieren
-                        if ',' in line:
-                            try:
-                                line_parts = line.split(',')
-                                damage_value = None
-                                
-                                # Suche nach Damage-Werten
-                                for part in line_parts:
-                                    try:
-                                        damage = float(part)
-                                        if abs(damage) > 0.1:
-                                            damage_value = abs(damage)
-                                            break
-                                    except ValueError:
-                                        continue
-                                
-                                if damage_value:
-                                    if debug_log:
-                                        logger.info(f"PARSED Damage: {damage_value:.2f} (Crit: {is_crit})")
-                                        logger.info(f"ACTION: ✓ ADDED to {player_name} -> {ability_name}")
-                                    # Player-Statistiken
-                                    total_damage += damage_value
-                                    player_damage[player_name] += damage_value
-                                    player_attacks[player_name] += 1
-                                    player_hits[player_name] += 1
-                                    
-                                    if is_crit:
-                                        player_crits[player_name] += 1
-                                    
-                                    if damage_value > player_max_hit[player_name]:
-                                        player_max_hit[player_name] = damage_value
-                                    
-                                    # Ability-Statistiken
-                                    if ability_name and ability_name != "Unknown":
-                                        ability = player_abilities[player_name][ability_name]
-                                        if not ability.name:
-                                            ability.name = ability_name
-                                        
-                                        ability.total_damage += damage_value
-                                        ability.hits += 1
-                                        ability.total_attacks += 1
-                                        
-                                        if is_crit:
-                                            ability.crits += 1
-                                        
-                                        if damage_value > ability.max_hit:
-                                            ability.max_hit = damage_value
-                            except:
-                                pass
-                except:
+                # Combat-Type-Filter
+                line_combat_type = self.determine_combat_type_from_line(parsed)
+                
+                if combat_type and line_combat_type != combat_type:
+                    skipped_lines += 1
                     continue
-            
-            # Player-Statistiken erstellen
-            for player_name in player_names:
-                if player_name and player_damage[player_name] > 0:
-                    combat_time = 60.0
-                    dps = player_damage[player_name] / combat_time if combat_time > 0 else 0
-                    
-                    player = WorkingPlayerStats(
+                
+                # Entity identifizieren
+                entity = self.identify_source_entity(parsed)
+                if not entity:
+                    skipped_lines += 1
+                    continue
+                
+                player_name = entity['player_name']
+                is_companion = entity['is_companion']
+                companion_name = entity['companion_name']
+                
+                # Player erstellen falls nicht vorhanden
+                if player_name not in players:
+                    players[player_name] = WorkingPlayerStats(
                         name=player_name,
-                        dps=dps,
+                        dps=0.0,
                         combat_time=combat_time,
-                        total_damage=player_damage[player_name],
-                        max_one_hit=player_max_hit[player_name] if player_max_hit[player_name] > 0 else 0,
+                        total_damage=0.0,
+                        max_one_hit=0.0,
                         deaths=0
                     )
+                
+                player = players[player_name]
+                
+                # Damage-Daten extrahieren
+                ability_name = parsed.get('ability_name', 'Unknown')
+                damage_type = parsed.get('damage_type', '')
+                primary_damage_type = self._extract_primary_damage_type(damage_type)
+                flags = parsed.get('flags', '')
+                is_crit = 'Critical' in flags or 'Crit' in flags
+                
+                # Damage-Wert extrahieren
+                damage_value = None
+                damage_values = parsed.get('damage_values', [])
+                for val in damage_values:
+                    try:
+                        dmg = float(val)
+                        # Überspringe negative Werte (Heilung/Shield)
+                        if dmg < 0:
+                            continue
+                        if dmg > 0.1:
+                            damage_value = dmg
+                            break
+                    except ValueError:
+                        continue
+                
+                if not damage_value:
+                    continue
+                
+                damage_events += 1
+                processed_lines += 1
+                
+                # Damage verarbeiten
+                if is_companion:
+                    # Companion-Damage
+                    if companion_name not in player.companions:
+                        player.companions[companion_name] = WorkingCompanionStats(name=companion_name)
                     
-                    # Crit % und Accuracy %
-                    if player_attacks[player_name] > 0:
-                        player.crit_percent = (player_crits[player_name] / player_attacks[player_name]) * 100.0
-                        player.accuracy_percent = (player_hits[player_name] / player_attacks[player_name]) * 100.0
+                    companion = player.companions[companion_name]
                     
-                    # Abilities hinzufügen
-                    player.abilities = dict(player_abilities[player_name])
+                    # Companion Stats
+                    companion.total_damage += damage_value
+                    companion.total_attacks += 1
+                    companion.hits += 1
+                    if is_crit:
+                        companion.crits += 1
+                    if damage_value > companion.max_hit:
+                        companion.max_hit = damage_value
                     
-                    players[player_name] = player
+                    # Companion Ability
+                    if ability_name and ability_name != "Unknown":
+                        if ability_name not in companion.abilities:
+                            companion.abilities[ability_name] = WorkingAbilityStats(ability_name)
+                        
+                        ability = companion.abilities[ability_name]
+                        ability.total_damage += damage_value
+                        ability.hits += 1
+                        ability.total_attacks += 1
+                        if is_crit:
+                            ability.crits += 1
+                        if damage_value > ability.max_hit:
+                            ability.max_hit = damage_value
+                        # Track damage type
+                        if primary_damage_type:
+                            if primary_damage_type not in ability.damage_types:
+                                ability.damage_types[primary_damage_type] = 0
+                            ability.damage_types[primary_damage_type] += 1
+                    
+                    # Zum Player-Gesamt addieren
+                    player.total_damage_with_companions += damage_value
+                
+                else:
+                    # Direkte Player-Damage
+                    player.total_damage += damage_value
+                    player.total_damage_with_companions += damage_value
+                    
+                    if damage_value > player.max_one_hit:
+                        player.max_one_hit = damage_value
+                    
+                    # Player Ability
+                    if ability_name and ability_name != "Unknown":
+                        if ability_name not in player.abilities:
+                            player.abilities[ability_name] = WorkingAbilityStats(ability_name)
+                        
+                        ability = player.abilities[ability_name]
+                        ability.total_damage += damage_value
+                        ability.hits += 1
+                        ability.total_attacks += 1
+                        if is_crit:
+                            ability.crits += 1
+                        if damage_value > ability.max_hit:
+                            ability.max_hit = damage_value
+                        # Track damage type
+                        if primary_damage_type:
+                            if primary_damage_type not in ability.damage_types:
+                                ability.damage_types[primary_damage_type] = 0
+                            ability.damage_types[primary_damage_type] += 1
+            
+            # DPS berechnen und Stats finalisieren
+            for player in players.values():
+                # Player DPS (ohne Companions)
+                player.DPS = player.total_damage / combat_time if combat_time > 0 else 0
+                
+                # Player DPS (mit Companions)
+                player.dps_with_companions = player.total_damage_with_companions / combat_time if combat_time > 0 else 0
+                
+                # Companion DPS berechnen
+                for companion in player.companions.values():
+                    companion.dps = companion.total_damage / combat_time if combat_time > 0 else 0
+                    companion.combat_time = combat_time
+                    
+                    # Companion Stats
+                    if companion.total_attacks > 0:
+                        companion.crit_percent = (companion.crits / companion.total_attacks) * 100.0
+                        companion.accuracy_percent = (companion.hits / companion.total_attacks) * 100.0
+                
+                # Player gesamt Crit/Acc %
+                total_attacks = sum(a.total_attacks for a in player.abilities.values())
+                total_crits = sum(a.crits for a in player.abilities.values())
+                total_hits = sum(a.hits for a in player.abilities.values())
+                
+                if total_attacks > 0:
+                    player.crit_percent = (total_crits / total_attacks) * 100.0
+                    player.accuracy_percent = (total_hits / total_attacks) * 100.0
             
             # Fallback: Test-Player falls keine echten Player gefunden
             if not players:
@@ -514,33 +714,14 @@ class WorkingOSCR:
                 )
                 player.crit_percent = 50.0
                 player.accuracy_percent = 95.0
-                
-                # Test-Ability
-                test_ability = WorkingAbilityStats("Test Ability")
-                test_ability.total_damage = 30000.0
-                test_ability.hits = 50
-                test_ability.total_attacks = 50
-                test_ability.crits = 25
-                test_ability.max_hit = 2000.0
-                player.abilities["Test Ability"] = test_ability
-                
                 players["TestPlayer"] = player
             
-            if debug_log:
-                logger.info("=" * 80)
-                logger.info("DEBUG SUMMARY:")
-                logger.info(f"Total Lines Processed: {end_byte - start_byte}")
-                logger.info(f"Combat Type Filter: {combat_type}")
-                logger.info(f"Damage Events: {damage_events}")
-                logger.info(f"Players Found: {len(players)}")
-                for pname in player_names:
-                    logger.info(f"  - {pname}: {player_damage[pname]:.2f} damage, {player_attacks[pname]} attacks")
-                logger.info("=" * 80)
-            
-            logger.info(f"Found {len(players)} players with {damage_events} damage events")
+            logger.info(f"Combat analysis complete: {len(players)} players, {damage_events} damage events")
             
         except Exception as e:
             logger.error(f"Error analyzing players: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Fallback
             player = WorkingPlayerStats(
                 name="TestPlayer",
@@ -585,6 +766,7 @@ class WorkingAbilityStats:
         self.max_hit = 0.0
         self.crits = 0
         self.total_attacks = 0
+        self.damage_types = {}  # Dict {damage_type: count}
         
     @property
     def dps(self):
@@ -600,6 +782,30 @@ class WorkingAbilityStats:
     def accuracy_percent(self):
         """Berechne Accuracy-Prozentsatz"""
         return (self.hits / self.total_attacks * 100.0) if self.total_attacks > 0 else 0.0
+    
+    def get_primary_damage_type(self):
+        """Gibt den häufigsten Damage-Type zurück"""
+        if not self.damage_types:
+            return ""
+        return max(self.damage_types, key=self.damage_types.get)
+
+
+class WorkingCompanionStats:
+    """Companion-Statistiken (Pets, Drohnen, Außenteam)"""
+    
+    def __init__(self, name: str):
+        self.name = name
+        self.total_damage = 0.0
+        self.dps = 0.0
+        self.max_hit = 0.0
+        self.combat_time = 0.0
+        self.abilities = {}  # Dict[str, WorkingAbilityStats]
+        self.hits = 0
+        self.crits = 0
+        self.total_attacks = 0
+        self.crit_percent = 0.0
+        self.accuracy_percent = 0.0
+        self.debuff = 0.0
 
 
 class WorkingPlayerStats:
@@ -619,8 +825,13 @@ class WorkingPlayerStats:
         self.max_one_hit = max_one_hit
         self.deaths = deaths
         self.abilities = {}  # Dict[str, WorkingAbilityStats]
+        self.companions = {}  # Dict[str, WorkingCompanionStats]
         self.crit_percent = 0.0
         self.accuracy_percent = 0.0
+        
+        # Neue Felder für "mit Companions"
+        self.total_damage_with_companions = total_damage
+        self.dps_with_companions = dps
 
 
 def get_health_status():
@@ -643,12 +854,13 @@ def get_health_status():
             "timestamp": datetime.now().isoformat()
         }
 
-def get_available_combats(log_path, max_combats=-1):
-    """Verfügbare Combats abrufen"""
+def get_available_combats(log_path, max_combats=20):
+    """Verfügbare Combats abrufen (Default: letzte 20)"""
     try:
         if not os.path.exists(log_path):
             raise FileNotFoundError(f"Log file not found: {log_path}")
         
+        logger.info(f"Loading combats with maxCombats={max_combats}")
         parser = WorkingOSCR(log_path)
         combats = parser.isolate_combats(log_path, max_combats)
         
@@ -697,13 +909,16 @@ def analyze_combat_log(log_path, max_combats=1, settings=None):
                 # Abilities serialisieren
                 abilities_data = []
                 for ability_name, ability in stats.abilities.items():
+                    primary_type = ability.get_primary_damage_type()
                     abilities_data.append({
                         'name': ability.name,
                         'totalDamage': ability.total_damage,
                         'dps': ability.dps,
                         'maxHit': ability.max_hit,
                         'critPercent': ability.crit_percent,
-                        'accuracyPercent': ability.accuracy_percent
+                        'accuracyPercent': ability.accuracy_percent,
+                        'attacks': ability.total_attacks,
+                        'damageType': primary_type
                     })
                 
                 players_data[player_name] = {
@@ -790,8 +1005,7 @@ def analyze_single_combat(log_path, combat_id, settings=None):
             log_file=log_path
         )
         
-        # Debug-Logging für UI-geladene Combats aktivieren
-        combat.players = parser._analyze_combat_players(log_path, c_byte_start, c_byte_end, c_type, debug_log=True)
+        combat.players = parser._analyze_combat_players(log_path, c_byte_start, c_byte_end, c_type)
         
         # Players serialisieren
         players_data = {}
@@ -799,13 +1013,45 @@ def analyze_single_combat(log_path, combat_id, settings=None):
             # Abilities serialisieren
             abilities_data = []
             for ability_name, ability in stats.abilities.items():
+                primary_type = ability.get_primary_damage_type()
                 abilities_data.append({
                     'name': ability.name,
                     'totalDamage': ability.total_damage,
                     'dps': ability.dps,
                     'maxHit': ability.max_hit,
                     'critPercent': ability.crit_percent,
-                    'accuracyPercent': ability.accuracy_percent
+                    'accuracyPercent': ability.accuracy_percent,
+                    'attacks': ability.total_attacks,
+                    'damageType': primary_type
+                })
+            
+            # Companions serialisieren
+            companions_data = []
+            for companion_name, companion in stats.companions.items():
+                # Companion Abilities serialisieren
+                companion_abilities_data = []
+                for ability_name, ability in companion.abilities.items():
+                    primary_type = ability.get_primary_damage_type()
+                    companion_abilities_data.append({
+                        'name': ability.name,
+                        'totalDamage': ability.total_damage,
+                        'dps': ability.dps,
+                        'maxHit': ability.max_hit,
+                        'critPercent': ability.crit_percent,
+                        'accuracyPercent': ability.accuracy_percent,
+                        'attacks': ability.total_attacks,
+                        'damageType': primary_type
+                    })
+                
+                companions_data.append({
+                    'name': companion.name,
+                    'dps': companion.dps,
+                    'totalDamage': companion.total_damage,
+                    'debuff': companion.debuff,
+                    'maxOneHit': companion.max_hit,
+                    'critPercent': companion.crit_percent,
+                    'accuracyPercent': companion.accuracy_percent,
+                    'abilities': companion_abilities_data
                 })
             
             players_data[player_name] = {
@@ -822,7 +1068,10 @@ def analyze_single_combat(log_path, combat_id, settings=None):
                 'deaths': stats.deaths,
                 'critPercent': stats.crit_percent,
                 'accuracyPercent': stats.accuracy_percent,
-                'abilities': abilities_data
+                'abilities': abilities_data,
+                'companions': companions_data,
+                'dpsWithCompanions': stats.dps_with_companions,
+                'totalDamageWithCompanions': stats.total_damage_with_companions
             }
         
         combat_data = {
@@ -865,6 +1114,8 @@ def main():
     try:
         if len(sys.argv) > 1 and sys.argv[1] == "--api":
             input_json = sys.stdin.read()
+            # Entferne UTF-8 BOM falls vorhanden
+            input_json = input_json.lstrip('\ufeff')
             input_data = json.loads(input_json)
             action = input_data.get('action')
             
