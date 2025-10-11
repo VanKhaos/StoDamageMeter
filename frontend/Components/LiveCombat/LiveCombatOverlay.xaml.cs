@@ -134,6 +134,9 @@ namespace StoDamageMeter.Components.LiveCombat
                 // Show empty state
                 _durationUpdateTimer?.Stop();
                 
+                // Clear player list
+                PlayersItemsControl.Items.Clear();
+                
                 if (EmptyPanel != null)
                 {
                     EmptyPanel.Visibility = Visibility.Visible;

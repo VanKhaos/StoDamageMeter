@@ -189,6 +189,17 @@ https://github.com/VanKhaos/StoDamageMeter/issues
 $ReadmePath = Join-Path $ReleaseVersionPath "README.txt"
 Set-Content -Path $ReadmePath -Value $ReadmeContent -Encoding UTF8
 
+# Changelog kopieren
+Write-Host "[7.5/7] Copying CHANGELOG..." -ForegroundColor Yellow
+$ChangelogSource = Join-Path $ProjectRoot "CHANGELOG.md"
+$ChangelogDest = Join-Path $ReleaseVersionPath "CHANGELOG.txt"
+if (Test-Path $ChangelogSource) {
+    Copy-Item -Path $ChangelogSource -Destination $ChangelogDest -Force
+    Write-Host "CHANGELOG copied to release" -ForegroundColor Green
+} else {
+    Write-Host "Warning: CHANGELOG.md not found at $ChangelogSource" -ForegroundColor Yellow
+}
+
 # Cleanup
 Write-Host "[Cleanup] Removing debug files and temporary files..." -ForegroundColor Yellow
 Get-ChildItem -Path $ReleaseVersionPath -Filter "*.pdb" -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
@@ -261,6 +272,7 @@ Write-Host "Release-Struktur:" -ForegroundColor Cyan
 Write-Host "  Root:" -ForegroundColor White
 Write-Host "    - StoDamageMeter.exe (Launcher)" -ForegroundColor Gray
 Write-Host "    - README.txt" -ForegroundColor Gray
+Write-Host "    - CHANGELOG.txt" -ForegroundColor Gray
 Write-Host "    - App/ (Core-Anwendung + Backend + Config + alle DLLs)" -ForegroundColor Gray
 Write-Host "    - Language/ (Sprachressourcen)" -ForegroundColor Gray
 Write-Host ""

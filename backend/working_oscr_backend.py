@@ -318,9 +318,7 @@ class WorkingOSCR:
             current_combat_lines = []
             current_combat_start_idx = 0
             last_timestamp = None
-            current_combat_type = None  # 'Space' oder 'Ground'
-            space_count = 0
-            ground_count = 0
+            current_combat_type = None  # Wird bei erster erkannter Zeile gesetzt, dann fix für Combat
             seconds_between_combats = self._settings['seconds_between_combats']
             
             for i, line in enumerate(lines):
@@ -370,13 +368,9 @@ class WorkingOSCR:
                 if start_new_combat:
                         # Combat beenden, wenn genug Zeilen
                         if len(current_combat_lines) >= self._settings['combat_min_lines']:
-                            # Combat-Type basierend auf Mehrheit bestimmen
-                            # Es gibt nur Space oder Ground, kein Unknown
-                            if ground_count > space_count:
-                                combat_type = 'Ground'
-                            else:
-                                # Default ist Space (bei Gleichstand oder wenn keiner erkannt)
-                                combat_type = 'Space'
+                            # Combat-Type direkt verwenden (wurde bei erster Zeile gesetzt)
+                            # Default ist Space falls nie erkannt
+                            combat_type = current_combat_type if current_combat_type else 'Space'
                             
                             # Combat speichern - Parse Timestamp aus der LETZTEN Zeile (neueste, chronologisch)
                             try:
@@ -418,37 +412,25 @@ class WorkingOSCR:
                                     combat_type
                                 ))
                         
-                        # Neuen Combat starten - Counter zurücksetzen
+                        # Neuen Combat starten - Type zurücksetzen
                         current_combat_lines = []
                         current_combat_start_idx = i
-                        space_count = 0
-                        ground_count = 0
-                        current_combat_type = None  # Zurücksetzen
+                        current_combat_type = None  # Zurücksetzen für neuen Combat
                 
                 # Zeile zum aktuellen Combat hinzufügen
                 current_combat_lines.append(line)
                 last_timestamp = current_time
                 
-                # Combat-Type zählen und setzen (mit korrekter Erkennung)
-                if line_combat_type == 'Space':
-                    space_count += 1
-                    if not current_combat_type:
-                        current_combat_type = 'Space'
-                elif line_combat_type == 'Ground':
-                    ground_count += 1
-                    if not current_combat_type:
-                        current_combat_type = 'Ground'
+                # Combat-Type bei erster Erkennung setzen (bleibt dann fix für Combat)
+                if line_combat_type and not current_combat_type:
+                    current_combat_type = line_combat_type
             
             # Letzten Combat hinzufügen falls vorhanden
             if (current_combat_lines and 
                 len(current_combat_lines) >= self._settings['combat_min_lines']):
-                # Combat-Type basierend auf Mehrheit bestimmen
-                # Es gibt nur Space oder Ground, kein Unknown
-                if ground_count > space_count:
-                    combat_type = 'Ground'
-                else:
-                    # Default ist Space (bei Gleichstand oder wenn keiner erkannt)
-                    combat_type = 'Space'
+                # Combat-Type direkt verwenden (wurde bei erster Zeile gesetzt)
+                # Default ist Space falls nie erkannt
+                combat_type = current_combat_type if current_combat_type else 'Space'
                 
                 # NUR Combats mit Player-Daten speichern (Owner muss P[ enthalten)
                 has_players = any(',P[' in line and '::' in line for line in current_combat_lines[:min(50, len(current_combat_lines))])

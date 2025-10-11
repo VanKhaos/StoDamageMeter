@@ -383,7 +383,7 @@ namespace StoDamageMeter.ViewModels
 
                 // Reset für nächsten Combat
                 _activeCombatLines.Clear();
-                _currentCombat = null;
+                CurrentCombat = null; // Property statt field, damit PropertyChanged gefeuert wird
                 _combatStartTime = null;
                 StatusText = "Warte auf nächsten Combat...";
 
