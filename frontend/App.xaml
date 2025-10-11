@@ -9,6 +9,9 @@
                 <!-- WPF UI Theme Dictionary - Dark Theme -->
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                
+                <!-- ✅ Custom Expander Styles für Dashboard und Live Combat -->
+                <ResourceDictionary Source="Styles/ExpanderStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Star Trek Custom Colors -->

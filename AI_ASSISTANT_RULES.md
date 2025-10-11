@@ -105,15 +105,45 @@
 - **Debug-Logs** sind temporär - nach Fixing immer entfernen
 - **Build-Effizienz** - nur bei wichtigen Änderungen kompilieren
 
+## 🛠️ Build & Deployment
+
+### Debug-Version erstellen
+- **Script:** `.\build_debug.ps1` im Root-Verzeichnis ausführen
+- **Ziel:** Zentrale Debug-Version im `Debug\` Ordner
+- **Vorteile:**
+  - Alle Debug-Dateien an einem Ort
+  - Debug-Symbole (.pdb) für besseres Debugging
+  - Schneller Zugriff aus Root
+  - Getrennt von Release-Builds
+- **Struktur:**
+  ```
+  Debug\
+  ├── StoDamageMeter.exe      (Frontend mit Debug-Symbolen)
+  ├── StoDamageMeter.pdb      (Debug-Symbole)
+  ├── OSCRBackend.exe         (Backend)
+  ├── appsettings.json
+  ├── *.dll                   (Dependencies)
+  └── README.txt
+  ```
+
+### Release-Version erstellen
+- **Script:** `.\create_release.ps1` für vollständigen Build
+- **Script:** `.\create_release_zip.ps1` für ZIP-Archiv
+- **Ziel:** `Releases\StoDamageMeter_vX.X.X\`
+- **Struktur:** Launcher + App/ + Language/
+
 ## 📚 Referenz-Dokumente
 
 - `COMBATLOG_ANALYSIS.md` - Combatlog-Format Spezifikation
 - `PROJEKT_ANALYSE.md` - Detaillierte Projektanalyse
-- `StoDamageMeter.csproj` - Projekt-Konfiguration
+- `DEVELOPER_LOG.md` - Entwicklungs-Tagebuch
+- `build_debug.ps1` - Debug-Build-Script
+- `create_release.ps1` - Release-Build-Script
+- `frontend/Build.targets` - MSBuild Custom Targets
 - `Services/` - Business Logic
 - `Models/` - Datenmodelle
 
 ---
 
-**Letzte Aktualisierung**: $(Get-Date -Format "dd.MM.yyyy HH:mm")
-**Version**: 1.0
+**Letzte Aktualisierung**: 2025-01-10
+**Version**: 1.1

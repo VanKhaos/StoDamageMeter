@@ -41,6 +41,9 @@ public partial class App : Application
         // OSCR Backend Service
         services.AddSingleton<IOSCRBackendService, OSCRBackendService>();
 
+        // Combat Log Watcher Service
+        services.AddSingleton<CombatLogWatcherService>();
+
         // Service Provider erstellen
         ServiceProvider = services.BuildServiceProvider();
 

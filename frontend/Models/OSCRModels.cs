@@ -59,6 +59,45 @@ namespace StoDamageMeter.Models
     }
 
     /// <summary>
+    /// Response für Live-Parsing (neue Log-Zeilen und aktiver Combat)
+    /// </summary>
+    public class LiveParseResponse : OSCRResponse
+    {
+        [JsonPropertyName("current_byte_offset")]
+        public long CurrentByteOffset { get; set; }
+
+        [JsonPropertyName("new_combats")]
+        public List<CombatInfo> NewCombats { get; set; } = new();
+
+        [JsonPropertyName("active_combat")]
+        public ActiveCombatInfo? ActiveCombat { get; set; }
+
+        [JsonPropertyName("lines_processed")]
+        public int LinesProcessed { get; set; }
+    }
+
+    /// <summary>
+    /// Informationen über einen aktiven Combat
+    /// </summary>
+    public class ActiveCombatInfo
+    {
+        [JsonPropertyName("lines")]
+        public List<string> Lines { get; set; } = new();
+
+        [JsonPropertyName("start_time")]
+        public string? StartTime { get; set; }
+
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
+
+        [JsonPropertyName("line_count")]
+        public int LineCount { get; set; }
+
+        [JsonPropertyName("is_active")]
+        public bool IsActive { get; set; }
+    }
+
+    /// <summary>
     /// Basis-Informationen über einen Combat
     /// </summary>
     public class CombatInfo
@@ -111,6 +150,18 @@ namespace StoDamageMeter.Models
         [JsonPropertyName("difficulty")]
         public string? Difficulty { get; set; }
 
+        [JsonPropertyName("date")]
+        public string? Date { get; set; }
+
+        [JsonPropertyName("time")]
+        public string? Time { get; set; }
+
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
+
+        [JsonPropertyName("duration")]
+        public double Duration { get; set; }
+
         [JsonPropertyName("startTime")]
         public string? StartTime { get; set; }
 
@@ -121,13 +172,31 @@ namespace StoDamageMeter.Models
         public string? Description { get; set; }
 
         [JsonPropertyName("players")]
-        public Dictionary<string, PlayerStatistics> Players { get; set; } = new();
+        public List<PlayerStatistics> Players { get; set; } = new();
+
+        [JsonPropertyName("totalDamage")]
+        public double TotalDamage { get; set; }
+
+        [JsonPropertyName("totalDPS")]
+        public double TotalDPS { get; set; }
+
+        [JsonPropertyName("lineCount")]
+        public int LineCount { get; set; }
 
         [JsonPropertyName("metadata")]
         public CombatMetadata? Metadata { get; set; }
 
         [JsonPropertyName("critters")]
         public Dictionary<string, CritterData> Critters { get; set; } = new();
+
+        /// <summary>
+        /// Icon basierend auf Combat-Type (Space oder Ground)
+        /// </summary>
+        public string Icon => Type switch
+        {
+            "Ground" => "🏃",
+            _ => "🚀" // Default ist Space
+        };
     }
 
     /// <summary>
@@ -167,6 +236,9 @@ namespace StoDamageMeter.Models
     {
         [JsonPropertyName("name")]
         public string? Name { get; set; }
+
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }  // "AwayTeam", "KitModule", "TempControlled", null
 
         [JsonPropertyName("dps")]
         public double Dps { get; set; }

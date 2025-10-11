@@ -30,7 +30,7 @@ namespace StoDamageMeter.Services
             targetControl.Items.Clear();
 
             var sortedPlayers = SortPlayerStatistics(
-                combatData.Players.Values,
+                combatData.Players,
                 sortColumn,
                 sortAscending);
 
@@ -48,7 +48,7 @@ namespace StoDamageMeter.Services
         {
             var playerContainer = new StackPanel
             {
-                Margin = new Thickness(0, 0, 0, 4)
+                Margin = new Thickness(0, 0, 0, 2) // ✅ Reduziert von 4 auf 2 für kompakteres Layout
             };
 
             var playerExpander = new Expander
@@ -85,6 +85,7 @@ namespace StoDamageMeter.Services
             var headerGrid = new Grid
             {
                 Background = new SolidColorBrush(Color.FromRgb(26, 26, 26))
+                // ✅ Kein Padding/Margin nötig - wird vom ToggleButton-Padding im Style übernommen
             };
 
             AddColumnDefinitions(headerGrid);
@@ -191,7 +192,7 @@ namespace StoDamageMeter.Services
             {
                 Background = new SolidColorBrush(Color.FromRgb(16, 16, 16)),
                 Margin = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(12, 8, 12, 8)
+                Padding = new Thickness(12, 6, 12, 6) // ✅ Reduziert von 8 auf 6 für kompakteres Layout
             };
 
             var abilityGrid = new Grid();
@@ -319,6 +320,14 @@ namespace StoDamageMeter.Services
 
             companionNamePanel.Children.Add(expandIcon);
             companionNamePanel.Children.Add(companionNameText);
+            
+            // Type Badge hinzufügen (falls vorhanden)
+            var typeBadge = CreateCompanionTypeBadge(companion.Type);
+            if (typeBadge != null)
+            {
+                companionNamePanel.Children.Add(typeBadge);
+            }
+            
             Grid.SetColumn(companionNamePanel, 0);
             headerGrid.Children.Add(companionNamePanel);
 
@@ -340,6 +349,62 @@ namespace StoDamageMeter.Services
             }
 
             return headerGrid;
+        }
+
+        /// <summary>
+        /// Erstellt ein Type-Badge für Companions
+        /// </summary>
+        private Border? CreateCompanionTypeBadge(string? companionType)
+        {
+            if (string.IsNullOrEmpty(companionType))
+                return null;
+
+            string icon;
+            string tooltip;
+            Color backgroundColor;
+
+            switch (companionType)
+            {
+                case "AwayTeam":
+                    icon = "👥";
+                    tooltip = "Away Team Member";
+                    backgroundColor = Color.FromRgb(74, 158, 255); // Blau
+                    break;
+                case "KitModule":
+                    icon = "🔧";
+                    tooltip = "Kit Module";
+                    backgroundColor = Color.FromRgb(255, 165, 0); // Orange
+                    break;
+                case "TempControlled":
+                    icon = "⚡";
+                    tooltip = "Temporarily Controlled";
+                    backgroundColor = Color.FromRgb(155, 89, 182); // Lila
+                    break;
+                default:
+                    return null;
+            }
+
+            var badge = new Border
+            {
+                Background = new SolidColorBrush(backgroundColor),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(4, 2, 4, 2),
+                Margin = new Thickness(6, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = tooltip
+            };
+
+            var iconText = new TextBlock
+            {
+                Text = icon,
+                FontSize = 12,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+
+            badge.Child = iconText;
+            return badge;
         }
 
         /// <summary>

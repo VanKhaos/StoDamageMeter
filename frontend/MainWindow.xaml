@@ -7,6 +7,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:combat="clr-namespace:StoDamageMeter.Components.Combat"
         xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
+        xmlns:liveCombat="clr-namespace:StoDamageMeter.Components.LiveCombat"
         mc:Ignorable="d"
         Title="STO Damage Meter" 
         Height="800" 
@@ -105,48 +106,58 @@
             
             <!-- Right Data Area -->
             <Grid Grid.Column="1" Background="{DynamicResource StarTrekDeepBlack}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <!-- Filter Bar -->
-                <ui:Card Grid.Row="0" Margin="16,16,16,8" Padding="16">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:Button Content="Damage Out"
-                                   Icon="{ui:SymbolIcon ArrowExportLtr24}"
-                                   Appearance="Primary"
-                                   Margin="0,0,8,0"/>
-                        
-                        <ui:Button Content="Damage Taken"
-                                   Icon="{ui:SymbolIcon ArrowImport24}"
-                                   Appearance="Secondary"
-                                   Margin="0,0,8,0"/>
-                        
-                        <ui:Button Content="Heals Out"
-                                   Icon="{ui:SymbolIcon HeartPulse24}"
-                                   Appearance="Secondary"
-                                   Margin="0,0,8,0"/>
-                        
-                        <ui:Button Content="Heals In"
-                                   Icon="{ui:SymbolIcon Heart24}"
-                                   Appearance="Secondary"
-                                   Margin="0,0,20,0"/>
-                        
-                        <ComboBox Width="150" 
-                                  SelectedIndex="0"
-                                  VerticalAlignment="Center">
-                            <ComboBoxItem Content="Selection"/>
-                            <ComboBoxItem Content="All Players"/>
-                            <ComboBoxItem Content="Top 5"/>
-                        </ComboBox>
-                        
-                        <ui:Button Icon="{ui:SymbolIcon Settings24}"
-                                   Appearance="Secondary"
-                                   Margin="12,0,0,0"
-                                   ToolTip="Settings"/>
-                    </StackPanel>
-                </ui:Card>
+                <!-- Tab Control for different views -->
+                <TabControl x:Name="MainTabControl" 
+                           Margin="16"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           SelectionChanged="MainTabControl_SelectionChanged">
+                    
+                    <!-- Tab 1: Damage Out (Historical Combats) -->
+                    <TabItem Header="Dashboard">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Filter Bar -->
+                            <ui:Card Grid.Row="0" Margin="0,0,0,8" Padding="16">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Button Content="Damage Out"
+                                               Icon="{ui:SymbolIcon ArrowExportLtr24}"
+                                               Appearance="Primary"
+                                               Margin="0,0,8,0"/>
+                                    
+                                    <ui:Button Content="Damage Taken"
+                                               Icon="{ui:SymbolIcon ArrowImport24}"
+                                               Appearance="Secondary"
+                                               Margin="0,0,8,0"/>
+                                    
+                                    <ui:Button Content="Heals Out"
+                                               Icon="{ui:SymbolIcon HeartPulse24}"
+                                               Appearance="Secondary"
+                                               Margin="0,0,8,0"/>
+                                    
+                                    <ui:Button Content="Heals In"
+                                               Icon="{ui:SymbolIcon Heart24}"
+                                               Appearance="Secondary"
+                                               Margin="0,0,20,0"/>
+                                    
+                                    <ComboBox Width="150" 
+                                              SelectedIndex="0"
+                                              VerticalAlignment="Center">
+                                        <ComboBoxItem Content="Selection"/>
+                                        <ComboBoxItem Content="All Players"/>
+                                        <ComboBoxItem Content="Top 5"/>
+                                    </ComboBox>
+                                    
+                                    <ui:Button Icon="{ui:SymbolIcon Settings24}"
+                                               Appearance="Secondary"
+                                               Margin="12,0,0,0"
+                                               ToolTip="Settings"/>
+                                </StackPanel>
+                            </ui:Card>
                 
                 <!-- Data Table Area -->
                 <ui:Card Grid.Row="1" Margin="16,8,16,16" Padding="20" VerticalAlignment="Top">
@@ -221,8 +232,16 @@
                                 </ScrollViewer>
                         </Grid>
                     </Border>
-                </Grid>
-                </ui:Card>
+                        </Grid>
+                        </ui:Card>
+                        </Grid>
+                    </TabItem>
+                    
+                    <!-- Tab 2: Live Combat -->
+                    <TabItem Header="Live Combat" x:Name="LiveCombatTab" IsEnabled="False">
+                        <liveCombat:LiveCombatView x:Name="LiveCombatViewComponent"/>
+                    </TabItem>
+                </TabControl>
             </Grid>
         </Grid>
     </Grid>

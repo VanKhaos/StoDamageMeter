@@ -11,8 +11,10 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StoDamageMeter.Services;
 using StoDamageMeter.Models;
+using StoDamageMeter.ViewModels;
 using System.Text.Json;
 using Wpf.Ui.Controls;
 
@@ -25,6 +27,9 @@ public partial class MainWindow : FluentWindow
 {
     private readonly IOSCRBackendService _backendService;
     private readonly CombatStatsRenderer _statsRenderer;
+    private readonly CombatLogWatcherService _logWatcher;
+    private readonly ILogger<MainWindow> _logger;
+    private LiveCombatViewModel? _liveCombatViewModel;
     private CancellationTokenSource? _loadingCancellation;
     private List<CombatInfo>? _loadedCombats;
     private CombatData? _currentCombatData;
@@ -40,6 +45,8 @@ public partial class MainWindow : FluentWindow
         
         // Backend Service aus DI Container holen
         _backendService = App.ServiceProvider.GetRequiredService<IOSCRBackendService>();
+        _logWatcher = App.ServiceProvider.GetRequiredService<CombatLogWatcherService>();
+        _logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
         
         // Stats Renderer initialisieren
         _statsRenderer = new CombatStatsRenderer((Style)this.FindResource("NoToggleIconExpanderStyle"));
@@ -51,8 +58,98 @@ public partial class MainWindow : FluentWindow
         CombatListViewComponent.CombatSelected += OnCombatSelected;
         StatsHeaderComponent.ColumnHeaderClicked += OnColumnHeaderClicked;
         
+        // TEST LOG
+        _logger.LogInformation("=== MainWindow Constructor - Logging Test ===");
+        
+        // Live Combat View Model initialisieren
+        InitializeLiveCombatViewModel();
+        
         // Initial Status Check
         _ = CheckBackendStatusAsync();
+    }
+
+    private void InitializeLiveCombatViewModel()
+    {
+        var logger = App.ServiceProvider.GetRequiredService<ILogger<LiveCombatViewModel>>();
+        _liveCombatViewModel = new LiveCombatViewModel(
+            _backendService,
+            _logWatcher,
+            logger,
+            Dispatcher
+        );
+
+        _liveCombatViewModel.CombatCompleted += OnLiveCombatCompleted;
+
+        // Set ViewModel to LiveCombatView Component
+        LiveCombatViewComponent.SetViewModel(_liveCombatViewModel);
+    }
+
+    private async void OnLiveCombatCompleted(object? sender, CombatData completedCombat)
+    {
+        _logger.LogInformation($"✅ Live Combat completed: {completedCombat.Type} - {completedCombat.TotalDPS:N0} DPS, Duration: {completedCombat.Duration:F1}s");
+        Console.WriteLine($"✅ Live Combat completed: {completedCombat.Type} - {completedCombat.TotalDPS:N0} DPS");
+
+        // Combat-Liste automatisch aktualisieren wenn ein Log geladen ist
+        if (!string.IsNullOrEmpty(_currentLogPath))
+        {
+            _logger.LogInformation("🔄 Refreshing combat list after completed live combat");
+            Console.WriteLine("🔄 Refreshing combat list...");
+            
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                try
+                {
+                    // Combat-Liste neu laden
+                    await LoadCombatListAsync(_currentLogPath);
+                    _logger.LogInformation("✅ Combat list refreshed successfully");
+                    Console.WriteLine("✅ Combat list refreshed");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Failed to refresh combat list after live combat");
+                    Console.WriteLine($"❌ Failed to refresh combat list: {ex.Message}");
+                }
+            });
+        }
+    }
+
+    private async void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // DEBUG: Console Output falls Logging nicht funktioniert
+        Console.WriteLine($"[DEBUG] Tab changed to index: {MainTabControl.SelectedIndex}");
+        
+        var logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
+        logger.LogInformation($"Tab changed to index: {MainTabControl.SelectedIndex}");
+        
+        if (MainTabControl.SelectedIndex == 1) // Live Combat Tab
+        {
+            Console.WriteLine($"[DEBUG] Live Combat tab selected. LogPath: {_currentLogPath ?? "NULL"}");
+            logger.LogInformation($"Live Combat tab selected. LogPath: {_currentLogPath ?? "NULL"}");
+            
+            // Starte Live-Modus wenn Log-Path vorhanden ist
+            if (!string.IsNullOrEmpty(_currentLogPath) && _liveCombatViewModel != null)
+            {
+                Console.WriteLine("[DEBUG] Starting live parsing...");
+                logger.LogInformation("Starting live parsing...");
+                await _liveCombatViewModel.StartLiveParsing(_currentLogPath);
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] Cannot start - LogPath empty: {string.IsNullOrEmpty(_currentLogPath)}, ViewModel null: {_liveCombatViewModel == null}");
+                logger.LogWarning($"Cannot start live parsing. LogPath null: {string.IsNullOrEmpty(_currentLogPath)}, ViewModel null: {_liveCombatViewModel == null}");
+            }
+        }
+        else // Historical Damage Out Tab
+        {
+            Console.WriteLine("[DEBUG] Historical tab selected");
+            logger.LogInformation("Historical tab selected, stopping live parsing");
+            
+            // Stoppe Live-Modus
+            if (_liveCombatViewModel != null)
+            {
+                await _liveCombatViewModel.StopLiveParsing();
+            }
+        }
     }
 
     private async Task CheckBackendStatusAsync()
@@ -223,6 +320,13 @@ public partial class MainWindow : FluentWindow
             });
 
             AppendResult($"Loaded {sortedCombats.Count} combats from log file");
+            
+            // ✅ Live Combat Tab aktivieren nach erfolgreichem Laden
+            Dispatcher.Invoke(() =>
+            {
+                LiveCombatTab.IsEnabled = true;
+                _logger.LogInformation("Live Combat tab enabled after combat log loaded");
+            });
         }
         catch (OperationCanceledException)
         {

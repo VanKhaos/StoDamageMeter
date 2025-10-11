@@ -238,7 +238,8 @@ class WorkingOSCR:
             'player_handle': '@handle',
             'player_name': 'Player Name',
             'is_companion': True/False,
-            'companion_name': 'Companion Name' oder None (HTML-bereinigt)
+            'companion_name': 'Companion Name' oder None (HTML-bereinigt),
+            'companion_type': 'AwayTeam' | 'KitModule' | 'TempControlled' | None
         }
         """
         if not parsed_line:
@@ -270,6 +271,7 @@ class WorkingOSCR:
         # 3. Source != Owner UND Source hat Type → Companion
         is_companion = False
         companion_name = None
+        companion_type = None
         
         # Source leer oder nur Wildcard = Spieler direkt
         if not source_name or source_name.strip() in ('', '*'):
@@ -279,12 +281,21 @@ class WorkingOSCR:
             if source_type and (source_type.startswith('C[') or source_type.startswith('S[')):
                 is_companion = True
                 companion_name = self.clean_name(source_name)  # HTML-Tags entfernen!
+                
+                # Companion-Typ bestimmen
+                if source_type.startswith('S['):
+                    companion_type = 'AwayTeam'
+                elif source_type.startswith('C[') and 'Kit' in source_type:
+                    companion_type = 'KitModule'
+                elif source_type.startswith('C['):
+                    companion_type = 'TempControlled'
         
         return {
             'player_handle': handle,
             'player_name': player_name,
             'is_companion': is_companion,
-            'companion_name': companion_name
+            'companion_name': companion_name,
+            'companion_type': companion_type
         }
     
     def isolate_combats(self, path: str, max_combats: int = -1):
@@ -535,6 +546,179 @@ class WorkingOSCR:
         
         logger.info(f"Analyzed {len(self.combats)} combats")
     
+    def _analyze_combat_lines_direct(self, combat_lines: list, combat_type: str = None, duration: float = 60.0):
+        """
+        Analysiert Combat-Zeilen direkt (für Live-Parsing)
+        
+        Args:
+            combat_lines: Liste von Combat-Log-Zeilen
+            combat_type: Combat-Typ (Space/Ground)
+            duration: Combat-Dauer in Sekunden
+        
+        Returns:
+            Dict mit Player-Statistiken
+        """
+        players = {}
+        
+        try:
+            # Statistiken sammeln
+            damage_events = 0
+            skipped_lines = 0
+            processed_lines = 0
+            
+            for line in combat_lines:
+                # Parse vollständig
+                parsed = self.parse_combat_log_line(line)
+                if not parsed:
+                    skipped_lines += 1
+                    continue
+                
+                # Combat-Type-Filter
+                line_combat_type = self.determine_combat_type_from_line(parsed)
+                
+                if combat_type and line_combat_type != combat_type:
+                    skipped_lines += 1
+                    continue
+                
+                # Entity identifizieren
+                entity = self.identify_source_entity(parsed)
+                if not entity:
+                    skipped_lines += 1
+                    continue
+                
+                player_name = entity['player_name']
+                is_companion = entity['is_companion']
+                companion_name = entity['companion_name']
+                companion_type = entity['companion_type']
+                
+                # Player erstellen falls nicht vorhanden
+                if player_name not in players:
+                    players[player_name] = WorkingPlayerStats(
+                        name=player_name,
+                        dps=0.0,
+                        combat_time=duration,
+                        total_damage=0.0,
+                        max_one_hit=0.0,
+                        deaths=0
+                    )
+                
+                player = players[player_name]
+                
+                # Damage-Daten extrahieren
+                ability_name = parsed.get('ability_name', 'Unknown')
+                damage_type = parsed.get('damage_type', '')
+                primary_damage_type = self._extract_primary_damage_type(damage_type)
+                flags = parsed.get('flags', '')
+                is_crit = 'Critical' in flags or 'Crit' in flags
+                
+                # Damage-Wert extrahieren
+                damage_value = None
+                damage_values = parsed.get('damage_values', [])
+                for val in damage_values:
+                    try:
+                        dmg = float(val)
+                        if dmg < 0:
+                            continue
+                        if dmg > 0.1:
+                            damage_value = dmg
+                            break
+                    except ValueError:
+                        continue
+                
+                if not damage_value:
+                    continue
+                
+                damage_events += 1
+                processed_lines += 1
+                
+                # Damage verarbeiten
+                if is_companion:
+                    # Companion-Damage
+                    if companion_name not in player.companions:
+                        player.companions[companion_name] = WorkingCompanionStats(name=companion_name, companion_type=companion_type)
+                    
+                    companion = player.companions[companion_name]
+                    
+                    # Companion Stats
+                    companion.total_damage += damage_value
+                    companion.total_attacks += 1
+                    companion.hits += 1
+                    if is_crit:
+                        companion.crits += 1
+                    if damage_value > companion.max_hit:
+                        companion.max_hit = damage_value
+                    
+                    # Companion Ability
+                    if ability_name and ability_name != "Unknown":
+                        if ability_name not in companion.abilities:
+                            companion.abilities[ability_name] = WorkingAbilityStats(ability_name)
+                        
+                        ability = companion.abilities[ability_name]
+                        ability.total_damage += damage_value
+                        ability.hits += 1
+                        ability.total_attacks += 1
+                        if is_crit:
+                            ability.crits += 1
+                        if damage_value > ability.max_hit:
+                            ability.max_hit = damage_value
+                        if primary_damage_type:
+                            if primary_damage_type not in ability.damage_types:
+                                ability.damage_types[primary_damage_type] = 0
+                            ability.damage_types[primary_damage_type] += 1
+                    
+                    # Zum Player-Gesamt addieren
+                    player.total_damage_with_companions += damage_value
+                
+                else:
+                    # Direkte Player-Damage
+                    player.total_damage += damage_value
+                    player.total_damage_with_companions += damage_value
+                    
+                    # Player Ability
+                    if ability_name and ability_name != "Unknown":
+                        if ability_name not in player.abilities:
+                            player.abilities[ability_name] = WorkingAbilityStats(ability_name)
+                        
+                        ability = player.abilities[ability_name]
+                        ability.total_damage += damage_value
+                        ability.hits += 1
+                        ability.total_attacks += 1
+                        if is_crit:
+                            ability.crits += 1
+                        if damage_value > ability.max_hit:
+                            ability.max_hit = damage_value
+                        if primary_damage_type:
+                            if primary_damage_type not in ability.damage_types:
+                                ability.damage_types[primary_damage_type] = 0
+                            ability.damage_types[primary_damage_type] += 1
+                    
+                    # Max One Hit
+                    if damage_value > player.max_one_hit:
+                        player.max_one_hit = damage_value
+            
+            # Berechne DPS für alle Player
+            for player in players.values():
+                if duration > 0:
+                    player.DPS = player.total_damage / duration
+                    player.dps_with_companions = player.total_damage_with_companions / duration
+                
+                # Berechne Companion DPS
+                for companion in player.companions.values():
+                    if duration > 0:
+                        companion.dps = companion.total_damage / duration
+                    
+                    # Berechne Crit% und Accuracy%
+                    if companion.total_attacks > 0:
+                        companion.crit_percent = (companion.crits / companion.total_attacks * 100.0)
+                        companion.accuracy_percent = (companion.hits / companion.total_attacks * 100.0)
+            
+            logger.info(f"Live combat analysis: {len(players)} players, {damage_events} damage events, {processed_lines} lines processed")
+            return players
+            
+        except Exception as e:
+            logger.error(f"Error in _analyze_combat_lines_direct: {e}")
+            return {}
+    
     def _analyze_combat_players(self, log_path: str, start_byte: int, end_byte: int, combat_type: str = None):
         """
         Neue Player-Analyse mit vollständigem Parsing und Companion-Support
@@ -578,6 +762,7 @@ class WorkingOSCR:
                 player_name = entity['player_name']
                 is_companion = entity['is_companion']
                 companion_name = entity['companion_name']
+                companion_type = entity['companion_type']
                 
                 # Player erstellen falls nicht vorhanden
                 if player_name not in players:
@@ -624,7 +809,7 @@ class WorkingOSCR:
                 if is_companion:
                     # Companion-Damage
                     if companion_name not in player.companions:
-                        player.companions[companion_name] = WorkingCompanionStats(name=companion_name)
+                        player.companions[companion_name] = WorkingCompanionStats(name=companion_name, companion_type=companion_type)
                     
                     companion = player.companions[companion_name]
                     
@@ -804,8 +989,9 @@ class WorkingAbilityStats:
 class WorkingCompanionStats:
     """Companion-Statistiken (Pets, Drohnen, Außenteam)"""
     
-    def __init__(self, name: str):
+    def __init__(self, name: str, companion_type: str = None):
         self.name = name
+        self.type = companion_type  # 'AwayTeam', 'KitModule', 'TempControlled'
         self.total_damage = 0.0
         self.dps = 0.0
         self.max_hit = 0.0
@@ -1019,7 +1205,7 @@ def analyze_single_combat(log_path, combat_id, settings=None):
         combat.players = parser._analyze_combat_players(log_path, c_byte_start, c_byte_end, c_type)
         
         # Players serialisieren
-        players_data = {}
+        players_data = []  # LISTE statt Dictionary!
         for player_name, stats in combat.players.items():
             # Abilities serialisieren
             abilities_data = []
@@ -1056,6 +1242,7 @@ def analyze_single_combat(log_path, combat_id, settings=None):
                 
                 companions_data.append({
                     'name': companion.name,
+                    'type': companion.type,  # 'AwayTeam', 'KitModule', 'TempControlled'
                     'dps': companion.dps,
                     'totalDamage': companion.total_damage,
                     'debuff': companion.debuff,
@@ -1065,7 +1252,8 @@ def analyze_single_combat(log_path, combat_id, settings=None):
                     'abilities': companion_abilities_data
                 })
             
-            players_data[player_name] = {
+            # An LISTE anhängen (nicht Dictionary-Key!)
+            players_data.append({
                 'name': stats.name,
                 'dps': stats.DPS,
                 'combatTime': stats.combat_time,
@@ -1083,7 +1271,7 @@ def analyze_single_combat(log_path, combat_id, settings=None):
                 'companions': companions_data,
                 'dpsWithCompanions': stats.dps_with_companions,
                 'totalDamageWithCompanions': stats.total_damage_with_companions
-            }
+            })
         
         combat_data = {
             'id': combat.id,
@@ -1120,6 +1308,290 @@ def analyze_single_combat(log_path, combat_id, settings=None):
             "timestamp": datetime.now().isoformat()
         }
 
+def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seconds: int = 30):
+    """
+    Live-Parsing: Liest nur neue Zeilen ab from_byte_offset und erkennt neue/aktive Combats
+    
+    Args:
+        log_path: Pfad zur Combat-Log-Datei
+        from_byte_offset: Byte-Position ab der gelesen werden soll
+        combat_timeout_seconds: Sekunden nach denen ein Combat als beendet gilt
+    
+    Returns:
+        Dict mit new_combats, active_combat_info, current_byte_offset
+    """
+    try:
+        parser = WorkingOSCR()
+        
+        if not os.path.exists(log_path):
+            return {
+                'success': False,
+                'error': f"Log file not found: {log_path}",
+                'current_byte_offset': from_byte_offset,
+                'new_combats': [],
+                'active_combat': None,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        file_size = os.path.getsize(log_path)
+        
+        if from_byte_offset >= file_size:
+            # Keine neuen Daten
+            return {
+                'success': True,
+                'current_byte_offset': file_size,
+                'new_combats': [],
+                'active_combat': None,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        new_lines = []
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+            f.seek(from_byte_offset)
+            new_content = f.read()
+            new_lines = new_content.splitlines()
+        
+        if not new_lines:
+            return {
+                'success': True,
+                'current_byte_offset': file_size,
+                'new_combats': [],
+                'active_combat': None,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Parse neue Zeilen und erkenne Combats
+        combats = []
+        current_combat_lines = []
+        last_combat_time = None
+        current_combat_type = None
+        combat_start_line = from_byte_offset
+        line_count = 0
+        
+        for line in new_lines:
+            line_count += 1
+            if not line.strip():
+                continue
+            
+            parsed = parser.parse_combat_log_line(line)
+            if not parsed or not parsed.get('timestamp'):
+                continue
+            
+            timestamp = parsed['timestamp']
+            combat_type = parser.determine_combat_type_from_line(parsed)
+            
+            # Erste Zeile oder Combat-Timeout
+            if last_combat_time is None:
+                last_combat_time = timestamp
+                current_combat_type = combat_type
+                current_combat_lines = [line]
+                continue
+            
+            time_diff = (timestamp - last_combat_time).total_seconds()
+            type_changed = (combat_type and current_combat_type and combat_type != current_combat_type)
+            
+            # Combat-Ende-Kriterien
+            if time_diff > combat_timeout_seconds or type_changed:
+                # Speichere vorherigen Combat wenn genug Zeilen
+                if len(current_combat_lines) >= 20:
+                    combats.append({
+                        'lines': current_combat_lines,
+                        'start_time': last_combat_time,
+                        'type': current_combat_type,
+                        'line_count': len(current_combat_lines)
+                    })
+                
+                # Starte neuen Combat
+                current_combat_lines = [line]
+                current_combat_type = combat_type
+            else:
+                current_combat_lines.append(line)
+            
+            last_combat_time = timestamp
+        
+        # Check ob aktueller Combat noch aktiv ist (letzter Combat im Buffer)
+        active_combat = None
+        if current_combat_lines and len(current_combat_lines) >= 20:
+            # Combat ist aktiv wenn letzte Zeile weniger als combat_timeout_seconds alt ist
+            active_combat = {
+                'lines': current_combat_lines,
+                'start_time': last_combat_time,
+                'type': current_combat_type,
+                'line_count': len(current_combat_lines),
+                'is_active': True
+            }
+        
+        # Konvertiere abgeschlossene Combats zu Combat-Infos
+        completed_combats = []
+        for idx, combat in enumerate(combats):
+            completed_combats.append({
+                'id': idx,
+                'date': combat['start_time'].strftime('%Y-%m-%d') if combat['start_time'] else '',
+                'time': combat['start_time'].strftime('%H:%M:%S') if combat['start_time'] else '',
+                'type': combat['type'] or 'Unknown',
+                'line_count': combat['line_count']
+            })
+        
+        return {
+            'success': True,
+            'current_byte_offset': file_size,
+            'new_combats': completed_combats,
+            'active_combat': active_combat if active_combat else None,
+            'lines_processed': line_count,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error in live_parse_log: {e}", exc_info=True)
+        return {
+            'success': False,
+            'error': str(e),
+            'current_byte_offset': from_byte_offset,
+            'new_combats': [],
+            'active_combat': None,
+            'timestamp': datetime.now().isoformat()
+        }
+
+def incremental_combat_update(log_path: str, combat_lines: list, settings: dict = None):
+    """
+    Inkrementelle Combat-Analyse: Analysiert Combat-Zeilen und berechnet Stats
+    
+    Args:
+        log_path: Pfad zur Combat-Log-Datei (für Context)
+        combat_lines: Liste der Combat-Log-Zeilen
+        settings: Optionale Analyse-Einstellungen
+    
+    Returns:
+        Dict mit vollständiger CombatData (Player-Stats, DPS, Rankings, etc.)
+    """
+    try:
+        parser = WorkingOSCR()
+        
+        if not combat_lines or len(combat_lines) < 1:  # Minimum 1 Zeile für schnelle Updates!
+            return {
+                'success': False,
+                'error': 'No combat lines provided',
+                'combats': [],
+                'totalCombats': 0,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Parse erste Zeile für Combat-Type und Timestamp
+        first_parsed = parser.parse_combat_log_line(combat_lines[0])
+        last_parsed = parser.parse_combat_log_line(combat_lines[-1])
+        
+        if not first_parsed or not last_parsed:
+            return {
+                'success': False,
+                'error': 'Could not parse combat lines',
+                'combats': [],
+                'totalCombats': 0,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        combat_type = parser.determine_combat_type_from_line(first_parsed)
+        start_time = first_parsed.get('timestamp')
+        end_time = last_parsed.get('timestamp')
+        
+        duration = 0
+        if start_time and end_time:
+            duration = (end_time - start_time).total_seconds()
+        
+        # Analysiere Combat-Zeilen direkt (nicht aus Datei)
+        players_data = parser._analyze_combat_lines_direct(combat_lines, combat_type or 'Unknown', duration)
+        
+        # Serialisiere Player-Stats
+        players_list = []
+        for player_name, stats in players_data.items():
+            player_dict = {
+                'name': player_name,
+                'dps': stats.DPS,  # Großbuchstaben!
+                'dpsWithCompanions': stats.dps_with_companions,
+                'totalDamage': stats.total_damage,
+                'totalDamageWithCompanions': stats.total_damage_with_companions,
+                'debuff': stats.debuff * 100,
+                'maxHit': stats.max_one_hit,  # max_one_hit!
+                'criticalHitPercentage': stats.crit_percent,  # crit_percent!
+                'accuracy': stats.accuracy_percent,  # accuracy_percent!
+                'attacks': sum(a.total_attacks for a in stats.abilities.values()) if stats.abilities else 0,  # Berechnet!
+                'companions': [],
+                'abilities': []
+            }
+            
+            # Companions
+            for comp_name, comp_stats in stats.companions.items():
+                companion_dict = {
+                    'name': comp_name,
+                    'type': comp_stats.type,  # 'AwayTeam', 'KitModule', 'TempControlled'
+                    'dps': comp_stats.dps,
+                    'totalDamage': comp_stats.total_damage,
+                    'maxHit': comp_stats.max_hit,
+                    'criticalHitPercentage': comp_stats.crit_percent,  # crit_percent!
+                    'accuracy': comp_stats.accuracy_percent,  # accuracy_percent!
+                    'attacks': comp_stats.total_attacks,
+                    'abilities': []
+                }
+                
+                for ability_name, ability_stats in comp_stats.abilities.items():
+                    companion_dict['abilities'].append({
+                        'name': ability_name,
+                        'dps': ability_stats.dps,
+                        'totalDamage': ability_stats.total_damage,
+                        'maxHit': ability_stats.max_hit,
+                        'criticalHitPercentage': ability_stats.crit_percent,  # crit_percent!
+                        'accuracy': ability_stats.accuracy_percent,  # accuracy_percent!
+                        'attacks': ability_stats.total_attacks,
+                        'damageType': ability_stats.get_primary_damage_type()  # Methode aufrufen!
+                    })
+                
+                player_dict['companions'].append(companion_dict)
+            
+            # Player Abilities
+            for ability_name, ability_stats in stats.abilities.items():
+                player_dict['abilities'].append({
+                    'name': ability_name,
+                    'dps': ability_stats.dps,
+                    'totalDamage': ability_stats.total_damage,
+                    'maxHit': ability_stats.max_hit,
+                    'criticalHitPercentage': ability_stats.crit_percent,  # crit_percent!
+                    'accuracy': ability_stats.accuracy_percent,  # accuracy_percent!
+                    'attacks': ability_stats.total_attacks,
+                    'damageType': ability_stats.get_primary_damage_type()  # Methode aufrufen!
+                })
+            
+            players_list.append(player_dict)
+        
+        combat_data = {
+            'id': 0,
+            'date': start_time.strftime('%Y-%m-%d') if start_time else '',
+            'time': start_time.strftime('%H:%M:%S.%f')[:-5] if start_time else '',
+            'type': combat_type or 'Unknown',
+            'icon': '🚀' if combat_type == 'Space' else '🏃',
+            'duration': duration,
+            'players': players_list,
+            'totalDamage': sum(p['totalDamageWithCompanions'] for p in players_list),
+            'totalDPS': sum(p['dpsWithCompanions'] for p in players_list),
+            'lineCount': len(combat_lines)
+        }
+        
+        # Return als Array (combats) für Kompatibilität mit CombatAnalysisResponse!
+        return {
+            'success': True,
+            'combats': [combat_data],  # ← Array statt combat_data!
+            'totalCombats': 1,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error in incremental_combat_update: {e}", exc_info=True)
+        return {
+            'success': False,
+            'error': str(e),
+            'combats': [],  # Leeres Array im Fehlerfall
+            'totalCombats': 0,
+            'timestamp': datetime.now().isoformat()
+        }
+
 def main():
     """Hauptfunktion"""
     try:
@@ -1146,6 +1618,16 @@ def main():
                 combat_id = input_data.get('combatId', 0)
                 settings = input_data.get('settings', {})
                 result = analyze_single_combat(log_path, combat_id, settings)
+            elif action == "live_parse":
+                log_path = input_data.get('logPath', '')
+                from_byte_offset = input_data.get('fromByteOffset', 0)
+                combat_timeout = input_data.get('combatTimeoutSeconds', 30)
+                result = live_parse_log(log_path, from_byte_offset, combat_timeout)
+            elif action == "incremental_update":
+                log_path = input_data.get('logPath', '')
+                combat_lines = input_data.get('combatLines', [])
+                settings = input_data.get('settings', {})
+                result = incremental_combat_update(log_path, combat_lines, settings)
             else:
                 result = {
                     "success": False,

@@ -51,6 +51,16 @@ namespace StoDamageMeter.Services
         Task<bool> IsBackendAvailableAsync();
 
         /// <summary>
+        /// Live-Parsing: Liest neue Log-Zeilen ab Byte-Offset
+        /// </summary>
+        Task<LiveParseResponse> LiveParseAsync(string logPath, long fromByteOffset, int timeoutSeconds = 30);
+
+        /// <summary>
+        /// Inkrementelles Combat-Update: Analysiert Combat-Zeilen
+        /// </summary>
+        Task<CombatAnalysisResponse> IncrementalCombatUpdateAsync(string logPath, List<string> combatLines, AnalysisSettings? settings = null);
+
+        /// <summary>
         /// Event das ausgelöst wird, wenn sich der Analyse-Fortschritt ändert
         /// </summary>
         event EventHandler<CombatAnalysisProgressEventArgs>? AnalysisProgress;
@@ -540,6 +550,44 @@ namespace StoDamageMeter.Services
                 ProgressPercentage = progressPercentage,
                 IsCompleted = isCompleted
             });
+        }
+
+        /// <summary>
+        /// Live-Parsing: Liest neue Log-Zeilen ab Byte-Offset und erkennt neue Combats
+        /// </summary>
+        public async Task<LiveParseResponse> LiveParseAsync(
+            string logPath,
+            long fromByteOffset,
+            int timeoutSeconds = 30)
+        {
+            var request = new
+            {
+                action = "live_parse",
+                logPath,
+                fromByteOffset,
+                combatTimeoutSeconds = timeoutSeconds
+            };
+
+            return await ExecuteBackendCommandAsync<LiveParseResponse>(request);
+        }
+
+        /// <summary>
+        /// Inkrementelles Combat-Update: Analysiert Combat-Zeilen und gibt vollständige Stats zurück
+        /// </summary>
+        public async Task<CombatAnalysisResponse> IncrementalCombatUpdateAsync(
+            string logPath,
+            List<string> combatLines,
+            AnalysisSettings? settings = null)
+        {
+            var request = new
+            {
+                action = "incremental_update",
+                logPath,
+                combatLines,
+                settings = settings ?? new AnalysisSettings()
+            };
+
+            return await ExecuteBackendCommandAsync<CombatAnalysisResponse>(request);
         }
 
         private void LogToFile(string message)

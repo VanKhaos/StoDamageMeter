@@ -1,0 +1,116 @@
+<UserControl x:Class="StoDamageMeter.Components.LiveCombat.LiveCombatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:combat="clr-namespace:StoDamageMeter.Components.Combat"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="StarTrekBlue" Color="#5B9BD5"/>
+        <SolidColorBrush x:Key="StarTrekDeepBlack" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="StarTrekDarkGray" Color="#1A1A1A"/>
+        <SolidColorBrush x:Key="StarTrekTextGray" Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="StarTrekBorderGray" Color="#333333"/>
+        <SolidColorBrush x:Key="StarTrekGold" Color="#B8860B"/>
+    </UserControl.Resources>
+    
+    <Grid Background="{StaticResource StarTrekDeepBlack}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Data Table Area (genau wie im Dashboard) -->
+        <ui:Card Grid.Row="0" Margin="16,8,16,16" Padding="20" VerticalAlignment="Top">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Combat Info Header (nur wenn Combat aktiv) -->
+                <Grid x:Name="CombatInfoPanel" Grid.Row="0" Visibility="Collapsed" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <TextBlock x:Name="CombatTypeIcon" 
+                                  Text="🚀" 
+                                  FontSize="18"
+                                  Margin="0,0,8,0"/>
+                        <TextBlock x:Name="CombatTypeText" 
+                                  Text="Space Combat"
+                                  FontSize="13"
+                                  Foreground="{StaticResource StarTrekTextGray}"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <TextBlock Grid.Column="1"
+                              x:Name="CombatDurationText"
+                              Text="00:00"
+                              FontSize="13"
+                              Foreground="{StaticResource StarTrekTextGray}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+                    
+                    <TextBlock Grid.Column="2"
+                              x:Name="TotalDPSText"
+                              Text="Total DPS: 0"
+                              FontSize="13"
+                              Foreground="{StaticResource StarTrekTextGray}"
+                              VerticalAlignment="Center"/>
+                </Grid>
+                
+                <!-- Column Headers Component (wie bei Damage Out) -->
+                <combat:CombatStatsHeader x:Name="LiveStatsHeaderComponent" 
+                                          Grid.Row="1" 
+                                          Margin="0,0,0,4"/>
+                
+                <!-- Data Area (wie bei Damage Out) -->
+                <Border Grid.Row="2"
+                        Background="{DynamicResource StarTrekDarkGray}"
+                        BorderBrush="{DynamicResource StarTrekBorderGray}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                    <Grid>
+                        <!-- Empty State -->
+                        <StackPanel x:Name="EmptyLiveStatsPanel" 
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center" 
+                                    Margin="0,40">
+                            <ui:SymbolIcon Symbol="Table24" 
+                                           FontSize="48" 
+                                           Foreground="{DynamicResource StarTrekBlue}"
+                                           Opacity="0.3"
+                                           Margin="0,0,0,12"/>
+                            <TextBlock Text="Warte auf Combat..." 
+                                       Foreground="{DynamicResource StarTrekTextGray}"
+                                       HorizontalAlignment="Center"
+                                       Opacity="0.6"/>
+                        </StackPanel>
+                        
+                        <!-- Data Table with Expandable Rows -->
+                        <ScrollViewer x:Name="LiveStatsScrollViewer"
+                                      Visibility="Collapsed"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalAlignment="Top">
+                            <ItemsControl x:Name="LiveStatsItemsControl"
+                                          Background="Transparent"
+                                          Padding="8"
+                                          VerticalAlignment="Top">
+                                <!-- Hier wird die Tabelle dynamisch gefüllt -->
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </ui:Card>
+    </Grid>
+</UserControl>
