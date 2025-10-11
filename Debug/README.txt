@@ -13,4 +13,4 @@ Starte die Anwendung mit: StoDamageMeter.exe
 Im Projektverzeichnis ausfÃ¼hren:
 .\build_debug.ps1
 
-Build-Zeit: 2025-10-10 23:27:31
+Build-Zeit: 2025-10-11 17:22:25
