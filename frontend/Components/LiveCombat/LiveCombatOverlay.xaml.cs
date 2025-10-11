@@ -7,6 +7,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using StoDamageMeter.ViewModels;
+using StoDamageMeter.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace StoDamageMeter.Components.LiveCombat
 {
@@ -59,6 +62,16 @@ namespace StoDamageMeter.Components.LiveCombat
             public Border? RowBorder { get; set; }
         }
         private System.Collections.Generic.Dictionary<string, PlayerRowInfo> _playerRowCache = new();
+        
+        // Window-Binding an STO
+        private WindowBindingService? _windowBinding;
+        private DispatcherTimer? _focusCheckTimer;
+        private bool _bindToStoWindow = true; // Default: AN (kann via Config deaktiviert werden)
+        private bool _isDragging = false;
+        private bool _wasManuallyOpened = false; // Track ob Overlay manuell geöffnet wurde
+        private bool _isAutoHiding = false; // Track ob Hide() vom Window-Binding kommt
+        private DateTime _lastUserInteraction = DateTime.MinValue; // Track letzte User-Interaktion
+        private readonly TimeSpan _interactionGracePeriod = TimeSpan.FromSeconds(3); // 3 Sekunden Grace-Period
 
         public LiveCombatOverlay()
         {
@@ -73,6 +86,58 @@ namespace StoDamageMeter.Components.LiveCombat
                 Interval = TimeSpan.FromSeconds(1)
             };
             _durationUpdateTimer.Tick += DurationTimer_Tick;
+            
+            // Config laden
+            LoadConfiguration();
+            
+            // Window-Binding initialisieren (wenn aktiviert)
+            if (_bindToStoWindow)
+            {
+                _windowBinding = new WindowBindingService();
+                
+                // Fokus-Check Timer (alle 500ms)
+                _focusCheckTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(500)
+                };
+                _focusCheckTimer.Tick += FocusCheckTimer_Tick;
+                _focusCheckTimer.Start();
+            }
+            
+            // Event-Handler für Bounds-Checking beim Verschieben
+            this.LocationChanged += OnLocationChanged;
+            
+            // Event-Handler für User-Interaktionen (verhindert Auto-Hide während Benutzung)
+            this.MouseEnter += (s, e) => MarkUserInteraction();
+            this.MouseDown += (s, e) => MarkUserInteraction();
+            this.Activated += (s, e) => MarkUserInteraction();
+        }
+        
+        /// <summary>
+        /// Markiert dass User gerade mit dem Overlay interagiert.
+        /// Verhindert Auto-Hide für Grace-Period (3 Sekunden).
+        /// </summary>
+        private void MarkUserInteraction()
+        {
+            _lastUserInteraction = DateTime.Now;
+        }
+
+        private void LoadConfiguration()
+        {
+            try
+            {
+                var configuration = App.ServiceProvider.GetService<IConfiguration>();
+                if (configuration != null)
+                {
+                    // Lade Window-Binding-Einstellung (Default: true)
+                    _bindToStoWindow = configuration.GetValue("LiveCombat:BindToStoWindow", true);
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback: Default-Wert verwenden
+                _bindToStoWindow = true;
+            }
         }
 
         private void DurationTimer_Tick(object? sender, EventArgs e)
@@ -80,6 +145,127 @@ namespace StoDamageMeter.Components.LiveCombat
             if (_viewModel != null && DurationText != null && _viewModel.CurrentCombat != null)
             {
                 DurationText.Text = $"⏱ {_viewModel.CombatDuration}";
+            }
+        }
+
+        private void FocusCheckTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_windowBinding == null || !_bindToStoWindow) return;
+
+            // Nur Window-Binding aktivieren wenn Overlay bereits manuell geöffnet wurde
+            if (!_wasManuallyOpened) return;
+
+            // NICHT verstecken wenn User gerade interagiert!
+            var timeSinceInteraction = DateTime.Now - _lastUserInteraction;
+            bool isUserInteracting = timeSinceInteraction < _interactionGracePeriod;
+            
+            if (isUserInteracting)
+            {
+                // User benutzt gerade das Overlay → kein Auto-Hide
+                return;
+            }
+
+            // Nur Ein-/Ausblenden wenn nicht gerade verschoben wird
+            if (_isDragging) return;
+            
+            // Settings-Popup offen? → kein Auto-Hide
+            if (SettingsPopup != null && SettingsPopup.Visibility == Visibility.Visible)
+            {
+                return;
+            }
+
+            bool isStoActive = _windowBinding.IsStoWindowActive();
+
+            if (isStoActive && !this.IsVisible)
+            {
+                _isAutoHiding = true;
+                this.Show();
+                _isAutoHiding = false;
+            }
+            else if (!isStoActive && this.IsVisible)
+            {
+                _isAutoHiding = true;
+                this.Hide();
+                _isAutoHiding = false;
+            }
+        }
+
+        protected override void OnContentRendered(EventArgs e)
+        {
+            base.OnContentRendered(e);
+            
+            // Markiere als manuell geöffnet
+            _wasManuallyOpened = true;
+            
+            // Window-Binding-Check mit 2 Sekunden Verzögerung
+            // So kann User das Overlay sehen und zu STO wechseln
+            if (_bindToStoWindow && _windowBinding != null)
+            {
+                var delayTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(2)
+                };
+                delayTimer.Tick += (s, args) =>
+                {
+                    delayTimer.Stop();
+                    
+                    // Jetzt prüfen ob STO aktiv ist
+                    bool isStoActive = _windowBinding.IsStoWindowActive();
+                    if (!isStoActive && this.IsVisible)
+                    {
+                        // STO ist nicht aktiv → Overlay verstecken
+                        _isAutoHiding = true;
+                        this.Hide();
+                        _isAutoHiding = false;
+                    }
+                };
+                delayTimer.Start();
+            }
+        }
+
+        private void OnLocationChanged(object? sender, EventArgs e)
+        {
+            // Bounds-Checking: Overlay innerhalb STO-Fenster halten
+            if (!_bindToStoWindow || _windowBinding == null) return;
+
+            if (_windowBinding.TryGetStoBounds(out var bounds))
+            {
+                bool needsAdjustment = false;
+                double newLeft = this.Left;
+                double newTop = this.Top;
+
+                // Prüfe ob Overlay außerhalb der STO-Grenzen ist
+                if (this.Left < bounds.Left)
+                {
+                    newLeft = bounds.Left;
+                    needsAdjustment = true;
+                }
+                else if (this.Left + this.ActualWidth > bounds.Right)
+                {
+                    newLeft = bounds.Right - this.ActualWidth;
+                    needsAdjustment = true;
+                }
+
+                if (this.Top < bounds.Top)
+                {
+                    newTop = bounds.Top;
+                    needsAdjustment = true;
+                }
+                else if (this.Top + this.ActualHeight > bounds.Bottom)
+                {
+                    newTop = bounds.Bottom - this.ActualHeight;
+                    needsAdjustment = true;
+                }
+
+                // Position korrigieren falls nötig
+                if (needsAdjustment)
+                {
+                    // Temporär Event-Handler entfernen um Rekursion zu vermeiden
+                    this.LocationChanged -= OnLocationChanged;
+                    this.Left = newLeft;
+                    this.Top = newTop;
+                    this.LocationChanged += OnLocationChanged;
+                }
             }
         }
 
@@ -347,12 +533,21 @@ namespace StoDamageMeter.Components.LiveCombat
             // Nur verschiebbar wenn nicht gepinnt
             if (e.ClickCount == 1 && !_isPinned)
             {
-                DragMove();
+                _isDragging = true;
+                try
+                {
+                    DragMove();
+                }
+                finally
+                {
+                    _isDragging = false;
+                }
             }
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
+            MarkUserInteraction(); // Verhindert Auto-Hide während Settings geöffnet sind
             if (SettingsPopup != null)
             {
                 SettingsPopup.Visibility = Visibility.Visible;
@@ -361,6 +556,7 @@ namespace StoDamageMeter.Components.LiveCombat
 
         private void PinButton_Click(object sender, RoutedEventArgs e)
         {
+            MarkUserInteraction(); // Verhindert Auto-Hide während User Pin ändert
             _isPinned = !_isPinned;
             
             if (PinButton != null)
@@ -380,11 +576,13 @@ namespace StoDamageMeter.Components.LiveCombat
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            // Kein MarkUserInteraction() beim Close - User will ja schließen
             Hide();
         }
 
         private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            MarkUserInteraction(); // Verhindert Auto-Hide während User Slider benutzt
             _playerFontSize = e.NewValue;
             
             // Label aktualisieren
@@ -617,11 +815,20 @@ namespace StoDamageMeter.Components.LiveCombat
             if (!_forceClose)
             {
                 e.Cancel = true;
+                
+                // Wenn User das Overlay manuell schließt (nicht vom Window-Binding)
+                // dann Flag zurücksetzen, damit es beim nächsten Öffnen wieder sichtbar bleibt
+                if (!_isAutoHiding)
+                {
+                    _wasManuallyOpened = false;
+                }
+                
                 Hide();
             }
             else
             {
                 _durationUpdateTimer?.Stop();
+                _wasManuallyOpened = false; // Bei echtem Close auch Flag zurücksetzen
             }
         }
 
@@ -630,12 +837,19 @@ namespace StoDamageMeter.Components.LiveCombat
             // Cleanup
             _durationUpdateTimer?.Stop();
             _demoUpdateTimer?.Stop(); // Demo-Timer auch stoppen
+            _focusCheckTimer?.Stop(); // Focus-Check Timer stoppen
+            
+            // Window-Binding aufräumen
+            _windowBinding?.Dispose();
             
             // Unsubscribe from events
             if (_viewModel != null)
             {
                 _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             }
+            
+            this.LocationChanged -= OnLocationChanged;
+            
             base.OnClosed(e);
         }
     }

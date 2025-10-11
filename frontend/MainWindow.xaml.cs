@@ -100,17 +100,10 @@ public partial class MainWindow : FluentWindow
                 try
                 {
                     // Combat-Liste neu laden (OHNE Trimmen - isInitialLoad = false)
+                    // Live-Parsing wird automatisch in LoadCombatListAsync neu gestartet
                     await LoadCombatListAsync(_currentLogPath, isInitialLoad: false);
                     _logger.LogInformation("✅ Combat list refreshed successfully");
                     Console.WriteLine("✅ Combat list refreshed");
-                    
-                    // FileWatcher neu starten wenn wir im Live Combat Tab sind
-                    if (MainTabControl.SelectedIndex == 1 && _liveCombatViewModel != null)
-                    {
-                        _logger.LogInformation("🔄 Restarting live parsing after combat refresh");
-                        Console.WriteLine("🔄 Restarting FileWatcher...");
-                        await _liveCombatViewModel.StartLiveParsing(_currentLogPath);
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -121,7 +114,7 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private async void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         // DEBUG: Console Output falls Logging nicht funktioniert
         Console.WriteLine($"[DEBUG] Tab changed to index: {MainTabControl.SelectedIndex}");
@@ -129,34 +122,17 @@ public partial class MainWindow : FluentWindow
         var logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
         logger.LogInformation($"Tab changed to index: {MainTabControl.SelectedIndex}");
         
+        // Live-Parsing läuft IMMER sobald ein Log geladen ist, unabhängig vom Tab
+        // Tab-Wechsel hat keinen Einfluss mehr auf Live-Parsing
         if (MainTabControl.SelectedIndex == 1) // Live Combat Tab
         {
-            Console.WriteLine($"[DEBUG] Live Combat tab selected. LogPath: {_currentLogPath ?? "NULL"}");
-            logger.LogInformation($"Live Combat tab selected. LogPath: {_currentLogPath ?? "NULL"}");
-            
-            // Starte Live-Modus wenn Log-Path vorhanden ist
-            if (!string.IsNullOrEmpty(_currentLogPath) && _liveCombatViewModel != null)
-            {
-                Console.WriteLine("[DEBUG] Starting live parsing...");
-                logger.LogInformation("Starting live parsing...");
-                await _liveCombatViewModel.StartLiveParsing(_currentLogPath);
-            }
-            else
-            {
-                Console.WriteLine($"[DEBUG] Cannot start - LogPath empty: {string.IsNullOrEmpty(_currentLogPath)}, ViewModel null: {_liveCombatViewModel == null}");
-                logger.LogWarning($"Cannot start live parsing. LogPath null: {string.IsNullOrEmpty(_currentLogPath)}, ViewModel null: {_liveCombatViewModel == null}");
-            }
+            Console.WriteLine($"[DEBUG] Live Combat tab selected");
+            logger.LogInformation($"Live Combat tab selected");
         }
-        else // Historical Damage Out Tab
+        else // Historical Damage Out Tab (Dashboard)
         {
-            Console.WriteLine("[DEBUG] Historical tab selected");
-            logger.LogInformation("Historical tab selected, stopping live parsing");
-            
-            // Stoppe Live-Modus
-            if (_liveCombatViewModel != null)
-            {
-                await _liveCombatViewModel.StopLiveParsing();
-            }
+            Console.WriteLine("[DEBUG] Dashboard tab selected");
+            logger.LogInformation("Dashboard tab selected");
         }
     }
 
@@ -267,14 +243,8 @@ public partial class MainWindow : FluentWindow
             LogFilePathTextBox.Text = openFileDialog.FileName;
             
             // Automatisch Combat-Liste laden
+            // Live-Parsing wird automatisch in LoadCombatListAsync gestartet
             await LoadCombatListAsync(openFileDialog.FileName);
-            
-            // Wenn wir im Live Combat Tab sind, starte FileWatcher neu
-            if (MainTabControl.SelectedIndex == 1 && _liveCombatViewModel != null)
-            {
-                _logger.LogInformation("Restarting live parsing after loading new log file");
-                await _liveCombatViewModel.StartLiveParsing(openFileDialog.FileName);
-            }
         }
     }
 
@@ -366,6 +336,14 @@ public partial class MainWindow : FluentWindow
                 LiveCombatTab.IsEnabled = true;
                 _logger.LogInformation("Live Combat tab enabled after combat log loaded");
             });
+            
+            // ✅ Live-Parsing automatisch starten nach erfolgreichem Laden
+            if (_liveCombatViewModel != null && !string.IsNullOrEmpty(logPath))
+            {
+                _logger.LogInformation("Starting live parsing automatically after log loaded");
+                Console.WriteLine("[DEBUG] Starting live parsing automatically...");
+                await _liveCombatViewModel.StartLiveParsing(logPath);
+            }
         }
         catch (OperationCanceledException)
         {

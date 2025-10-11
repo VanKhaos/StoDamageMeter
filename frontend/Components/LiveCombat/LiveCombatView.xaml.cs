@@ -12,6 +12,11 @@ namespace StoDamageMeter.Components.LiveCombat
         private LiveCombatViewModel? _viewModel;
         private readonly CombatStatsRenderer _statsRenderer;
         private LiveCombatOverlay? _overlayWindow;
+        
+        /// <summary>
+        /// Prüft ob das Live Combat Overlay aktuell geöffnet/sichtbar ist
+        /// </summary>
+        public bool IsOverlayVisible => _overlayWindow != null && _overlayWindow.IsVisible;
 
         public LiveCombatView()
         {

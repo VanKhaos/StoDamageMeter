@@ -692,6 +692,11 @@ class WorkingOSCR:
                     player.DPS = player.total_damage / duration
                     player.dps_with_companions = player.total_damage_with_companions / duration
                 
+                # Berechne Ability DPS (mit echter Combat-Zeit)
+                for ability in player.abilities.values():
+                    if duration > 0:
+                        ability.dps = ability.total_damage / duration
+                
                 # Berechne Companion DPS
                 for companion in player.companions.values():
                     if duration > 0:
@@ -701,6 +706,11 @@ class WorkingOSCR:
                     if companion.total_attacks > 0:
                         companion.crit_percent = (companion.crits / companion.total_attacks * 100.0)
                         companion.accuracy_percent = (companion.hits / companion.total_attacks * 100.0)
+                    
+                    # Berechne Companion Ability DPS (mit echter Combat-Zeit)
+                    for ability in companion.abilities.values():
+                        if duration > 0:
+                            ability.dps = ability.total_damage / duration
             
             logger.info(f"Live combat analysis: {len(players)} players, {damage_events} damage events, {processed_lines} lines processed")
             return players
@@ -869,6 +879,10 @@ class WorkingOSCR:
                 # Player DPS (mit Companions)
                 player.dps_with_companions = player.total_damage_with_companions / combat_time if combat_time > 0 else 0
                 
+                # Ability DPS berechnen (mit echter Combat-Zeit)
+                for ability in player.abilities.values():
+                    ability.dps = ability.total_damage / combat_time if combat_time > 0 else 0
+                
                 # Companion DPS berechnen
                 for companion in player.companions.values():
                     companion.dps = companion.total_damage / combat_time if combat_time > 0 else 0
@@ -878,6 +892,10 @@ class WorkingOSCR:
                     if companion.total_attacks > 0:
                         companion.crit_percent = (companion.crits / companion.total_attacks) * 100.0
                         companion.accuracy_percent = (companion.hits / companion.total_attacks) * 100.0
+                    
+                    # Companion Ability DPS berechnen (mit echter Combat-Zeit)
+                    for ability in companion.abilities.values():
+                        ability.dps = ability.total_damage / combat_time if combat_time > 0 else 0
                 
                 # Player gesamt Crit/Acc %
                 total_attacks = sum(a.total_attacks for a in player.abilities.values())
@@ -930,16 +948,12 @@ class WorkingAbilityStats:
     def __init__(self, name: str):
         self.name = name
         self.total_damage = 0.0
+        self.dps = 0.0  # Wird mit echter Combat-Zeit berechnet
         self.hits = 0
         self.max_hit = 0.0
         self.crits = 0
         self.total_attacks = 0
         self.damage_types = {}  # Dict {damage_type: count}
-        
-    @property
-    def dps(self):
-        """Berechne DPS basierend auf einer angenommenen Combat-Zeit"""
-        return self.total_damage / 60.0 if self.total_damage > 0 else 0.0
     
     @property
     def crit_percent(self):

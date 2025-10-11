@@ -1,0 +1,7 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#1a1a1a"/>
+  <rect x="10" y="10" width="780" height="580" fill="none" stroke="#5B9BD5" stroke-width="2" stroke-dasharray="10,5"/>
+  <text x="400" y="280" font-family="Arial, sans-serif" font-size="32" fill="#5B9BD5" text-anchor="middle" font-weight="bold">Application (Empty)</text>
+  <text x="400" y="330" font-family="Arial, sans-serif" font-size="24" fill="#b0b0b0" text-anchor="middle">Coming Soon</text>
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="16" fill="#666" text-anchor="middle">800 x 600</text>
+</svg>

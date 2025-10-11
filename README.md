@@ -5,7 +5,9 @@
   
   <p><strong>Ein moderner Combat Parser für Star Trek Online</strong></p>
   
-  [![Version](https://img.shields.io/badge/Version-1.2.0-blue.svg)](https://github.com/VanKhaos/StoDamageMeter/releases)
+  🌐 **[Website](https://vankhaos.github.io/StoDamageMeter/)** | **[Download](https://github.com/VanKhaos/StoDamageMeter/releases/latest)**
+  
+  [![Version](https://img.shields.io/badge/Version-1.2.2-blue.svg)](https://github.com/VanKhaos/StoDamageMeter/releases)
   [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://github.com/VanKhaos/StoDamageMeter)
   [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -254,6 +256,44 @@ StoDamageMeter/
 - **WPF-UI** - Fluent Design für WPF
 - **Microsoft.Extensions** - Dependency Injection, Logging
 - **PyInstaller** - Python → Standalone EXE
+
+---
+
+## 🔒 EULA-Konformität & Sicherheit
+
+**STO Damage Meter ist vollständig EULA-konform** und sicher in der Verwendung.
+
+### Was das Tool macht:
+- ✅ Liest nur die vom Spiel erstellte `combatlog.log` Textdatei
+- ✅ Parst die Daten außerhalb des Spielprozesses
+- ✅ Zeigt Statistiken in separatem Fenster an
+
+### Was das Tool NICHT macht:
+- ❌ **Kein Memory-Reading** - Greift nicht auf Spielspeicher zu
+- ❌ **Keine Code-Injection** - Modifiziert das Spiel nicht
+- ❌ **Kein Prozess-Hooking** - Keine Interaktion mit STO-Prozess
+- ❌ **Kein Gameplay-Vorteil** - Zeigt nur bereits sichtbare Kampfdaten
+
+### Window-Binding (Optional)
+Das Overlay-Window-Binding-Feature nutzt ausschließlich **Standard Windows-APIs**:
+- `GetForegroundWindow()` - Ermittelt aktives Fenster
+- `GetWindowRect()` - Liest Fenster-Position
+- **Vergleichbar mit:** Discord Overlay, OBS, Task Manager
+
+Dies sind öffentliche Windows-APIs die von tausenden Programmen genutzt werden.
+
+### Community-Tools
+STO Damage Meter verwendet die gleiche Parsing-Logik wie etablierte Community-Tools:
+- **OSCR** (Open STO Combat Reparser)
+- **CLR** (Combat Log Reader)
+
+Diese Tools werden seit Jahren von der Community genutzt ohne Probleme.
+
+### Zusammenfassung
+- ✅ **100% EULA-konform** - Keine Manipulation des Spiels
+- ✅ **Keine Bans** - Liest nur öffentliche Log-Dateien
+- ✅ **Community-bewährt** - Basiert auf OSCR
+- ✅ **Open Source** - Vollständig einsehbarer Code
 
 ---
 
