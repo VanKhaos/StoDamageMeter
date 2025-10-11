@@ -8,7 +8,7 @@ namespace StoDamageMeter.Components.Combat
     {
         public event EventHandler<string>? ColumnHeaderClicked;
 
-        private string _currentSortColumn = "DpsWithCompanions";
+        private string _currentSortColumn = "TotalDamageWithCompanions";
         private bool _sortAscending = false;
 
         public CombatStatsHeader()

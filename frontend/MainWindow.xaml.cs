@@ -36,7 +36,7 @@ public partial class MainWindow : FluentWindow
     private string? _currentLogPath;
     
     // Sorting state
-    private string _currentSortColumn = "DpsWithCompanions"; // Default
+    private string _currentSortColumn = "TotalDamageWithCompanions"; // Default
     private bool _sortAscending = false; // Default: descending
 
     public MainWindow()
@@ -99,10 +99,18 @@ public partial class MainWindow : FluentWindow
             {
                 try
                 {
-                    // Combat-Liste neu laden
-                    await LoadCombatListAsync(_currentLogPath);
+                    // Combat-Liste neu laden (OHNE Trimmen - isInitialLoad = false)
+                    await LoadCombatListAsync(_currentLogPath, isInitialLoad: false);
                     _logger.LogInformation("✅ Combat list refreshed successfully");
                     Console.WriteLine("✅ Combat list refreshed");
+                    
+                    // FileWatcher neu starten wenn wir im Live Combat Tab sind
+                    if (MainTabControl.SelectedIndex == 1 && _liveCombatViewModel != null)
+                    {
+                        _logger.LogInformation("🔄 Restarting live parsing after combat refresh");
+                        Console.WriteLine("🔄 Restarting FileWatcher...");
+                        await _liveCombatViewModel.StartLiveParsing(_currentLogPath);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -248,14 +256,29 @@ public partial class MainWindow : FluentWindow
 
         if (openFileDialog.ShowDialog() == true)
         {
+            // WICHTIG: Stoppe Live-Parsing BEVOR wir neue Datei laden
+            // Sonst verliert FileWatcher Verbindung wenn Datei getrimmt wird
+            if (_liveCombatViewModel != null)
+            {
+                await _liveCombatViewModel.StopLiveParsing();
+                _logger.LogInformation("Stopped live parsing before loading new log file");
+            }
+            
             LogFilePathTextBox.Text = openFileDialog.FileName;
             
             // Automatisch Combat-Liste laden
             await LoadCombatListAsync(openFileDialog.FileName);
+            
+            // Wenn wir im Live Combat Tab sind, starte FileWatcher neu
+            if (MainTabControl.SelectedIndex == 1 && _liveCombatViewModel != null)
+            {
+                _logger.LogInformation("Restarting live parsing after loading new log file");
+                await _liveCombatViewModel.StartLiveParsing(openFileDialog.FileName);
+            }
         }
     }
 
-    private async Task LoadCombatListAsync(string logPath)
+    private async Task LoadCombatListAsync(string logPath, bool isInitialLoad = true)
     {
         try
         {
@@ -264,6 +287,16 @@ public partial class MainWindow : FluentWindow
             
             // Store log path for combat details loading
             _currentLogPath = logPath;
+            
+            // Backup und Trim der combatlog.log NUR beim initialen Laden
+            // NICHT für Backup-Dateien (enthalten "backup" im Namen)
+            // NICHT beim Refresh nach Combat-Ende
+            if (isInitialLoad && 
+                logPath.EndsWith("combatlog.log", StringComparison.OrdinalIgnoreCase) && 
+                !logPath.Contains("backup", StringComparison.OrdinalIgnoreCase))
+            {
+                await CreateBackupAndTrimLogFileAsync(logPath);
+            }
             
             // Cancel previous loading
             _loadingCancellation?.Cancel();
@@ -299,8 +332,13 @@ public partial class MainWindow : FluentWindow
                 return;
             }
 
+            // Filter: Nur Combats mit Map anzeigen (keine Mock/Test-Daten)
+            var validCombats = response.Combats
+                .Where(c => !string.IsNullOrEmpty(c.Map) && c.Map != "Unknown") // Nur echte Combats
+                .ToList();
+
             // Sort combats by date and time (newest first)
-            var sortedCombats = response.Combats
+            var sortedCombats = validCombats
                 .OrderByDescending(c => c.Date)
                 .ThenByDescending(c => c.Time)
                 .ToList();
@@ -312,10 +350,11 @@ public partial class MainWindow : FluentWindow
             {
                 CombatListViewComponent.SetCombats(sortedCombats);
                 
-                // Automatisch ersten Combat auswählen
+                // Automatisch ersten Combat auswählen UND laden (ohne Tab-Wechsel)
                 if (sortedCombats.Count > 0)
                 {
-                    CombatListViewComponent.SelectFirst();
+                    CombatListViewComponent.SelectFirst(); // Visuell auswählen (Event unterdrückt)
+                    _ = LoadCombatDetailsAsync(sortedCombats[0]); // Manuell laden ohne Event
                 }
             });
 
@@ -387,6 +426,11 @@ public partial class MainWindow : FluentWindow
     private void OnCombatSelected(object? sender, CombatInfo selectedCombat)
     {
         System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
+        
+        // IMMER zum Dashboard wechseln bei Combat-Klick
+        MainTabControl.SelectedIndex = 0;
+        _logger.LogInformation("Switched to Dashboard tab after combat selection");
+        
         _ = LoadCombatDetailsAsync(selectedCombat);
     }
 
@@ -522,6 +566,182 @@ public partial class MainWindow : FluentWindow
                 _currentSortColumn,
                 _sortAscending);
         }
+    }
+
+    private DateTime? ParseCombatLogTimestamp(string logLine)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(logLine))
+                return null;
+
+            // Zeitstempel ist am Anfang der Zeile bis zum ersten ::
+            var parts = logLine.Split(new[] { "::" }, StringSplitOptions.None);
+            if (parts.Length < 2)
+                return null;
+
+            var timestampStr = parts[0].Trim();
+            
+            // Format: YY:MM:DD:HH:MM:SS.ms
+            var timeParts = timestampStr.Split(':');
+            if (timeParts.Length < 6)
+                return null;
+
+            var year = 2000 + int.Parse(timeParts[0]);
+            var month = int.Parse(timeParts[1]);
+            var day = int.Parse(timeParts[2]);
+            var hour = int.Parse(timeParts[3]);
+            var minute = int.Parse(timeParts[4]);
+            
+            // Sekunden können Dezimalstellen haben (SS.ms)
+            var secondsParts = timeParts[5].Split('.');
+            var second = int.Parse(secondsParts[0]);
+            var millisecond = secondsParts.Length > 1 ? int.Parse(secondsParts[1]) * 100 : 0;
+
+            return new DateTime(year, month, day, hour, minute, second, millisecond);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task CreateBackupAndTrimLogFileAsync(string logPath)
+    {
+        try
+        {
+            var fileInfo = new System.IO.FileInfo(logPath);
+            var fileSizeMB = fileInfo.Length / (1024.0 * 1024.0);
+            
+            _logger.LogInformation($"Processing combatlog.log - Size: {fileSizeMB:F2} MB");
+            
+            // Backup erstellen (immer!)
+            var backupTimestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
+            var directory = System.IO.Path.GetDirectoryName(logPath);
+            var fileName = System.IO.Path.GetFileNameWithoutExtension(logPath);
+            var backupPath = System.IO.Path.Combine(directory ?? ".", $"{fileName}_backup_{backupTimestamp}.log");
+            
+            System.IO.File.Copy(logPath, backupPath, overwrite: false);
+            _logger.LogInformation($"✅ Backup created: {backupPath}");
+            AppendResult($"Backup created: {System.IO.Path.GetFileName(backupPath)}");
+            
+            // Alle Combats auslesen
+            var response = await _backendService.GetAvailableCombatsWithProgressAsync(logPath, maxCombats: 999, CancellationToken.None);
+            
+            if (!response.Success)
+            {
+                _logger.LogWarning($"Could not read combats for trimming: {response.Error}");
+                return;
+            }
+            
+            _logger.LogInformation($"Found {response.Combats.Count} combats in log file");
+            
+            // Nur trimmen wenn mehr als 30 Combats vorhanden
+            if (response.Combats.Count <= 30)
+            {
+                _logger.LogInformation($"No trimming needed: {response.Combats.Count} combats (≤ 30)");
+                return;
+            }
+            
+            _logger.LogInformation($"Trimming: {response.Combats.Count} → 30 combats");
+            
+            // DEBUG: Zeige erste und letzte Combats VOR dem Sortieren
+            _logger.LogInformation($"First combat in list: {response.Combats.First().Date} {response.Combats.First().Time} (Byte {response.Combats.First().ByteStart})");
+            _logger.LogInformation($"Last combat in list: {response.Combats.Last().Date} {response.Combats.Last().Time} (Byte {response.Combats.Last().ByteStart})");
+            
+            // Letzte 30 Combats behalten
+            // WICHTIG: Backend gibt Combats bereits vom ältesten zum neuesten sortiert (nach ByteStart)
+            // Wir nehmen die LETZTEN 30 (= neuesten)
+            var combatsToKeep = response.Combats
+                .OrderBy(c => c.ByteStart) // Sicherstellen dass nach Position sortiert
+                .TakeLast(30) // Die LETZTEN 30 = neuesten
+                .ToList();
+            
+            // DEBUG: Zeige was wir behalten
+            _logger.LogInformation($"Keeping combats from {combatsToKeep.First().Date} {combatsToKeep.First().Time} to {combatsToKeep.Last().Date} {combatsToKeep.Last().Time}");
+            
+            if (combatsToKeep.Count == 0)
+            {
+                _logger.LogWarning("No combats to keep after filtering");
+                return;
+            }
+            
+            // NEUE STRATEGIE: Verwende Timestamps statt Byte-Positionen!
+            // Viel zuverlässiger weil wir nicht mit Byte-Berechnungen kämpfen müssen
+            var tempPath = logPath + ".tmp";
+            
+            // Hole Start- und End-Timestamps der zu behaltenden Combats
+            var firstCombat = combatsToKeep.First();
+            var lastCombat = combatsToKeep.Last();
+            
+            // Parse Timestamps (Format: "YYYY-MM-DD HH:MM:SS.f")
+            var startTimestamp = DateTime.ParseExact(
+                $"{firstCombat.Date} {firstCombat.Time}",
+                "yyyy-MM-dd HH:mm:ss.f",
+                System.Globalization.CultureInfo.InvariantCulture);
+            var endTimestamp = DateTime.ParseExact(
+                $"{lastCombat.Date} {lastCombat.Time}",
+                "yyyy-MM-dd HH:mm:ss.f",
+                System.Globalization.CultureInfo.InvariantCulture);
+            
+            _logger.LogInformation($"Keeping combats from {startTimestamp:yyyy-MM-dd HH:mm:ss} to {endTimestamp:yyyy-MM-dd HH:mm:ss}");
+            _logger.LogInformation($"Using timestamp-based filtering (robust and reliable!)");
+            
+            long linesWritten = 0;
+            long totalLinesRead = 0;
+            
+            using (var reader = new System.IO.StreamReader(logPath, System.Text.Encoding.UTF8))
+            using (var writer = new System.IO.StreamWriter(tempPath, false, System.Text.Encoding.UTF8))
+            {
+                string? line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    totalLinesRead++;
+                    
+                    // Extrahiere Timestamp aus der Log-Zeile
+                    // Format: YY:MM:DD:HH:MM:SS.ms::...
+                    var lineTimestamp = ParseCombatLogTimestamp(line);
+                    
+                    // Behalte Zeile wenn sie im Zeitbereich liegt
+                    if (lineTimestamp.HasValue && lineTimestamp.Value >= startTimestamp && lineTimestamp.Value <= endTimestamp.AddMinutes(5))
+                    {
+                        await writer.WriteLineAsync(line);
+                        linesWritten++;
+                    }
+                }
+            }
+            
+            _logger.LogInformation($"Read {totalLinesRead} total lines, wrote {linesWritten} lines to trimmed file");
+            
+            // Ersetze Original mit getrimmter Datei
+            System.IO.File.Delete(logPath);
+            System.IO.File.Move(tempPath, logPath);
+            
+            var newFileInfo = new System.IO.FileInfo(logPath);
+            var newSizeMB = newFileInfo.Length / (1024.0 * 1024.0);
+            _logger.LogInformation($"✅ Trimming complete: {fileSizeMB:F2} MB → {newSizeMB:F2} MB (kept {combatsToKeep.Count} combats)");
+            AppendResult($"Combat log trimmed: {fileSizeMB:F2} MB → {newSizeMB:F2} MB (kept last 30 combats)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during backup and trim");
+            AppendResult($"Warning: Could not trim combat log: {ex.Message}");
+            // Nicht kritisch, fortfahren
+        }
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // Schließe das Overlay-Fenster falls geöffnet
+        LiveCombatViewComponent?.Cleanup();
+        
+        // Stoppe Live-Parsing
+        if (_liveCombatViewModel != null)
+        {
+            _liveCombatViewModel.StopLiveParsing().Wait();
+        }
+        
+        base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)

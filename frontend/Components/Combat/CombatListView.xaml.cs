@@ -10,6 +10,7 @@ namespace StoDamageMeter.Components.Combat
         public event EventHandler<CombatInfo>? CombatSelected;
 
         public ObservableCollection<CombatInfo> Combats { get; } = new();
+        private bool _suppressSelectionEvent = false;
 
         public CombatListView()
         {
@@ -19,7 +20,8 @@ namespace StoDamageMeter.Components.Combat
 
         private void OnCombatSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (CombatListBox.SelectedItem is CombatInfo combat)
+            // Event nur bei echtem User-Klick auslösen, nicht bei programmatischer Selektion
+            if (!_suppressSelectionEvent && CombatListBox.SelectedItem is CombatInfo combat)
             {
                 CombatSelected?.Invoke(this, combat);
             }
@@ -43,11 +45,14 @@ namespace StoDamageMeter.Components.Combat
         {
             if (Combats.Count > 0)
             {
+                _suppressSelectionEvent = true;
                 CombatListBox.SelectedIndex = 0;
+                _suppressSelectionEvent = false;
             }
         }
     }
 }
+
 
 
 

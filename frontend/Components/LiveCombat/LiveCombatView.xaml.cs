@@ -11,6 +11,7 @@ namespace StoDamageMeter.Components.LiveCombat
     {
         private LiveCombatViewModel? _viewModel;
         private readonly CombatStatsRenderer _statsRenderer;
+        private LiveCombatOverlay? _overlayWindow;
 
         public LiveCombatView()
         {
@@ -159,7 +160,7 @@ namespace StoDamageMeter.Components.LiveCombat
                 _statsRenderer.RenderCombatStats(
                     LiveStatsItemsControl,
                     _viewModel.CurrentCombat,
-                    "DpsWithCompanions",
+                    "TotalDamageWithCompanions",
                     false // Absteigend sortiert
                 );
                 Console.WriteLine($"✅ Rendered {LiveStatsItemsControl.Items.Count} items to LiveStatsItemsControl");
@@ -216,6 +217,45 @@ namespace StoDamageMeter.Components.LiveCombat
                 await _viewModel.StopLiveParsing();
             }
         }
+
+        private void ShowOverlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_overlayWindow == null)
+            {
+                _overlayWindow = new LiveCombatOverlay();
+                
+                if (_viewModel != null)
+                {
+                    _overlayWindow.SetViewModel(_viewModel);
+                }
+                
+                _overlayWindow.Show();
+            }
+            else
+            {
+                if (_overlayWindow.Visibility == Visibility.Visible)
+                {
+                    _overlayWindow.Activate();
+                }
+                else
+                {
+                    _overlayWindow.Show();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cleanup-Methode zum Schließen des Overlays beim Beenden der Anwendung
+        /// </summary>
+        public void Cleanup()
+        {
+            if (_overlayWindow != null)
+            {
+                _overlayWindow.ForceClose();
+                _overlayWindow = null;
+            }
+        }
     }
 }
+
 

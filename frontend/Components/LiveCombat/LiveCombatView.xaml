@@ -9,12 +9,20 @@
              d:DesignHeight="600" d:DesignWidth="800">
     
     <UserControl.Resources>
-        <SolidColorBrush x:Key="StarTrekBlue" Color="#5B9BD5"/>
-        <SolidColorBrush x:Key="StarTrekDeepBlack" Color="#0A0A0A"/>
-        <SolidColorBrush x:Key="StarTrekDarkGray" Color="#1A1A1A"/>
-        <SolidColorBrush x:Key="StarTrekTextGray" Color="#B0B0B0"/>
-        <SolidColorBrush x:Key="StarTrekBorderGray" Color="#333333"/>
-        <SolidColorBrush x:Key="StarTrekGold" Color="#B8860B"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Import Expander Styles -->
+                <ResourceDictionary Source="/Styles/ExpanderStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Color Brushes -->
+            <SolidColorBrush x:Key="StarTrekBlue" Color="#5B9BD5"/>
+            <SolidColorBrush x:Key="StarTrekDeepBlack" Color="#0A0A0A"/>
+            <SolidColorBrush x:Key="StarTrekDarkGray" Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="StarTrekTextGray" Color="#B0B0B0"/>
+            <SolidColorBrush x:Key="StarTrekBorderGray" Color="#333333"/>
+            <SolidColorBrush x:Key="StarTrekGold" Color="#B8860B"/>
+        </ResourceDictionary>
     </UserControl.Resources>
     
     <Grid Background="{StaticResource StarTrekDeepBlack}">
@@ -28,11 +36,23 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
+                <!-- Overlay Button (immer sichtbar) -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <ui:Button x:Name="ShowOverlayButton"
+                              Content="Show Overlay"
+                              Icon="{ui:SymbolIcon WindowNew24}"
+                              Appearance="Primary"
+                              Click="ShowOverlayButton_Click"
+                              HorizontalAlignment="Right"
+                              ToolTip="Open floating overlay window"/>
+                </Grid>
+                
                 <!-- Combat Info Header (nur wenn Combat aktiv) -->
-                <Grid x:Name="CombatInfoPanel" Grid.Row="0" Visibility="Collapsed" Margin="0,0,0,12">
+                <Grid x:Name="CombatInfoPanel" Grid.Row="1" Visibility="Collapsed" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -69,11 +89,11 @@
                 
                 <!-- Column Headers Component (wie bei Damage Out) -->
                 <combat:CombatStatsHeader x:Name="LiveStatsHeaderComponent" 
-                                          Grid.Row="1" 
+                                          Grid.Row="2" 
                                           Margin="0,0,0,4"/>
                 
                 <!-- Data Area (wie bei Damage Out) -->
-                <Border Grid.Row="2"
+                <Border Grid.Row="3"
                         Background="{DynamicResource StarTrekDarkGray}"
                         BorderBrush="{DynamicResource StarTrekBorderGray}"
                         BorderThickness="1"

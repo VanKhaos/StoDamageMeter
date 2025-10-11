@@ -70,7 +70,7 @@ class WorkingOSCR:
         
         self._settings = {
             "combats_to_parse": 20,
-            "seconds_between_combats": 30,
+            "seconds_between_combats": 45,
             "combat_min_lines": 20,
             "graph_resolution": 0.2,
         }
@@ -404,16 +404,19 @@ class WorkingOSCR:
                             # Combat-Type als Map-Name
                             combat_type_name = f"{combat_type} Combat"
                             
-                            combats.append((
-                                len(combats),
-                                combat_type_name,
-                                date_str,
-                                time_str,
-                                "Normal",
-                                current_combat_start_idx,
-                                i - 1,
-                                combat_type
-                            ))
+                            # NUR Combats mit Player-Daten speichern (Owner muss P[ enthalten)
+                            has_players = any(',P[' in line and '::' in line for line in current_combat_lines[:min(50, len(current_combat_lines))])
+                            if has_players:
+                                combats.append((
+                                    len(combats),
+                                    combat_type_name,
+                                    date_str,
+                                    time_str,
+                                    "Normal",
+                                    current_combat_start_idx,
+                                    i - 1,
+                                    combat_type
+                                ))
                         
                         # Neuen Combat starten - Counter zurücksetzen
                         current_combat_lines = []
@@ -447,42 +450,46 @@ class WorkingOSCR:
                     # Default ist Space (bei Gleichstand oder wenn keiner erkannt)
                     combat_type = 'Space'
                 
-                # Combat speichern - Parse Timestamp aus der LETZTEN Zeile (neueste, chronologisch)
-                try:
-                    # current_combat_lines[-1] ist die NEUESTE Zeile (chronologisch)
-                    last_line_timestamp = current_combat_lines[-1].split('::')[0]
-                    parsed_timestamp = self.parse_timestamp(last_line_timestamp)
-                    
-                    if parsed_timestamp:
-                        date_str = parsed_timestamp.strftime("%Y-%m-%d")
-                        time_str = parsed_timestamp.strftime("%H:%M:%S.%f")[:-5]  # Ohne letzte Mikrosekunde
-                    else:
-                        # Fallback: Manuelles Parsing
-                        time_parts = last_line_timestamp.split(':')
-                        if len(time_parts) >= 6:
-                            date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
-                            time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                # NUR Combats mit Player-Daten speichern (Owner muss P[ enthalten)
+                has_players = any(',P[' in line and '::' in line for line in current_combat_lines[:min(50, len(current_combat_lines))])
+                
+                if has_players:
+                    # Combat speichern - Parse Timestamp aus der LETZTEN Zeile (neueste, chronologisch)
+                    try:
+                        # current_combat_lines[-1] ist die NEUESTE Zeile (chronologisch)
+                        last_line_timestamp = current_combat_lines[-1].split('::')[0]
+                        parsed_timestamp = self.parse_timestamp(last_line_timestamp)
+                        
+                        if parsed_timestamp:
+                            date_str = parsed_timestamp.strftime("%Y-%m-%d")
+                            time_str = parsed_timestamp.strftime("%H:%M:%S.%f")[:-5]  # Ohne letzte Mikrosekunde
                         else:
-                            date_str = "2025-10-09"
-                            time_str = "00:00:00"
-                except Exception as e:
-                    logger.warning(f"Error parsing combat timestamp: {e}")
-                    date_str = "2025-10-09"
-                    time_str = "00:00:00"
-                
-                # Combat-Type als Map-Name
-                combat_type_name = f"{combat_type} Combat"
-                
-                combats.append((
-                    len(combats),
-                    combat_type_name,
-                    date_str,
-                    time_str,
-                    "Normal",
-                    current_combat_start_idx,
-                    len(lines),
-                    combat_type
-                ))
+                            # Fallback: Manuelles Parsing
+                            time_parts = last_line_timestamp.split(':')
+                            if len(time_parts) >= 6:
+                                date_str = f"20{time_parts[0]}-{time_parts[1]}-{time_parts[2]}"
+                                time_str = f"{time_parts[3]}:{time_parts[4]}:{time_parts[5]}"
+                            else:
+                                date_str = "2025-10-09"
+                                time_str = "00:00:00"
+                    except Exception as e:
+                        logger.warning(f"Error parsing combat timestamp: {e}")
+                        date_str = "2025-10-09"
+                        time_str = "00:00:00"
+                    
+                    # Combat-Type als Map-Name
+                    combat_type_name = f"{combat_type} Combat"
+                    
+                    combats.append((
+                        len(combats),
+                        combat_type_name,
+                        date_str,
+                        time_str,
+                        "Normal",
+                        current_combat_start_idx,
+                        len(lines),
+                        combat_type
+                    ))
             
             logger.info(f"Found {len(combats)} combats (chronological)")
             
@@ -573,12 +580,13 @@ class WorkingOSCR:
                     skipped_lines += 1
                     continue
                 
-                # Combat-Type-Filter
-                line_combat_type = self.determine_combat_type_from_line(parsed)
-                
-                if combat_type and line_combat_type != combat_type:
-                    skipped_lines += 1
-                    continue
+                # Combat-Type-Filter DEAKTIVIERT für Live-Parsing
+                # Problem: Wenn erste Zeile anderen Type hat, werden alle anderen ignoriert!
+                # line_combat_type = self.determine_combat_type_from_line(parsed)
+                # 
+                # if combat_type and line_combat_type != combat_type:
+                #     skipped_lines += 1
+                #     continue
                 
                 # Entity identifizieren
                 entity = self.identify_source_entity(parsed)
@@ -898,36 +906,18 @@ class WorkingOSCR:
                     player.crit_percent = (total_crits / total_attacks) * 100.0
                     player.accuracy_percent = (total_hits / total_attacks) * 100.0
             
-            # Fallback: Test-Player falls keine echten Player gefunden
+            # Keine Fallback-Daten mehr - leere Liste wenn keine Spieler gefunden
             if not players:
-                player = WorkingPlayerStats(
-                    name="TestPlayer",
-                    dps=1000.0,
-                    combat_time=60.0,
-                    total_damage=60000.0,
-                    max_one_hit=5000.0,
-                    deaths=0
-                )
-                player.crit_percent = 50.0
-                player.accuracy_percent = 95.0
-                players["TestPlayer"] = player
-            
-            logger.info(f"Combat analysis complete: {len(players)} players, {damage_events} damage events")
+                logger.info(f"Combat analysis complete: No players found, {damage_events} damage events, {processed_lines} lines processed")
+            else:
+                logger.info(f"Combat analysis complete: {len(players)} players, {damage_events} damage events")
             
         except Exception as e:
             logger.error(f"Error analyzing players: {e}")
             import traceback
             logger.error(traceback.format_exc())
-            # Fallback
-            player = WorkingPlayerStats(
-                name="TestPlayer",
-                dps=1000.0,
-                combat_time=60.0,
-                total_damage=60000.0,
-                max_one_hit=5000.0,
-                deaths=0
-            )
-            players["TestPlayer"] = player
+            # Keine Fallback-Daten - leere Liste zurückgeben
+            players = {}
         
         return players
 
@@ -1308,7 +1298,7 @@ def analyze_single_combat(log_path, combat_id, settings=None):
             "timestamp": datetime.now().isoformat()
         }
 
-def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seconds: int = 30):
+def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seconds: int = 45):
     """
     Live-Parsing: Liest nur neue Zeilen ab from_byte_offset und erkennt neue/aktive Combats
     

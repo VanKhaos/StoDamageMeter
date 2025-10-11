@@ -9,6 +9,7 @@
     <AssemblyName>StoDamageMeter</AssemblyName>
     <RootNamespace>StoDamageMeter</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,14 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\app_icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  <!-- Application Icon -->
+  <ItemGroup>
+    <Resource Include="Assets\app_icon.ico" />
   </ItemGroup>
 
   <!-- Build-Targets für Backend-Integration importieren -->

@@ -99,11 +99,13 @@ namespace StoDamageMeter.Services
 
                 _watcher = new FileSystemWatcher(directory ?? ".", fileName)
                 {
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName | NotifyFilters.CreationTime,
                     EnableRaisingEvents = true
                 };
 
                 _watcher.Changed += OnFileChanged;
+                _watcher.Created += OnFileCreated;
+                _watcher.Deleted += OnFileDeleted;
                 _watcher.Error += OnWatcherErrorEvent;
 
                 // Debounce-Timer (100ms für schnellere Reaktion)
@@ -141,6 +143,8 @@ namespace StoDamageMeter.Services
             {
                 _watcher.EnableRaisingEvents = false;
                 _watcher.Changed -= OnFileChanged;
+                _watcher.Created -= OnFileCreated;
+                _watcher.Deleted -= OnFileDeleted;
                 _watcher.Error -= OnWatcherErrorEvent;
                 _watcher.Dispose();
                 _watcher = null;
@@ -169,6 +173,32 @@ namespace StoDamageMeter.Services
 
             // Debouncing: Timer neu starten bei jeder Änderung (100ms für schnellere Updates)
             _debounceTimer?.Change(100, Timeout.Infinite);
+        }
+
+        private void OnFileCreated(object sender, FileSystemEventArgs e)
+        {
+            _logger.LogInformation($"🆕 File created event detected: {e.Name}");
+            
+            // Reset Offset auf 0 (Datei ist neu, von Anfang lesen)
+            _currentByteOffset = 0;
+            _incompleteLineBuffer = null;
+            
+            // Sofort neue Zeilen verarbeiten
+            _debounceTimer?.Change(100, Timeout.Infinite);
+        }
+
+        private void OnFileDeleted(object sender, FileSystemEventArgs e)
+        {
+            _logger.LogWarning($"🗑️ File deleted event detected: {e.Name}");
+            
+            // Reset Offset (falls Datei neu erstellt wird)
+            _currentByteOffset = 0;
+            _incompleteLineBuffer = null;
+            
+            lock (_lock)
+            {
+                _pendingLines.Clear();
+            }
         }
 
         private void ProcessPendingLines(object? state)

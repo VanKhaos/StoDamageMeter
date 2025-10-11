@@ -33,6 +33,8 @@ namespace StoDamageMeter.ViewModels
         private DateTime? _lastUpdateTime;
         private Timer? _durationTimer;
         private DateTime? _combatStartTime;
+        private DateTime? _lastLineReceivedTime;
+        private Timer? _inactivityTimer;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<CombatData>? CombatCompleted;
@@ -122,6 +124,9 @@ namespace StoDamageMeter.ViewModels
                 
                 _fileWatcher.StartWatching(logPath, startOffset);
 
+                // Starte Inactivity-Timer (prüft alle 5 Sekunden ob seit 30s keine neuen Zeilen kamen)
+                _inactivityTimer = new Timer(CheckForInactivity, null, 5000, 5000);
+
                 IsActive = true;
                 StatusText = "Warte auf Combat...";
 
@@ -149,6 +154,8 @@ namespace StoDamageMeter.ViewModels
                 _fileWatcher.StopWatching();
                 _durationTimer?.Dispose();
                 _durationTimer = null;
+                _inactivityTimer?.Dispose();
+                _inactivityTimer = null;
 
                 // Finaler Combat-Check
                 if (_activeCombatLines.Count >= 20 && CurrentCombat != null)
@@ -179,13 +186,18 @@ namespace StoDamageMeter.ViewModels
         {
             if (!IsActive || e.Lines.Count == 0)
             {
+                _logger.LogWarning("⚠️ OnNewLinesDetected called but IsActive={0} or Lines.Count={1}", IsActive, e.Lines.Count);
                 return;
             }
 
             try
             {
                 _lastUpdateTime = DateTime.Now;
+                _lastLineReceivedTime = DateTime.Now;
                 NewLinesProcessed += e.Lines.Count;
+                
+                _logger.LogInformation($"🔵 OnNewLinesDetected: {e.Lines.Count} lines, current buffer: {_activeCombatLines.Count}");
+                Console.WriteLine($"🔵 OnNewLinesDetected: {e.Lines.Count} lines, buffer: {_activeCombatLines.Count}, IsActive: {IsActive}");
 
                 // Prüfe Combat-Trennung: Zeit-Gap oder Combat-Type-Wechsel
                 if (_activeCombatLines.Count > 0)
@@ -226,9 +238,9 @@ namespace StoDamageMeter.ViewModels
 
                         // Combat-Pause erkannt? → Finalisiere alten Combat
                         // Lange Kämpfe (>1 Minute) sind OK, solange kontinuierlich Zeilen kommen!
-                        if (timeDiff > 30)
+                        if (timeDiff > 45)
                         {
-                            _logger.LogInformation($"🔴 Combat ended: {timeDiff:F0}s gap detected");
+                            _logger.LogInformation($"🔴 Combat ended: {timeDiff:F0}s gap detected (>45s threshold)");
                             Console.WriteLine($"🔴 Combat ended: {timeDiff:F0}s gap - finalizing");
                             await FinalizeCombat();
                             
@@ -404,6 +416,29 @@ namespace StoDamageMeter.ViewModels
             }, null, 0, 1000); // Update jede Sekunde
         }
 
+        private void CheckForInactivity(object? state)
+        {
+            if (!IsActive || !_lastLineReceivedTime.HasValue || _activeCombatLines.Count == 0)
+            {
+                return;
+            }
+
+            var timeSinceLastLine = (DateTime.Now - _lastLineReceivedTime.Value).TotalSeconds;
+            
+            if (timeSinceLastLine > 45)
+            {
+                _logger.LogInformation($"⏱️ Inactivity timeout: {timeSinceLastLine:F1}s since last line (>45s threshold) - finalizing combat");
+                Console.WriteLine($"⏱️ Inactivity timeout: {timeSinceLastLine:F1}s since last line");
+                
+                // Combat finalisieren (auf UI-Thread)
+                _dispatcher.Invoke(async () =>
+                {
+                    await FinalizeCombat();
+                    StatusText = "Warte auf Combat...";
+                });
+            }
+        }
+
         private void OnWatcherError(object? sender, FileWatcherErrorEventArgs e)
         {
             _logger.LogError(e.Exception, $"FileWatcher error: {e.ErrorMessage}");
@@ -503,6 +538,7 @@ namespace StoDamageMeter.ViewModels
             _fileWatcher.WatcherError -= OnWatcherError;
             _fileWatcher.Dispose();
             _durationTimer?.Dispose();
+            _inactivityTimer?.Dispose();
         }
     }
 }

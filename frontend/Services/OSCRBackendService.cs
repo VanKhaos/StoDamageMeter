@@ -558,7 +558,7 @@ namespace StoDamageMeter.Services
         public async Task<LiveParseResponse> LiveParseAsync(
             string logPath,
             long fromByteOffset,
-            int timeoutSeconds = 30)
+            int timeoutSeconds = 45)
         {
             var request = new
             {
