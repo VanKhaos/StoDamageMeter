@@ -201,8 +201,18 @@ if (Test-Path $ChangelogSource) {
 }
 
 # Cleanup
-Write-Host "[Cleanup] Removing debug files and temporary files..." -ForegroundColor Yellow
+Write-Host "[Cleanup] Removing debug files, logs and temporary files..." -ForegroundColor Yellow
+
+# Debug-Symbole entfernen
 Get-ChildItem -Path $ReleaseVersionPath -Filter "*.pdb" -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
+
+# Log-Dateien entfernen (sollten nicht im Release sein)
+$LogsDir = Join-Path $AppDir "logs"
+if (Test-Path $LogsDir) {
+    Write-Host "  Removing log files from release..." -ForegroundColor Yellow
+    Get-ChildItem -Path $LogsDir -Filter "*.log" -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
+    # Leeren logs-Ordner behalten (wird beim ersten Start neu befüllt)
+}
 
 # Temporären Launcher-Ordner löschen
 if (Test-Path $LauncherOutputPath) {

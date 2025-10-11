@@ -28,7 +28,7 @@ logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# File Handler - schreibt ins logs/ Unterverzeichnis
+# File Handler - schreibt ins logs/ Unterverzeichnis mit Rotation
 # Bestimme das Verzeichnis der .exe (oder des Scripts)
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
@@ -42,7 +42,16 @@ logs_dir = os.path.join(exe_dir, 'logs')
 os.makedirs(logs_dir, exist_ok=True)
 
 log_file_path = os.path.join(logs_dir, 'oscr_backend.log')
-file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
+
+# RotatingFileHandler statt FileHandler: Max 10 MB pro Datei, 3 Backups
+from logging.handlers import RotatingFileHandler
+file_handler = RotatingFileHandler(
+    log_file_path, 
+    mode='a', 
+    maxBytes=10*1024*1024,  # 10 MB
+    backupCount=3,  # Halte 3 Backup-Dateien (oscr_backend.log.1, .2, .3)
+    encoding='utf-8'
+)
 file_handler.setLevel(logging.INFO)
 
 # Format

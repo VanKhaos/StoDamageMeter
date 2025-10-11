@@ -468,12 +468,25 @@ namespace StoDamageMeter.Services
                 {
                     _logger.LogWarning("Backend stderr: {Error}", error);
                     
-                    // In Log-Datei schreiben (vollständig)
+                    // In Log-Datei schreiben (nur in Debug-Builds)
+                    #if DEBUG
                     try
                     {
                         var logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
                         Directory.CreateDirectory(logsDir);
                         var logFile = Path.Combine(logsDir, "backend_debug.log");
+                        
+                        // Prüfe Dateigröße und rotiere bei > 10 MB
+                        var fileInfo = new FileInfo(logFile);
+                        if (fileInfo.Exists && fileInfo.Length > 10 * 1024 * 1024)
+                        {
+                            // Rotiere: backend_debug.log -> backend_debug.log.1
+                            var oldFile = logFile + ".1";
+                            if (File.Exists(oldFile))
+                                File.Delete(oldFile);
+                            File.Move(logFile, oldFile);
+                        }
+                        
                         File.AppendAllText(logFile, $"\n=== {DateTime.Now} ===\n");
                         File.AppendAllText(logFile, $"Command: {_backendPath} {_backendArgs}\n");
                         File.AppendAllText(logFile, $"Exit Code: {process.ExitCode}\n");
@@ -482,6 +495,7 @@ namespace StoDamageMeter.Services
                         File.AppendAllText(logFile, "=== END ===\n\n");
                     }
                     catch { }
+                    #endif
                 }
 
                 if (process.ExitCode != 0)

@@ -40,6 +40,10 @@ ENV/
 
 # Logs
 *.log
+**/logs/
+**/logs/*.log
+frontend/bin/Debug/net9.0-windows/logs/
+frontend/bin/Release/net9.0-windows/logs/
 
 # OS
 .DS_Store

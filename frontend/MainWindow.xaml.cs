@@ -207,18 +207,32 @@ public partial class MainWindow : FluentWindow
         // In Debug-Konsole schreiben
         System.Diagnostics.Debug.WriteLine(logMessage);
         
-        // In Log-Datei schreiben
+        // In Log-Datei schreiben (nur in Debug-Builds)
+        #if DEBUG
         try
         {
             var logsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
             System.IO.Directory.CreateDirectory(logsDir);
             var logFile = System.IO.Path.Combine(logsDir, "frontend_debug.log");
+            
+            // Prüfe Dateigröße und rotiere bei > 5 MB
+            var fileInfo = new System.IO.FileInfo(logFile);
+            if (fileInfo.Exists && fileInfo.Length > 5 * 1024 * 1024)
+            {
+                // Rotiere: frontend_debug.log -> frontend_debug.log.1
+                var oldFile = logFile + ".1";
+                if (System.IO.File.Exists(oldFile))
+                    System.IO.File.Delete(oldFile);
+                System.IO.File.Move(logFile, oldFile);
+            }
+            
             System.IO.File.AppendAllText(logFile, logMessage + Environment.NewLine);
         }
         catch
         {
             // Ignore file logging errors
         }
+        #endif
     }
 
     private async void BrowseButton_Click(object sender, RoutedEventArgs e)

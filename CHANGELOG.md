@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-10-11
+
+### Added
+- **Automatische Log-Rotation für alle Log-Dateien**
+  - Backend: `RotatingFileHandler` mit max. 10 MB pro Datei, 3 Backups
+  - Frontend Debug-Logs: Nur in DEBUG-Builds, max. 5-10 MB mit Rotation
+  - Gesamt-Maximum: ~40 MB (Release) bzw. ~70 MB (Debug)
+  - Verhindert unbegrenztes Log-Wachstum bei Dauernutzung
+
+### Fixed
+- **Log-Größen-Problem:** Verhindert mehrere GB große Log-Dateien
+  - Entwickler hatte 10 GB `backend_service_debug.log` durch Dauernutzung
+  - Endanwender sind jetzt geschützt vor Festplatz-Problemen
+  - Logs rotieren automatisch bei Erreichen der Grenze
+- **Release-ZIP-Größe:** Log-Dateien werden nicht mehr ins Release-Package inkludiert
+  - `create_release.ps1` entfernt alle Logs vor ZIP-Erstellung
+  - Kleinere und sauberere Release-Pakete
+
+### Changed
+- Backend-Logging nutzt `RotatingFileHandler` statt einfachen `FileHandler`
+- Frontend Debug-Logs nur in DEBUG-Builds (via `#if DEBUG`)
+- `.gitignore` erweitert um alle Log-Pattern
+- `RELEASE_GUIDE.md` dokumentiert Log-Rotation-Feature
+
 ## [1.2.2] - 2025-10-11
 
 ### Added
