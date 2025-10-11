@@ -258,6 +258,9 @@ namespace StoDamageMeter.ViewModels
                 // Füge neue Zeilen zum aktiven Combat hinzu
                 _activeCombatLines.AddRange(e.Lines);
 
+                // Debug-Logging für Line-Tracking (Hybrid-Debouncing)
+                _logger.LogDebug($"📝 Lines in buffer: {_activeCombatLines.Count}, New: {e.Lines.Count}, Total processed: {e.TotalLinesProcessed}");
+
                 _logger.LogInformation($"📝 Added {e.Lines.Count} lines, total in buffer: {_activeCombatLines.Count}");
                 Console.WriteLine($"📝 Added {e.Lines.Count} lines, total in buffer: {_activeCombatLines.Count}");
 
@@ -371,6 +374,15 @@ namespace StoDamageMeter.ViewModels
             }
 
             _logger.LogInformation($"Finalizing combat: {_activeCombatLines.Count} lines");
+
+            // Finaler Flush um ALLE Zeilen zu erfassen
+            _logger.LogInformation($"🔄 Triggering final FileWatcher flush (current lines: {_activeCombatLines.Count})...");
+            _fileWatcher.FlushPendingLines();
+
+            // Kurz warten (100ms) damit Flush-Event verarbeitet werden kann
+            await Task.Delay(100);
+
+            _logger.LogInformation($"📊 Final combat lines count after flush: {_activeCombatLines.Count}");
 
             try
             {
