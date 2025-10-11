@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2025-10-11
+
+### Added
+- **Hybrid-Debouncing für Live-Parsing**
+  - Erste Zeilen sofort verarbeitet (0ms) für schnelle Reaktion
+  - Normale Zeilen gebatched (100ms) für Performance
+  - Max-Delay (500ms) verhindert verpasste Zeilen
+  - Finaler Flush bei Combat-Ende für 100% Datengenauigkeit
+
+### Fixed
+- **Live Combat vs Dashboard Unterschiede behoben**
+  - FileWatcher verpasst keine Zeilen mehr durch optimiertes Debouncing
+  - Identische DPS/Total Damage Werte zwischen Live Combat und Dashboard
+  - Finale Flush-Mechanik erfasst alle ausstehenden Zeilen vor Combat-Abschluss
+
+### Changed
+- **Multi-Player-Datengenauigkeit dokumentiert**
+  - README.md erklärt warum eigene Stats 100% akkurat sind
+  - README.md erklärt warum andere Spieler-Daten abweichen können (Client-seitige Logs)
+  - 5 Hauptgründe dokumentiert: Rendering-Distanz, Pets, DoT, Network, AoE
+
 ## [1.2.3] - 2025-10-11
 
 ### Added

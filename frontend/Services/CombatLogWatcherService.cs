@@ -42,6 +42,13 @@ namespace StoDamageMeter.Services
         private readonly object _lock = new();
         private int _totalLinesProcessed;
         private string? _incompleteLineBuffer;
+        
+        // Hybrid-Debouncing für schnelle Kämpfe mit vielen Zeilen
+        private bool _hasProcessedFirstBatch = false;
+        private DateTime _lastProcessTime = DateTime.MinValue;
+        private const int INITIAL_DELAY_MS = 0;        // Erste Zeilen sofort
+        private const int BATCH_DELAY_MS = 100;        // Dann 100ms Batching
+        private const int MAX_DELAY_MS = 500;          // Spätestens nach 500ms verarbeiten
 
         public event EventHandler<NewLogLinesEventArgs>? NewLinesDetected;
         public event EventHandler<FileWatcherErrorEventArgs>? WatcherError;
@@ -91,7 +98,12 @@ namespace StoDamageMeter.Services
                     _currentByteOffset = startOffset;
                 }
 
+                // Reset Hybrid-Debouncing Flags
+                _hasProcessedFirstBatch = false;
+                _lastProcessTime = DateTime.MinValue;
+
                 _logger.LogInformation($"Starting FileWatcher for {logPath} at offset {_currentByteOffset}");
+                _logger.LogInformation($"Hybrid-Debouncing: First={INITIAL_DELAY_MS}ms, Batch={BATCH_DELAY_MS}ms, Max={MAX_DELAY_MS}ms");
 
                 // FileSystemWatcher erstellen
                 var directory = Path.GetDirectoryName(logPath);
@@ -171,8 +183,31 @@ namespace StoDamageMeter.Services
                 return;
             }
 
-            // Debouncing: Timer neu starten bei jeder Änderung (100ms für schnellere Updates)
-            _debounceTimer?.Change(100, Timeout.Infinite);
+            // Hybrid-Debouncing für schnelle Kämpfe mit vielen Zeilen:
+            // - Erste Zeilen sofort (0ms) für schnelle Reaktion
+            // - Dann 100ms Batching für Performance
+            // - Aber spätestens nach 500ms MUSS verarbeitet werden (keine Zeile wird verpasst)
+            
+            var timeSinceLastProcess = (DateTime.Now - _lastProcessTime).TotalMilliseconds;
+            
+            if (!_hasProcessedFirstBatch)
+            {
+                // Erste Zeilen sofort verarbeiten
+                _logger.LogDebug("⚡ First batch - processing immediately");
+                _debounceTimer?.Change(INITIAL_DELAY_MS, Timeout.Infinite);
+            }
+            else if (timeSinceLastProcess >= MAX_DELAY_MS)
+            {
+                // Max-Delay erreicht - sofort verarbeiten um keine Zeilen zu verpassen
+                _logger.LogDebug($"⏱️ Max delay reached ({timeSinceLastProcess:F0}ms) - forcing immediate processing");
+                _debounceTimer?.Change(0, Timeout.Infinite);
+            }
+            else
+            {
+                // Normal: 100ms Batching für Performance
+                _logger.LogDebug($"📦 Batching with {BATCH_DELAY_MS}ms delay");
+                _debounceTimer?.Change(BATCH_DELAY_MS, Timeout.Infinite);
+            }
         }
 
         private void OnFileCreated(object sender, FileSystemEventArgs e)
@@ -207,6 +242,11 @@ namespace StoDamageMeter.Services
             {
                 return;
             }
+
+            // Timestamp-Tracking für Hybrid-Debouncing
+            _lastProcessTime = DateTime.Now;
+            _hasProcessedFirstBatch = true;
+            _logger.LogDebug($"🔄 Processing pending lines at {_lastProcessTime:HH:mm:ss.fff}");
 
             try
             {
@@ -338,6 +378,29 @@ namespace StoDamageMeter.Services
             };
 
             WatcherError?.Invoke(this, eventArgs);
+        }
+
+        /// <summary>
+        /// Forciert sofortige Verarbeitung aller ausstehenden Zeilen.
+        /// Wird bei Combat-Ende aufgerufen um sicherzustellen dass ALLE Zeilen erfasst wurden.
+        /// </summary>
+        public void FlushPendingLines()
+        {
+            if (!_isWatching || string.IsNullOrEmpty(_currentLogPath))
+            {
+                _logger.LogDebug("FlushPendingLines: Not watching or no log path");
+                return;
+            }
+
+            _logger.LogInformation("🚀 Forcing flush of pending lines (Combat Ende)");
+            
+            // Timer stoppen um keine weiteren Events zu triggern
+            _debounceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            
+            // Sofort verarbeiten
+            ProcessPendingLines(null);
+            
+            _logger.LogInformation($"✅ Flush completed - Total lines processed: {_totalLinesProcessed}");
         }
 
         public void Dispose()

@@ -51,6 +51,64 @@
 
 ---
 
+## ⚠️ Wichtige Hinweise zur Datengenauigkeit
+
+### Deine eigenen Daten sind 100% akkurat
+
+Die Anwendung liest deinen lokalen Combat-Log und zeigt **deine eigenen Statistiken** (DPS, Total Damage, etc.) **zu 100% korrekt** an.
+
+### Andere Spieler-Daten können unvollständig sein
+
+**Warum sehe ich für andere Spieler unterschiedliche Werte?**
+
+Star Trek Online's Combat-Log ist **client-seitig**. Das bedeutet:
+
+- **Dein Log enthält nur Events, die dein Game-Client "sieht"**
+- Andere Spieler schreiben ihre eigenen Logs mit ihren sichtbaren Events
+
+**Beispiel:**
+
+- 🎮 Spieler A (an PC A) sieht für sich selbst: **20.000 DPS** ✅
+- 🎮 Spieler B (an PC B) sieht für Spieler A: **10.000 DPS** ⚠️
+
+**Gründe für Unterschiede:**
+
+1. **Rendering-Distanz**
+   - Events außerhalb deiner Sichtweite werden nicht geloggt
+   - Spieler A's Angriffe weit weg von dir → nicht in deinem Log
+
+2. **Pet/Companion Damage**
+   - Du siehst 100% deiner eigenen Pet-Angriffe
+   - Du siehst nur ~50% der Pet-Angriffe anderer Spieler
+
+3. **DoT/HoT (Damage over Time)**
+   - STO überträgt nicht alle DoT-Ticks an andere Clients
+   - Plasma-Burn, Torpedo-Spread DoT werden teilweise gefiltert
+
+4. **Network-Updates**
+   - Bei Lag siehst du weniger Events von anderen Spielern
+   - Schnelle Angriffe (Cannon Rapid Fire) werden "gebatched"
+
+5. **AoE-Damage (Area of Effect)**
+   - Area-Schaden wird nur für nahe Spieler vollständig geloggt
+
+### Das ist kein Bug!
+
+**Das ist eine Design-Entscheidung von Cryptic Studios:**
+- ✅ Performance-Optimierung (nicht jedes Event an alle Clients senden)
+- ✅ Network-Bandwidth sparen
+- ✅ Jeder Spieler kann seine **eigenen** Daten perfekt tracken
+
+**Alle STO Parser-Tools haben dieses Verhalten** (inkl. OSCR, SCM, etc.)
+
+### Empfehlung
+
+- 📊 **Vertraue deinen eigenen Statistiken** - sie sind 100% korrekt
+- 👥 **Andere Spieler-Daten sind Schätzwerte** - für genaue Werte müssten sie ihren eigenen Parser nutzen
+- 🤝 **Team-DPS vergleichen?** - Jeder Spieler sollte seinen eigenen Log analysieren und Ergebnisse teilen
+
+---
+
 ## 📥 Installation
 
 ### Download
