@@ -252,8 +252,8 @@ if (-not (Test-Path $AppSettingsInApp)) {
 if ($ValidationErrors.Count -gt 0) {
     Write-Host ""
     Write-Host "=== Validation Errors ===" -ForegroundColor Red
-    foreach ($error in $ValidationErrors) {
-        Write-Host "  - $error" -ForegroundColor Red
+    foreach ($validationError in $ValidationErrors) {
+        Write-Host "  - $validationError" -ForegroundColor Red
     }
     throw "Release structure validation failed"
 }
