@@ -99,7 +99,7 @@ ButtonHoverBrush: #B8860B (Gold)
 ### 📁 **Dateien geändert:**
 - `frontend/MainWindow.xaml` - Haupt-UI-Implementierung
 - `frontend/App.xaml.cs` - Dependency Injection Setup
-- `frontend/appsettings.json` - Backend-Konfiguration
+- Backend-Konfiguration ist jetzt hardcoded
 - `frontend/Models/OSCRModels.cs` - Datenmodelle
 - `frontend/Services/OSCRBackendService.cs` - Backend-Integration
 
@@ -309,7 +309,7 @@ ButtonHoverBrush: #B8860B (Gold)
    - Max Combats: 20 (statt 10)
    - Sekunden zwischen Combats: 30 (statt 100)
    - Combat Min Lines: 20 (unverändert)
-   - Alle Settings in `appsettings.json` konfigurierbar
+   - Alle Settings sind jetzt hardcoded
 
 9. **Projekt-Aufräumung**
    - Alle temporären Test-Batch-Dateien gelöscht
@@ -413,7 +413,7 @@ if time_diff > seconds_between_combats:  # >30 Sekunden
 - `frontend/MainWindow.xaml` - ListView statt ItemsControl, Blue Theme
 - `frontend/MainWindow.xaml.cs` - SelectionChanged Event-Handler
 - `frontend/App.xaml` - Star Trek Blue Color-Overrides
-- `frontend/appsettings.json` - Optimierte Combat-Settings (20/30/20)
+- Combat-Settings sind jetzt hardcoded (20/30/20)
 
 **Gelöscht (Cleanup):**
 - `test_backend.bat`, `test_backends.bat`, `test_list_combats.bat`
@@ -458,7 +458,7 @@ NACHHER:
 **Erforderliche Dateien für Verteilung:**
 - `StoDamageMeter.exe` (Frontend)
 - `OSCRBackend.exe` (Backend - standalone)
-- `appsettings.json` (Konfiguration)
+- Konfiguration wurde entfernt (hardcoded)
 - Alle Microsoft.Extensions.*.dll (Dependencies)
 - `Wpf.Ui.dll` (UI-Library)
 
@@ -1977,7 +1977,7 @@ C# Frontend → Python Backend:
      ├── App/                   (257 Dateien)
      │   ├── StoDamageMeter.Core.exe
      │   ├── OSCRBackend.exe
-     │   ├── appsettings.json
+     │   # appsettings.json wurde entfernt
      │   └── [251 DLLs + Runtime]
      └── Language/              (13 Sprachordner)
      ```
@@ -2012,7 +2012,7 @@ C# Frontend → Python Backend:
    - Alles im gleichen Verzeichnis = einfacher
 
 6. **Problemlösungen während der Entwicklung**
-   - **Problem 1:** Backend und appsettings nicht gefunden
+   - **Problem 1:** Backend nicht gefunden
      - **Ursache:** Lagen im Root, Core-App in App/
      - **Lösung:** Alles in App/ verschoben, Launcher setzt WorkingDirectory
    - **Problem 2:** Konsolenfenster beim Launcher-Start
@@ -2366,7 +2366,7 @@ Root/
 ├── App/                       (257 Dateien, 252 MB)
 │   ├── StoDamageMeter.Core.exe
 │   ├── OSCRBackend.exe
-│   ├── appsettings.json
+│   # appsettings.json wurde entfernt
 │   └── [Runtime + DLLs]
 └── Language/                  (13 Sprachordner)
 ```
@@ -2507,7 +2507,7 @@ Root/
      ├── StoDamageMeter.exe      (Frontend mit Debug-Symbolen)
      ├── StoDamageMeter.pdb      (Debug-Symbole)
      ├── OSCRBackend.exe         (Backend)
-     ├── appsettings.json
+     # appsettings.json wurde entfernt
      ├── *.dll                   (Dependencies)
      └── README.txt
      ```

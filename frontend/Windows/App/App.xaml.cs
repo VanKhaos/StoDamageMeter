@@ -1,7 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using Microsoft.Extensions.Configuration;
+﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StoDamageMeter.Services;
@@ -19,12 +16,6 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Konfiguration laden
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
         // Services registrieren
         var services = new ServiceCollection();
         
@@ -34,9 +25,6 @@ public partial class App : Application
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Information);
         });
-
-        // Konfiguration
-        services.AddSingleton<IConfiguration>(configuration);
 
         // OSCR Backend Service
         services.AddSingleton<IOSCRBackendService, OSCRBackendService>();

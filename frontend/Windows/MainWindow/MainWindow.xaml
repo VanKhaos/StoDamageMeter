@@ -21,7 +21,7 @@
         <!-- Import Styles -->
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles/ExpanderStyles.xaml"/>
+                <ResourceDictionary Source="../Styles/ExpanderStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ui:FluentWindow.Resources>
@@ -36,7 +36,7 @@
         <ui:TitleBar 
             Grid.Row="0"
             Title="STO Damage Meter"
-            Icon="Assets/app_icon.png">
+            Icon="../Assets/app_icon.png">
         </ui:TitleBar>
         
         <!-- Main Content Area -->

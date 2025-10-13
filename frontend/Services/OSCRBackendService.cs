@@ -97,7 +97,7 @@ namespace StoDamageMeter.Services
 
         public event EventHandler<CombatAnalysisProgressEventArgs>? AnalysisProgress;
 
-        public OSCRBackendService(IConfiguration configuration, ILogger<OSCRBackendService> logger)
+        public OSCRBackendService(ILogger<OSCRBackendService> logger)
         {
             _logger = logger;
             
@@ -105,7 +105,7 @@ namespace StoDamageMeter.Services
             // BaseDirectory ist z.B.: D:\Projekte\StoDamageMeter\Debug\
             // Wir müssen 4 Ebenen hoch zum Projekt-Root
             var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var backendFileName = configuration["OSCRBackendPath"] ?? "OSCRBackend.exe";
+            var backendFileName = "OSCRBackend.exe";
             
             // 1. Versuch: Backend im gleichen Verzeichnis wie die .exe (Release/Publish)
             var backendPathSameDir = Path.Combine(appDirectory, backendFileName);
