@@ -81,17 +81,17 @@
 
 ```powershell
 # 1. Release bauen
-.\create_release.ps1 -Version "1.1.1"
+.\scripts\create_release.ps1 -Version "1.1.1"
 
 # 2. ZIP erstellen
-.\create_release_zip.ps1 -Version "1.1.1"
+.\scripts\create_release_zip.ps1 -Version "1.1.1"
 ```
 
 ### Oder alles auf einmal:
 ```powershell
 # Release bauen UND ZIP erstellen
-.\create_release.ps1 -Version "1.1.1"
-.\create_release_zip.ps1 -Version "1.1.1"
+.\scripts\create_release.ps1 -Version "1.1.1"
+.\scripts\create_release_zip.ps1 -Version "1.1.1"
 ```
 
 ---
@@ -100,8 +100,8 @@
 
 Vor der Verteilung prüfen:
 
-- [ ] Release-Build erfolgreich (`create_release.ps1` lief ohne Fehler)
-- [ ] ZIP-Datei erstellt (`create_release_zip.ps1` lief ohne Fehler)
+- [ ] Release-Build erfolgreich (`scripts\create_release.ps1` lief ohne Fehler)
+- [ ] ZIP-Datei erstellt (`scripts\create_release_zip.ps1` lief ohne Fehler)
 - [ ] **Test auf einem anderen PC** (wichtig!)
   - [ ] ZIP entpacken
   - [ ] StoDamageMeter.exe starten

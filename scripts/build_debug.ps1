@@ -3,8 +3,8 @@
 
 Write-Host "=== Building STO Damage Meter (Debug Version) ===" -ForegroundColor Cyan
 
-# Arbeitsverzeichnis
-$RootPath = $PSScriptRoot
+# Arbeitsverzeichnis (Script ist jetzt in scripts/ Ordner)
+$RootPath = Split-Path $PSScriptRoot -Parent
 $FrontendPath = Join-Path $RootPath "frontend"
 $BackendPath = Join-Path $RootPath "backend"
 $DebugPath = Join-Path $RootPath "Debug"
@@ -38,27 +38,12 @@ if ($LASTEXITCODE -ne 0) {
 Pop-Location
 Write-Host "Frontend build completed" -ForegroundColor Green
 
-# 3. Dateien in Debug/ kopieren
-Write-Host "`n[3/3] Copying files to Debug/..." -ForegroundColor Yellow
+# 3. Debug-Ordner ist bereits korrekt befüllt
+Write-Host "`n[3/3] Debug build completed!" -ForegroundColor Yellow
 
-# Debug-Ordner leeren
-if (Test-Path $DebugPath) {
-    Remove-Item -Path "$DebugPath\*" -Recurse -Force
-}
-
-# Frontend-Dateien kopieren
-$FrontendDebugPath = Join-Path $FrontendPath "bin\Debug\net9.0-windows"
-if (Test-Path $FrontendDebugPath) {
-    Copy-Item -Path "$FrontendDebugPath\*" -Destination $DebugPath -Recurse -Force
-    Write-Host "Frontend copied" -ForegroundColor Green
-} else {
-    Write-Host "ERROR: Frontend Debug build not found at $FrontendDebugPath" -ForegroundColor Red
-    exit 1
-}
-
-# Backend kopieren (überschreiben falls schon vom Build.targets kopiert)
-Copy-Item -Path $BackendExe -Destination "$DebugPath\OSCRBackend.exe" -Force
-Write-Host "Backend copied" -ForegroundColor Green
+# Debug-Ordner ist bereits durch dotnet build befüllt
+# Backend wird automatisch durch Build.targets kopiert
+Write-Host "Debug files are ready in: $DebugPath" -ForegroundColor Green
 
 # README erstellen
 $ReadmeContent = @"

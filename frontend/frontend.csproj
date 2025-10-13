@@ -14,6 +14,9 @@
   <!-- Debug: Mit Konsole (für Logs) -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <OutputType>Exe</OutputType>
+    <OutputPath>..\Debug\</OutputPath>
+    <BaseOutputPath>..\Debug\</BaseOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <!-- Release: Ohne Konsole -->
@@ -44,6 +47,7 @@
   <!-- Application Icon -->
   <ItemGroup>
     <Resource Include="Assets\app_icon.ico" />
+    <Resource Include="Assets\app_icon.png" />
   </ItemGroup>
 
   <!-- Build-Targets für Backend-Integration importieren -->

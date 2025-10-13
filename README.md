@@ -1,7 +1,7 @@
 # STO Damage Meter
 
 <div align="center">
-  <img src="frontend/Assets/app_icon.png" alt="STO Damage Meter Icon" width="128" height="128">
+  <img src="DPS_Meter_Logo_White.png" alt="STO Damage Meter Icon" width="128" height="128">
   
   <p><strong>Ein moderner Combat Parser für Star Trek Online</strong></p>
   
@@ -237,7 +237,7 @@ StoDamageMeter/
 
 **Debug-Build:**
 ```powershell
-.\build_debug.ps1
+.\scripts\build_debug.ps1
 ```
 - Output: `Debug/`
 - Mit Konsole für Logs
@@ -245,7 +245,7 @@ StoDamageMeter/
 
 **Release-Build:**
 ```powershell
-.\create_release.ps1
+.\scripts\create_release.ps1
 ```
 - Output: `Releases/StoDamageMeter_v1.x.x/`
 - Ohne Konsole
@@ -253,7 +253,7 @@ StoDamageMeter/
 
 **Release-ZIP:**
 ```powershell
-.\create_release_zip.ps1 -Version "1.2.0"
+.\scripts\create_release_zip.ps1 -Version "1.2.0"
 ```
 
 ### Technologie-Stack

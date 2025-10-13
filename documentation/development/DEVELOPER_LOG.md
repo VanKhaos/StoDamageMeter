@@ -1992,7 +1992,7 @@ C# Frontend → Python Backend:
      - Sprachordner → `Language/`
    - Benennt `StoDamageMeter.exe` → `StoDamageMeter.Core.exe` um
 
-4. **create_release.ps1 komplett überarbeitet**
+4. **scripts\create_release.ps1 komplett überarbeitet**
    - 7-Schritte Build-Prozess (vorher 6):
      1. Cleaning old release files
      2. Checking Python Backend
@@ -2084,7 +2084,7 @@ static int Main(string[] args)
 **Aktualisiert:**
 - `frontend/Build.targets` - ReorganizeReleaseStructure Target
 - `frontend/frontend.csproj` - GenerateAssemblyInfo=false
-- `create_release.ps1` - 7-Schritte Build-Prozess
+- `scripts\create_release.ps1` - 7-Schritte Build-Prozess
 
 ### 💡 **Lessons Learned:**
 
@@ -2253,8 +2253,8 @@ private async Task StartCoreApplication(string[] args)
 - `Launcher/Launcher.csproj` - EnableDefaultApplicationDefinition=false
 
 **Unverändert:**
-- `create_release.ps1` - Funktioniert mit neuem Launcher
-- `create_release_zip.ps1` - Funktioniert automatisch
+- `scripts\create_release.ps1` - Funktioniert mit neuem Launcher
+- `scripts\create_release_zip.ps1` - Funktioniert automatisch
 
 ### 🚨 **Gelöste Probleme:**
 
@@ -2490,7 +2490,7 @@ Root/
      - `Players` von `Dictionary` zu `List` geändert für einfachere Sortierung
 
 8. **Debug-Build-System erstellt**
-   - **Neues Script:** `build_debug.ps1` im Root-Verzeichnis
+   - **Neues Script:** `scripts\build_debug.ps1` im Scripts-Verzeichnis
    - **Funktionen:**
      - Prüft Backend-Existenz (baut falls nötig)
      - Baut Frontend im Debug-Modus
@@ -2598,7 +2598,7 @@ def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seco
 - `frontend/ViewModels/LiveCombatViewModel.cs` - Live-Combat-ViewModel (~320 Zeilen)
 - `frontend/Components/LiveCombat/LiveCombatView.xaml` - UI-Component
 - `frontend/Components/LiveCombat/LiveCombatView.xaml.cs` - Code-Behind
-- `build_debug.ps1` - Debug-Build-Script (~80 Zeilen)
+- `scripts\build_debug.ps1` - Debug-Build-Script (~80 Zeilen)
 - `Debug/` - Neuer Ordner für Debug-Builds
 
 **Aktualisiert:**
@@ -2681,7 +2681,7 @@ def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seco
 - CombatLogWatcherService: ~230 Zeilen
 - LiveCombatViewModel: ~320 Zeilen
 - LiveCombatView: ~160 Zeilen (XAML + Code-Behind)
-- build_debug.ps1: ~80 Zeilen
+- scripts\build_debug.ps1: ~80 Zeilen
 - **Gesamt:** ~1190 Zeilen neuer Code
 
 **Geänderte Dateien:** 11
@@ -2699,7 +2699,7 @@ def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seco
 
 **Vorteile:**
 - Zentrale Debug-Version im `Debug/` Ordner
-- Ein Befehl: `.\build_debug.ps1`
+- Ein Befehl: `.\scripts\build_debug.ps1`
 - Debug-Symbole (.pdb) für besseres Debugging
 - README.txt mit Build-Zeit
 - Getrennt von Release-Builds (`Deploy/`, `Releases/`)
@@ -2707,7 +2707,7 @@ def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seco
 **Verwendung:**
 ```powershell
 # Debug-Version erstellen
-.\build_debug.ps1
+.\scripts\build_debug.ps1
 
 # Debug-Version starten
 .\Debug\StoDamageMeter.exe
@@ -3575,7 +3575,7 @@ combat_type = current_combat_type if current_combat_type else 'Space'
 
 3. **Release-Script Log-Cleanup (PowerShell)**
    - **Problem:** Log-Dateien wurden im Release-Package mitgeliefert
-   - **Lösung:** `create_release.ps1` entfernt alle `*.log` Dateien vor ZIP-Erstellung
+   - **Lösung:** `scripts\create_release.ps1` entfernt alle `*.log` Dateien vor ZIP-Erstellung
    - **Code:**
      ```powershell
      # Log-Dateien entfernen
@@ -3625,7 +3625,7 @@ combat_type = current_combat_type if current_combat_type else 'Space'
 - `backend/working_oscr_backend.py` - RotatingFileHandler implementiert
 - `frontend/MainWindow.xaml.cs` - Debug-Log-Rotation + #if DEBUG
 - `frontend/Services/OSCRBackendService.cs` - Debug-Log-Rotation + #if DEBUG
-- `create_release.ps1` - Log-Cleanup vor ZIP-Erstellung
+- `scripts\create_release.ps1` - Log-Cleanup vor ZIP-Erstellung
 - `.gitignore` - Log-Pattern hinzugefügt
 - `RELEASE_GUIDE.md` - Log-Rotation dokumentiert
 
@@ -3691,7 +3691,7 @@ combat_type = current_combat_type if current_combat_type else 'Space'
 - Backend: ~20 Zeilen (Import + Handler-Konfiguration)
 - Frontend MainWindow: ~25 Zeilen (Rotation-Logik + #if DEBUG)
 - Frontend OSCRBackendService: ~30 Zeilen (Rotation-Logik + #if DEBUG)
-- create_release.ps1: ~10 Zeilen (Log-Cleanup)
+- scripts\create_release.ps1: ~10 Zeilen (Log-Cleanup)
 - .gitignore: 6 Zeilen
 - RELEASE_GUIDE.md: ~15 Zeilen
 

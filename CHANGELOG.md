@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Endanwender sind jetzt geschützt vor Festplatz-Problemen
   - Logs rotieren automatisch bei Erreichen der Grenze
 - **Release-ZIP-Größe:** Log-Dateien werden nicht mehr ins Release-Package inkludiert
-  - `create_release.ps1` entfernt alle Logs vor ZIP-Erstellung
+  - `scripts\create_release.ps1` entfernt alle Logs vor ZIP-Erstellung
   - Kleinere und sauberere Release-Pakete
 
 ### Changed

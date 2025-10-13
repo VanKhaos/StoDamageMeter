@@ -102,7 +102,7 @@ namespace StoDamageMeter.Services
             _logger = logger;
             
             // Backend-Pfad relativ zum Deploy-Verzeichnis
-            // BaseDirectory ist z.B.: D:\Projekte\StoDamageMeter\frontend\bin\Debug\net9.0-windows\
+            // BaseDirectory ist z.B.: D:\Projekte\StoDamageMeter\Debug\
             // Wir müssen 4 Ebenen hoch zum Projekt-Root
             var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var backendFileName = configuration["OSCRBackendPath"] ?? "OSCRBackend.exe";

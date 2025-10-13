@@ -35,10 +35,10 @@ Releases/                              ← Release-Ordner
 
 ```powershell
 # 1. Release bauen
-.\create_release.ps1 -Version "1.1.1"
+.\scripts\create_release.ps1 -Version "1.1.1"
 
 # 2. ZIP erstellen (landet automatisch hier)
-.\create_release_zip.ps1 -Version "1.1.1"
+.\scripts\create_release_zip.ps1 -Version "1.1.1"
 ```
 
 Die neue ZIP-Datei wird automatisch in diesem Ordner erstellt!

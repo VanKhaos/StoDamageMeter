@@ -112,10 +112,10 @@ cd ..
 
 ```powershell
 # Release-Ordner erstellen
-.\create_release.ps1 -Version "1.2.3"
+.\scripts\create_release.ps1 -Version "1.2.3"
 
 # ZIP-Datei erstellen
-.\create_release_zip.ps1 -Version "1.2.3"
+.\scripts\create_release_zip.ps1 -Version "1.2.3"
 ```
 
 **Output:**
@@ -277,8 +277,8 @@ Vor dem Release:
 - [ ] Launcher-Version aktualisiert (`Launcher/SplashScreen.xaml`)
 - [ ] GitHub Pages Version aktualisiert (`docs/index.html`)
 - [ ] README.md Version-Badge aktualisiert
-- [ ] Release gebaut (`create_release.ps1`)
-- [ ] Release-ZIP erstellt (`create_release_zip.ps1`)
+- [ ] Release gebaut (`scripts\create_release.ps1`)
+- [ ] Release-ZIP erstellt (`scripts\create_release_zip.ps1`)
 - [ ] Release getestet (Anwendung funktioniert)
 - [ ] Git committed & gepusht (beide Branches)
 
@@ -309,7 +309,7 @@ Nach dem Release:
 taskkill /F /IM StoDamageMeter.exe
 
 # Erneut versuchen
-.\create_release_zip.ps1 -Version "1.2.3"
+.\scripts\create_release_zip.ps1 -Version "1.2.3"
 ```
 
 ### Problem: Git-Merge-Konflikt
@@ -356,11 +356,11 @@ git diff main version/1.2
 Remove-Item -Path "Releases\StoDamageMeter_v1.2.3\App\logs\*.log" -Force
 
 # ZIP neu erstellen
-.\create_release_zip.ps1 -Version "1.2.3"
+.\scripts\create_release_zip.ps1 -Version "1.2.3"
 ```
 
 **Prävention:** 
-- Das `create_release.ps1` Script entfernt Logs automatisch ab Version 1.2.2+
+- Das `scripts\create_release.ps1` Script entfernt Logs automatisch ab Version 1.2.2+
 - Ab Version 1.2.3: Log-Rotation implementiert (automatisch begrenzte Log-Größen)
   - Backend: max 10 MB pro Log, 3 Backup-Dateien
   - Frontend Debug-Logs: nur in DEBUG-Builds, max 5-10 MB mit Rotation
@@ -383,8 +383,8 @@ Remove-Item -Path "Releases\StoDamageMeter_v1.2.3\App\logs\*.log" -Force
 .\update_page_version.ps1
 
 # Release bauen
-.\create_release.ps1 -Version "1.2.3"
-.\create_release_zip.ps1 -Version "1.2.3"
+.\scripts\create_release.ps1 -Version "1.2.3"
+.\scripts\create_release_zip.ps1 -Version "1.2.3"
 
 # Git Workflow
 git add .

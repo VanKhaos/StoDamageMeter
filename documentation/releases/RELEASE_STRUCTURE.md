@@ -1,8 +1,9 @@
-# 📦 STO Damage Meter v1.1.5 - Saubere Release Struktur
+# 📦 STO Damage Meter - Release Struktur
 
-**Build-Datum:** 10.10.2025  
-**Gesamtgröße:** ~160.96 MB (entpackt) | ~74.07 MB (ZIP)  
-**Anzahl Dateien:** 415
+**Aktuelle Version:** v1.2.4+  
+**Build-Datum:** 13.10.2025  
+**Gesamtgröße:** ~170 MB (entpackt) | ~123 MB (ZIP)  
+**Anzahl Dateien:** 441
 
 ---
 
@@ -11,26 +12,27 @@
 Das Root-Verzeichnis enthält jetzt nur noch die wichtigsten Dateien:
 
 ```
-StoDamageMeter_v1.1.5/
-├── 📱 StoDamageMeter.exe          (~156 KB - Launcher)
-├── 🔧 OSCRBackend.exe             (~7.7 MB - Python Backend)
-├── ⚙️ appsettings.json            (Konfiguration)
+StoDamageMeter_v1.2.4/
+├── 📱 StoDamageMeter.exe          (~12 MB - Launcher)
 ├── 📄 README.txt                  (Benutzeranleitung)
-├── 📁 logs/                       (Log-Dateien)
+├── 📄 CHANGELOG.txt               (Versionshistorie)
+├── 📁 Assets/                     (App-Icon)
+│   └── app_icon.png
 ├── 📁 App/                        (Hauptanwendung + alle DLLs)
-└── 📁 Language/                   (Sprachressourcen)
+├── 📁 Language/                   (Sprachressourcen)
+└── 📁 [Einige WPF-DLLs im Root]   (WPF-Core-Dateien)
 ```
 
-### ✨ Vorteile der neuen Struktur
+### ✨ Vorteile der aktuellen Struktur
 
-- ✅ **Übersichtliches Root-Verzeichnis** - Nur 4 Dateien + 3 Ordner
+- ✅ **Übersichtliches Root-Verzeichnis** - Nur 2 Dateien + 3 Ordner + wenige DLLs
 - ✅ **Schneller Start** - Benutzer sehen sofort welche EXE gestartet werden muss
-- ✅ **Cleanes Design** - Keine DLL-Flut mehr im Root
+- ✅ **Cleanes Design** - Die meisten DLLs sind im App/ Ordner versteckt
 - ✅ **Professionell** - Ähnlich wie kommerzielle Software strukturiert
 
 ---
 
-## 📂 App/ Verzeichnis (255 Dateien)
+## 📂 App/ Verzeichnis (257 Dateien)
 
 Enthält die gesamte .NET-Anwendung mit allen Bibliotheken:
 
@@ -40,6 +42,8 @@ StoDamageMeter.Core.exe         # Die eigentliche WPF-Anwendung
 StoDamageMeter.dll              # Anwendungs-Bibliothek
 StoDamageMeter.deps.json        # Dependency-Informationen
 StoDamageMeter.runtimeconfig.json  # Runtime-Konfiguration
+OSCRBackend.exe                 # Python Backend (7.7 MB)
+appsettings.json                # Konfiguration
 createdump.exe                  # .NET Crash Dump Tool
 ```
 
@@ -118,14 +122,15 @@ Jeder Sprachordner enthält 12 Resource-DLLs:
 
 | Kategorie | Anzahl | Ort |
 |-----------|--------|-----|
-| **Hauptdateien** | 4 | Root |
+| **Hauptdateien** | 2 | Root |
 | **Ordner** | 3 | Root |
-| **Core-Anwendung** | 5 | App/ |
+| **WPF-Core-DLLs** | 6 | Root |
+| **Core-Anwendung** | 7 | App/ |
 | **System DLLs** | ~250 | App/ |
 | **Sprachordner** | 13 | Language/ |
 | **Resource DLLs** | 156 (12 × 13) | Language/*/  |
-| **Log-Dateien** | 0-4 | logs/ |
-| **Gesamtdateien** | **415** | |
+| **Assets** | 1 | Assets/ |
+| **Gesamtdateien** | **441** | |
 
 ---
 
@@ -133,7 +138,7 @@ Jeder Sprachordner enthält 12 Resource-DLLs:
 
 ### Launcher (StoDamageMeter.exe)
 
-Der Launcher ist eine kleine (~156 KB), optimierte Single-File-Anwendung:
+Der Launcher ist eine optimierte Single-File-Anwendung:
 
 **Funktionen:**
 1. Prüft ob `App\StoDamageMeter.Core.exe` existiert
@@ -143,7 +148,7 @@ Der Launcher ist eine kleine (~156 KB), optimierte Single-File-Anwendung:
 5. Wartet auf Core-App und gibt Exit-Code zurück
 
 **Vorteile:**
-- Sehr klein (trimmed + single-file)
+- Optimierte Größe (~12 MB)
 - Schneller Start
 - Benutzer starten immer die richtige Datei
 - Professioneller Eindruck
@@ -175,17 +180,17 @@ Root/ (414 Dateien)
 
 **Problem:** Unübersichtlich, zu viele Dateien im Root
 
-### ✅ Neue Struktur (v1.1.5)
+### ✅ Aktuelle Struktur (v1.2.4+)
 
 ```
-Root/ (7 Einträge)
+Root/ (7 Einträge + wenige DLLs)
 ├── StoDamageMeter.exe          (Launcher)
-├── OSCRBackend.exe
-├── appsettings.json
 ├── README.txt
-├── logs/
+├── CHANGELOG.txt
+├── Assets/                     (App-Icon)
 ├── App/                        (alle DLLs versteckt)
-└── Language/                   (Sprachen organisiert)
+├── Language/                   (Sprachen organisiert)
+└── [6 WPF-Core-DLLs]           (nur die wichtigsten)
 ```
 
 **Vorteil:** Übersichtlich, professionell, cleanes Design!
@@ -198,29 +203,30 @@ Root/ (7 Einträge)
 
 1. **Launcher bauen:**
    - Single-File Publish
-   - Trimmed (nur benötigte Code)
-   - ~156 KB Größe
+   - Optimiert für WPF-Kompatibilität
+   - ~12 MB Größe
 
 2. **Frontend bauen:**
    - Self-Contained Publish
    - Alle DLLs inkludiert
    - Build.targets verschiebt automatisch:
      - Alle DLLs → App/
-     - Alle EXEs → App/ (außer OSCRBackend.exe)
+     - Alle EXEs → App/ (außer Launcher)
      - Core-App → App/StoDamageMeter.Core.exe
      - Sprachordner → Language/
+     - Assets → Assets/
 
 3. **Release zusammenstellen:**
    - Launcher als StoDamageMeter.exe im Root
-   - Backend im Root
-   - Konfiguration im Root
+   - Backend im App/ Ordner
+   - Konfiguration im App/ Ordner
    - Alles andere organisiert in Unterordnern
 
 ### Automatische Reorganisation
 
 Die Datei `frontend/Build.targets` enthält ein MSBuild-Target `ReorganizeReleaseStructure`:
 - Läuft nach dem Publish
-- Erstellt App/ und Language/ Ordner
+- Erstellt App/, Language/ und Assets/ Ordner
 - Verschiebt Dateien automatisch
 - Benennt Core-App um
 
@@ -229,7 +235,7 @@ Die Datei `frontend/Build.targets` enthält ein MSBuild-Target `ReorganizeReleas
 ## 🔧 Systemanforderungen
 
 - **Betriebssystem:** Windows 10/11 (64-bit)
-- **Festplatte:** ~170 MB freier Speicherplatz
+- **Festplatte:** ~180 MB freier Speicherplatz
 - **RAM:** Minimal 2 GB
 - **Keine** .NET Runtime oder Python Installation erforderlich!
 
@@ -266,43 +272,44 @@ StoDamageMeter.exe (Launcher)
 ### Neues Release erstellen:
 
 ```powershell
-# 1. Release bauen (mit neuer Struktur)
-.\create_release.ps1 -Version "1.1.6"
+# 1. Release bauen (mit aktueller Struktur)
+.\scripts\create_release.ps1 -Version "1.2.5"
 
 # 2. ZIP erstellen
-.\create_release_zip.ps1 -Version "1.1.6"
+.\scripts\create_release_zip.ps1 -Version "1.2.5"
 ```
 
-### Neue Dateien im Projekt:
+### Projektstruktur:
 
 ```
-Launcher/                       # Neues Launcher-Projekt
+Launcher/                       # Launcher-Projekt
 ├── Launcher.csproj
 └── Program.cs
 
 frontend/
-├── Build.targets              # Erweitert: ReorganizeReleaseStructure
+├── Build.targets              # ReorganizeReleaseStructure
 └── frontend.csproj            # GenerateAssemblyInfo=false
 
-create_release.ps1             # Aktualisiert: Baut Launcher
+scripts\create_release.ps1     # Baut Launcher + Frontend
 ```
 
 ---
 
 ## 🎉 Zusammenfassung
 
-**v1.1.5 bringt:**
+**Aktuelle Struktur bringt:**
 - ✅ Sauberes, übersichtliches Root-Verzeichnis
 - ✅ Professionelle Launcher-Lösung
 - ✅ Automatische Reorganisation beim Build
 - ✅ Gleiche Funktionalität wie vorher
 - ✅ Bessere Benutzererfahrung
+- ✅ Assets-Ordner für App-Icons
 
 **Größenvergleich:**
 - v1.1.4: ~148 MB (entpackt), ~68 MB (ZIP)
-- v1.1.5: ~161 MB (entpackt), ~74 MB (ZIP)
+- v1.2.4: ~170 MB (entpackt), ~123 MB (ZIP)
 
-**Größenzunahme:** ~13 MB (durch Launcher-Overhead)  
+**Größenzunahme:** ~22 MB (durch .NET 9.0 und erweiterte Features)  
 **Vorteil:** Deutlich bessere Organisation und Benutzerfreundlichkeit!
 
 ---
@@ -311,4 +318,3 @@ create_release.ps1             # Aktualisiert: Baut Launcher
 **Plattform:** Windows x64  
 **Release-Art:** Self-Contained mit Launcher  
 **Komprimierung:** Optimal
-
