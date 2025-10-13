@@ -11,8 +11,8 @@ Write-Host "=== STO Damage Meter - Release Builder ===" -ForegroundColor Cyan
 Write-Host "Version: $Version" -ForegroundColor Green
 Write-Host ""
 
-# Pfade definieren
-$ProjectRoot = $PSScriptRoot
+# Pfade definieren (Script ist in scripts/ Ordner)
+$ProjectRoot = Split-Path $PSScriptRoot -Parent
 $FrontendPath = Join-Path $ProjectRoot "frontend"
 $BackendPath = Join-Path $ProjectRoot "backend"
 $ReleasePath = Join-Path $ProjectRoot "Releases"
