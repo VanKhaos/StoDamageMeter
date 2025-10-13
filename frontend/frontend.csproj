@@ -32,6 +32,14 @@
     <PackageReference Include="WPF-UI" Version="3.0.5" />
   </ItemGroup>
 
+  <!-- WPF Application Definition -->
+  <ItemGroup>
+    <ApplicationDefinition Include="Windows\App\App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+  </ItemGroup>
+
   <!-- Assets ins Output kopieren -->
   <ItemGroup>
     <None Update="Assets\app_icon.png">

@@ -11,7 +11,7 @@
                 <ui:ControlsDictionary />
                 
                 <!-- ✅ Custom Expander Styles für Dashboard und Live Combat -->
-                <ResourceDictionary Source="Styles/ExpanderStyles.xaml"/>
+                <ResourceDictionary Source="../../Styles/ExpanderStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Star Trek Custom Colors -->
