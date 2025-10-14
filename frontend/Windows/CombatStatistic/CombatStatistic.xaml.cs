@@ -66,8 +66,8 @@ namespace StoDamageMeter;
         // Initial Status Check
         _ = CheckBackendStatusAsync();
         
-        // Automatically load log file if one is selected
-        Loaded += async (s, e) => await AutoLoadLogFileAsync();
+        // Load combat list if a log file is already selected
+        Loaded += async (s, e) => await LoadCombatListIfAvailableAsync();
     }
 
 
@@ -198,9 +198,59 @@ namespace StoDamageMeter;
         #endif
     }
 
+    private async Task LoadCombatListIfAvailableAsync()
+    {
+        // Prüfe ob bereits gecachte Daten vorhanden sind
+        if (LandingWindow.CachedCombatData != null && LandingWindow.CachedCombatData.Count > 0)
+        {
+            // Verwende die gecachten Daten
+            await LoadCombatListFromCacheAsync();
+            return;
+        }
+
+        // Falls keine gecachten Daten vorhanden sind, lade sie neu
+        string? logFilePath = LandingWindow.SelectedLogFilePath;
+        
+        if (string.IsNullOrEmpty(logFilePath) || !File.Exists(logFilePath))
+        {
+            return;
+        }
+
+        // Lade die Combat List
+        await LoadCombatListAsync(logFilePath);
+    }
+
+    private async Task LoadCombatListFromCacheAsync()
+    {
+        try
+        {
+            AppendResult($"=== Loading Combat List from Cache ===");
+            AppendResult($"Cached combats: {LandingWindow.CachedCombatData?.Count ?? 0}");
+            
+            if (LandingWindow.CachedCombatData == null || LandingWindow.CachedCombatData.Count == 0)
+            {
+                AppendResult("No cached combat data available");
+                return;
+            }
+
+            // Setze die Combat List mit den gecachten Daten
+            CombatListViewComponent.SetCombats(LandingWindow.CachedCombatData);
+            
+            AppendResult($"✅ Combat list loaded from cache: {LandingWindow.CachedCombatData.Count} combats");
+            
+            // Setze den aktuellen Log-Pfad für Combat-Details
+            _currentLogPath = LandingWindow.SelectedLogFilePath;
+        }
+        catch (Exception ex)
+        {
+            AppendResult($"❌ Error loading combat list from cache: {ex.Message}");
+            _logger.LogError(ex, "Error loading combat list from cache");
+        }
+    }
+
     private async Task AutoLoadLogFileAsync()
     {
-        // Verwende die vom Landing Window ausgewählte Log-Datei
+        // Verwende NUR die vom Landing Window ausgewählte Log-Datei
         string? logFilePath = LandingWindow.SelectedLogFilePath;
         
         if (string.IsNullOrEmpty(logFilePath) || !File.Exists(logFilePath))
@@ -710,7 +760,6 @@ namespace StoDamageMeter;
         private void PinButton_Click(object sender, RoutedEventArgs e)
         {
             _isPinned = !_isPinned;
-            this.Topmost = _isPinned;
             
             // Update icon
             PinIcon.Text = _isPinned ? "📍" : "📌";

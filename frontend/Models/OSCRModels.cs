@@ -125,6 +125,9 @@ namespace StoDamageMeter.Models
 
         [JsonPropertyName("type")]
         public string? Type { get; set; }
+
+        [JsonPropertyName("duration")]
+        public double Duration { get; set; }
         
         /// <summary>
         /// Icon basierend auf Combat-Type (Space oder Ground)
@@ -134,6 +137,21 @@ namespace StoDamageMeter.Models
             "Ground" => "🏃",
             _ => "🚀" // Default ist Space
         };
+
+        /// <summary>
+        /// Formatierte Kampfdauer als String (z.B. "2:34")
+        /// </summary>
+        public string DurationFormatted
+        {
+            get
+            {
+                if (Duration <= 0) return "0:00";
+                
+                var minutes = (int)(Duration / 60);
+                var seconds = (int)(Duration % 60);
+                return $"{minutes}:{seconds:D2}";
+            }
+        }
     }
 
     /// <summary>

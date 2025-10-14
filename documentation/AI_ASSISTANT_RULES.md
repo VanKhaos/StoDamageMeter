@@ -13,6 +13,7 @@
 - **NIEMALS** Breaking Changes ohne vorherige Absprache
 - **NIEMALS** Dependencies ohne Begründung hinzufügen
 - **NIEMALS** Debug-Logs nach erfolgreichem Fixing stehen lassen
+- **NIEMALS** manuell vom User erstellten oder entfernten Code rückgängig machen oder löschen
 
 ## ✅ Was ich tun soll
 
@@ -30,6 +31,7 @@
 - **IMMER** Error Handling implementieren
 - **IMMER** Debug-Logs nach erfolgreichem Feature-Fix entfernen
 - **IMMER** dotnet build nur bei wichtigen Code-Änderungen ausführen
+- **IMMER** manuell vom User erstellten oder entfernten Code nur überprüfen, nicht ändern
 
 ### Dokumentation
 - **IMMER** detaillierte Kommentare schreiben
@@ -177,4 +179,4 @@
 ---
 
 **Letzte Aktualisierung**: 2025-10-14
-**Version**: 1.2
+**Version**: 1.3

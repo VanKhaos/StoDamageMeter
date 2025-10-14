@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['D:\\Projekte\\StoDamageMeter\\backend\\working_oscr_backend.py'],
+    ['working_oscr_backend.py'],
     pathex=[],
     binaries=[],
     datas=[],

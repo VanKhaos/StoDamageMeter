@@ -74,7 +74,7 @@ namespace StoDamageMeter
                 // Load combat data
                 var response = await backendService.GetAvailableCombatsWithProgressAsync(
                     SelectedLogFilePath, 
-                    50 // maxCombats
+                    30 // maxCombats - neueste 30 Combats
                 );
                 
                 // Small delay for visual effect

@@ -25,42 +25,64 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
                             
-                            <!-- Icon -->
-                            <TextBlock Grid.Column="0"
-                                       Text="{Binding Icon}" 
-                                       FontSize="16"
-                                       Foreground="#5B9BD5"
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center"/>
+                            <!-- First Row: Date and Duration -->
+                            <Grid Grid.Row="0" Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Date -->
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Date}" 
+                                           Foreground="White"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                                
+                                <!-- Duration -->
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding DurationFormatted}" 
+                                           Foreground="#5B9BD5"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
                             
-                            <!-- Date -->
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding Date}" 
-                                       Foreground="White"
-                                       FontSize="12"
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Center"/>
-                            
-                            <!-- Time -->
-                            <TextBlock Grid.Column="2"
-                                       Text="{Binding Time}" 
-                                       Foreground="#B0B0B0"
-                                       FontSize="12"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"/>
+                            <!-- Second Row: Time and Combat Type -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Time -->
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Time}" 
+                                           Foreground="#B0B0B0"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"/>
+                                
+                                <!-- Combat Type -->
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Type}" 
+                                           Foreground="#FFA500"
+                                           FontSize="10"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="Padding" Value="16,8"/>
+                        <Setter Property="Padding" Value="16,10"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="Template">
                             <Setter.Value>
