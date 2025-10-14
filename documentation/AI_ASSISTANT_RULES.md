@@ -35,6 +35,8 @@
 - **IMMER** detaillierte Kommentare schreiben
 - **IMMER** Änderungen dokumentieren
 - **IMMER** README/Anleitungen aktualisieren
+- **IMMER** Devlog-Sessions für jeden Entwicklungstag erstellen
+- **IMMER** das aktuelle Datum verwenden bei Updates/Änderungen
 
 ## 🎯 Projekt-spezifische Regeln
 
@@ -110,10 +112,29 @@
 **Wenn der User sagt "Wir beenden die Session" soll ich folgendes machen:**
 
 1. **Projekt aufräumen** - nicht mehr benötigte Dateien löschen
-2. **DEVELOPER_LOG.md aktualisieren** - was wir gemacht haben dokumentieren
+2. **Devlog-Session erstellen** - neue Session-Datei im `documentation/development/devlog/` Ordner
 3. **Alles committen** - mit aussagekräftiger Commit-Message
 4. **In aktuellen Branch pushen** - NIEMALS direkt in main branch!
 5. **Session beenden** - nach erfolgreichem Push
+
+## 📝 Devlog-Verwaltung
+
+### Session-Dateien erstellen
+- **Format:** `YYYY-MM-DD_sessionX_Titel-der-Session.md`
+- **Ort:** `documentation/development/devlog/`
+- **Inhalt:** 
+  - Datum, Dauer, Fokus
+  - Was erreicht wurde
+  - Probleme und Lösungen
+  - Technische Details
+  - Geänderte Dateien
+  - Nächste Schritte
+  - Lessons Learned
+
+### Bei mehreren Sessions pro Tag
+- **Separate Dateien** für jede Session erstellen
+- **Session-Nummer** fortlaufend vergeben (session1, session2, etc.)
+- **README.md** im devlog-Ordner aktualisieren
 
 ## 🛠️ Build & Deployment
 
@@ -146,7 +167,7 @@
 
 - `COMBATLOG_ANALYSIS.md` - Combatlog-Format Spezifikation
 - `PROJEKT_ANALYSE.md` - Detaillierte Projektanalyse
-- `DEVELOPER_LOG.md` - Entwicklungs-Tagebuch
+- `documentation/development/devlog/` - Entwicklungs-Sessions (aufgeteilt nach Datum)
 - `build_debug.ps1` - Debug-Build-Script
 - `create_release.ps1` - Release-Build-Script
 - `frontend/Build.targets` - MSBuild Custom Targets
@@ -155,5 +176,5 @@
 
 ---
 
-**Letzte Aktualisierung**: 2025-01-10
-**Version**: 1.1
+**Letzte Aktualisierung**: 2025-10-14
+**Version**: 1.2
