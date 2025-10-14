@@ -7,7 +7,7 @@
   
   🌐 **[Website](https://vankhaos.github.io/StoDamageMeter/)** | **[Download](https://github.com/VanKhaos/StoDamageMeter/releases/latest)**
   
-  [![Version](https://img.shields.io/badge/Version-1.2.2-blue.svg)](https://github.com/VanKhaos/StoDamageMeter/releases)
+  [![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/VanKhaos/StoDamageMeter/releases)
   [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://github.com/VanKhaos/StoDamageMeter)
   [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)

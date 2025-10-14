@@ -1,7 +1,7 @@
 ﻿# Schnell-Script zum Updaten der Version in GitHub Pages
 
-$oldVersion = "1.2.3"
-$newVersion = "1.2.4"
+$oldVersion = "1.2.4"
+$newVersion = "2.0.0"
 $newDate = "13. Oktober 2025"
 
 $content = Get-Content "docs/index.html" -Raw

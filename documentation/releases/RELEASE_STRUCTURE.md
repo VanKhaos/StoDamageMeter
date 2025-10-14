@@ -1,6 +1,6 @@
 # 📦 STO Damage Meter - Release Struktur
 
-**Aktuelle Version:** v1.2.4+  
+**Aktuelle Version:** v2.0.0+  
 **Build-Datum:** 13.10.2025  
 **Gesamtgröße:** ~170 MB (entpackt) | ~123 MB (ZIP)  
 **Anzahl Dateien:** 441
@@ -12,7 +12,7 @@
 Das Root-Verzeichnis enthält jetzt nur noch die wichtigsten Dateien:
 
 ```
-StoDamageMeter_v1.2.4/
+StoDamageMeter_v2.0.0/
 ├── 📱 StoDamageMeter.exe          (~12 MB - Launcher)
 ├── 📄 README.txt                  (Benutzeranleitung)
 ├── 📄 CHANGELOG.txt               (Versionshistorie)
