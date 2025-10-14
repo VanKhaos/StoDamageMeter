@@ -38,6 +38,9 @@ namespace StoDamageMeter.Services
     {
         private readonly HttpClient _httpClient;
         private const string GITHUB_API_URL = "https://api.github.com/repos/VanKhaos/StoDamageMeter/releases/latest";
+        
+        // Test-Modus für Update-Simulation
+        private const bool TEST_MODE = true; // Setze auf false für Produktion
 
         public UpdateCheckService()
         {
@@ -48,6 +51,28 @@ namespace StoDamageMeter.Services
 
         public async Task<UpdateInfo?> CheckForUpdatesAsync()
         {
+            // Test-Modus: Simuliere immer verfügbares Update
+            if (TEST_MODE)
+            {
+                // Simuliere Netzwerk-Delay
+                await Task.Delay(1000);
+                
+                return new UpdateInfo
+                {
+                    UpdateAvailable = true,
+                    LatestVersion = "2.1.0",
+                    ReleaseUrl = "https://github.com/VanKhaos/StoDamageMeter/releases/latest",
+                    ReleaseNotes = "🚀 **Test Update - Simulation Mode**\n\n" +
+                                  "This is a simulated update for testing purposes.\n\n" +
+                                  "**New Features:**\n" +
+                                  "- Update notification system\n" +
+                                  "- Material Design improvements\n" +
+                                  "- Bug fixes and performance enhancements\n\n" +
+                                  "**Note:** This is a test update. In production, this would be a real update.",
+                    PublishedAt = DateTime.Now.AddDays(-1)
+                };
+            }
+
             try
             {
                 var response = await _httpClient.GetStringAsync(GITHUB_API_URL);
