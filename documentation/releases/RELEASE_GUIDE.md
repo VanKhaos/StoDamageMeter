@@ -59,7 +59,33 @@ Füge einen neuen Eintrag für die neue Version hinzu:
            Opacity="0.7"/>
 ```
 
-### 3. GitHub Pages Version aktualisieren
+### 3. Frontend-Version aktualisieren
+
+**Datei:** `frontend/frontend.csproj`
+
+```xml
+<Version>1.2.3</Version>
+```
+
+### 4. UpdateCheckService-Version aktualisieren
+
+**Datei:** `frontend/Services/UpdateCheckService.cs`
+
+```csharp
+public Version GetCurrentVersion()
+{
+    // Einfache Versionserkennung - hardcoded für Stabilität
+    return new Version(1, 2, 3, 0);  // ⚠️ WICHTIG: Hier Version anpassen!
+}
+```
+
+**Auch User-Agent String aktualisieren:**
+
+```csharp
+_httpClient.DefaultRequestHeaders.Add("User-Agent", "STO-Damage-Meter/1.2.3");
+```
+
+### 5. GitHub Pages Version aktualisieren
 
 **Option A: Mit Helper-Script**
 
@@ -86,7 +112,7 @@ In `docs/index.html` an **5 Stellen** die Version ändern:
 Auch das Datum aktualisieren:
 - **Zeile ~249:** `Veröffentlicht am 11. Oktober 2025` → `Veröffentlicht am 15. Oktober 2025`
 
-### 4. README.md Version-Badge aktualisieren (optional)
+### 6. README.md Version-Badge aktualisieren (optional)
 
 ```markdown
 [![Version](https://img.shields.io/badge/Version-1.2.3-blue.svg)]
@@ -275,11 +301,15 @@ Vor dem Release:
 
 - [ ] CHANGELOG.md aktualisiert
 - [ ] Launcher-Version aktualisiert (`Launcher/SplashScreen.xaml`)
+- [ ] **Frontend-Version aktualisiert** (`frontend/frontend.csproj`) ⚠️
+- [ ] **UpdateCheckService-Version aktualisiert** (`frontend/Services/UpdateCheckService.cs`) ⚠️
+- [ ] **User-Agent String aktualisiert** (`UpdateCheckService.cs`) ⚠️
 - [ ] GitHub Pages Version aktualisiert (`docs/index.html`)
 - [ ] README.md Version-Badge aktualisiert
 - [ ] Release gebaut (`scripts\create_release.ps1`)
 - [ ] Release-ZIP erstellt (`scripts\create_release_zip.ps1`)
 - [ ] Release getestet (Anwendung funktioniert)
+- [ ] **Update-Benachrichtigung getestet** (keine falschen "neue Version verfügbar" Meldungen) ⚠️
 - [ ] Git committed & gepusht (beide Branches)
 
 Release erstellen:
@@ -345,6 +375,33 @@ git diff main version/1.2
 1. Gehe zu Release → Edit
 2. Stelle sicher dass ZIP-Datei unter "Assets" erscheint
 3. Release muss "Published" sein (nicht "Draft")
+
+### Problem: Update-Benachrichtigung zeigt "neue Version verfügbar" obwohl aktuelle Version
+
+**Ursache:** Version-Nummern in der Anwendung sind nicht aktualisiert
+
+**Symptom:** Anwendung zeigt "🔔 Update Available - v2.0.1" obwohl 2.0.1 die aktuelle Version ist
+
+**Lösung:**
+```powershell
+# Prüfe alle Version-Stellen:
+grep -r "2.0.0" frontend/
+grep -r "2.0.0" Launcher/
+
+# Aktualisiere alle Version-Nummern:
+# 1. frontend/frontend.csproj: <Version>2.0.1</Version>
+# 2. frontend/Services/UpdateCheckService.cs: return new Version(2, 0, 1, 0);
+# 3. UpdateCheckService.cs: "STO-Damage-Meter/2.0.1"
+# 4. Launcher/SplashScreen.xaml: "Version 2.0.1"
+
+# Release neu erstellen:
+.\scripts\create_release.ps1 -Version "2.0.1"
+.\scripts\create_release_zip.ps1 -Version "2.0.1"
+```
+
+**Prävention:** 
+- Immer alle 4 Version-Stellen bei Release aktualisieren (siehe Checkliste)
+- Update-Benachrichtigung nach Release testen
 
 ### Problem: ZIP-Datei ist riesig (mehrere GB)
 
