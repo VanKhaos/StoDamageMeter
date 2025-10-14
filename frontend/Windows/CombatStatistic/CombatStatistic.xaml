@@ -6,6 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StoDamageMeter"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:combat="clr-namespace:StoDamageMeter.Components.Combat"
         xmlns:shared="clr-namespace:StoDamageMeter.Components.Shared"
         xmlns:liveCombat="clr-namespace:StoDamageMeter.Components.LiveCombat"
@@ -59,69 +60,69 @@
                                    Foreground="#5B9BD5"
                                    VerticalAlignment="Center" />
                     </StackPanel>
-                    <!-- Pin Button -->
-                    <Button x:Name="PinButton"
-                            Grid.Column="1"
-                            Width="32"
-                            Height="32"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="PinButton_Click"
-                            Margin="0,0,2,0"
-                            Cursor="Hand">
-                        <TextBlock x:Name="PinIcon"
-                                   Text="📌"
-                                   FontSize="12"
-                                   Foreground="#E0E0E0"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                    </Button>
-                    <!-- Close Button -->
-                    <Button x:Name="CloseButton"
-                            Grid.Column="2"
-                            Width="32"
-                            Height="32"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="CloseButton_Click"
-                            Cursor="Hand">
-                        <TextBlock Text="✕"
-                                   FontSize="12"
-                                   Foreground="#E0E0E0"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                    </Button>
+                     <!-- Pin Button -->
+                     <Button x:Name="PinButton"
+                             Grid.Column="1"
+                             Style="{StaticResource MaterialDesignIconButton}"
+                             Width="32"
+                             Height="32"
+                             Click="PinButton_Click"
+                             Margin="0,0,2,0"
+                             ToolTip="Pin Window">
+                         <materialDesign:PackIcon x:Name="PinIcon"
+                                                  Kind="Pin"
+                                                  Width="16"
+                                                  Height="16" />
+                     </Button>
+                     <!-- Close Button -->
+                     <Button x:Name="CloseButton"
+                             Grid.Column="2"
+                             Style="{StaticResource MaterialDesignIconButton}"
+                             Width="32"
+                             Height="32"
+                             Click="CloseButton_Click"
+                             ToolTip="Close Window">
+                         <materialDesign:PackIcon Kind="Close"
+                                                  Width="16"
+                                                  Height="16" />
+                     </Button>
                 </Grid>
             </Border>
             <!-- Main Content -->
             <Grid Grid.Row="1"
-                  Background="#22000000">
+                  >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="20*" />
                     <ColumnDefinition Width="80*" />
                 </Grid.ColumnDefinitions>
-                <!-- Left Combat List -->
-                <Border Grid.Column="0">
-                    <!-- Combat List -->
-                    <ui:Card Margin="16"
-                             Padding="0">
-                        <combat:CombatListView x:Name="CombatListViewComponent"
-                                               Margin="0" />
-                    </ui:Card>
-                </Border>
+                 <!-- Left Combat List -->
+                 <Border Grid.Column="0">
+                     <!-- Combat List -->
+                     <materialDesign:Card Margin="0"
+                                          Padding="0"
+                                          materialDesign:ElevationAssist.Elevation="Dp2"
+                                          Background="#33000000"
+                                          >
+                         <combat:CombatListView x:Name="CombatListViewComponent"
+                                                Margin="0" />
+                     </materialDesign:Card>
+                 </Border>
                 <!-- Right Data Area -->
-                <Grid Grid.Column="1">
+                <Grid Grid.Column="1" >
                     <!-- Statistics View (no tabs) -->
-                    <Grid Margin="16">
+                    <Grid Margin="0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <!-- Data Table Area -->
-                        <ui:Card Grid.Row="1"
-                                 Margin="16,8,16,16"
-                                 Padding="20"
-                                 VerticalAlignment="Top">
+                         <!-- Data Table Area -->
+                         <materialDesign:Card Grid.Row="1"
+                                              Margin="8,0,8,8"
+                                              Padding="20"
+                                              VerticalAlignment="Top"
+                                              materialDesign:ElevationAssist.Elevation="Dp4"
+                                              Background="#33000000"
+                                              >
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -133,21 +134,19 @@
                                                           Grid.Row="1"
                                                           Margin="0,0,0,4" />
                                 <!-- Data Table Container -->
-                                <Border Grid.Row="2"
-                                        BorderBrush="{DynamicResource StarTrekBorderGray}"
-                                        BorderThickness="1"
-                                        CornerRadius="4">
+                                <Border Grid.Row="2">
                                     <Grid>
                                         <!-- Empty State -->
                                         <StackPanel x:Name="EmptyCombatStatsPanel"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     Margin="0,40">
-                                            <ui:SymbolIcon Symbol="Table24"
-                                                           FontSize="48"
-                                                           Foreground="{DynamicResource StarTrekBlue}"
-                                                           Opacity="0.3"
-                                                           Margin="0,0,0,12" />
+                                             <materialDesign:PackIcon Kind="Table"
+                                                                      Width="48"
+                                                                      Height="48"
+                                                                      Foreground="{DynamicResource StarTrekBlue}"
+                                                                      Opacity="0.3"
+                                                                      Margin="0,0,0,12" />
                                             <TextBlock Text="Select a combat to view statistics"
                                                        Foreground="{DynamicResource StarTrekTextGray}"
                                                        HorizontalAlignment="Center"
@@ -164,10 +163,11 @@
                                                     Visibility="Collapsed"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
-                                            <ProgressBar IsIndeterminate="True"
-                                                         Width="200"
-                                                         Height="4"
-                                                         Margin="0,0,0,12" />
+                                             <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                                          IsIndeterminate="True"
+                                                          Width="32"
+                                                          Height="32"
+                                                          Margin="0,0,0,12" />
                                             <TextBlock x:Name="LoadingCombatStatsText"
                                                        Text="Loading combat statistics..."
                                                        Foreground="{DynamicResource StarTrekTextGray}"
@@ -182,7 +182,7 @@
                                             <ItemsControl x:Name="CombatStatsItemsControl"
                                                           Background="Transparent"
                                                           Margin="0"
-                                                          Padding="8"
+                                                          Padding="0"
                                                           VerticalAlignment="Top">
                                                 <!-- Hier wird die Tabelle dynamisch gefüllt -->
                                             </ItemsControl>
@@ -190,7 +190,7 @@
                                     </Grid>
                                 </Border>
                             </Grid>
-                        </ui:Card>
+                        </materialDesign:Card>
                     </Grid>
                 </Grid>
             </Grid>

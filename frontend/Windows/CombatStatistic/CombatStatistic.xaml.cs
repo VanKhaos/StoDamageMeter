@@ -762,7 +762,7 @@ namespace StoDamageMeter;
             _isPinned = !_isPinned;
             
             // Update icon
-            PinIcon.Text = _isPinned ? "📍" : "📌";
+            PinIcon.Kind = _isPinned ? MaterialDesignThemes.Wpf.PackIconKind.PinOff : MaterialDesignThemes.Wpf.PackIconKind.Pin;
             
             // Update title bar cursor to show if draggable
             TitleBarBorder.Cursor = _isPinned ? Cursors.Arrow : Cursors.SizeAll;
