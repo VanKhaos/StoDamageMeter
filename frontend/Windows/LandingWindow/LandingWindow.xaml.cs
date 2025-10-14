@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using StoDamageMeter.Services;
@@ -107,13 +108,16 @@ namespace StoDamageMeter
             InitializeComponent();
             _updateCheckService = App.ServiceProvider.GetRequiredService<UpdateCheckService>();
             SetZoom(_zoomFactor);
-            
+
+            // Set default logo
+            LogoImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/app_icon.png"));
+
             // Update log file menu item color on startup
             UpdateLogFileMenuItemColor();
-            
+
             // Keyboard Shortcuts für Zoom
             KeyDown += LandingWindow_KeyDown;
-            
+
             // Check for updates on startup (fire-and-forget, non-blocking)
             Loaded += OnLoaded;
         }
@@ -372,6 +376,9 @@ namespace StoDamageMeter
                         UpdateAvailableMenuItem.Header = $"🔔 Update Available - v{updateInfo.LatestVersion}";
                         UpdateAvailableMenuItem.Visibility = Visibility.Visible;
                         UpdateAvailableMenuItem.Tag = updateInfo.ReleaseUrl;
+                        
+                        // Wechsle zu grünem Logo für Update-Benachrichtigung
+                        LogoImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/DPS_Meter_Logo_Green.png"));
                     });
                 }
                 else
@@ -379,6 +386,9 @@ namespace StoDamageMeter
                     Dispatcher.Invoke(() =>
                     {
                         UpdateAvailableMenuItem.Visibility = Visibility.Collapsed;
+                        
+                        // Wechsle zurück zu normalem Logo
+                        LogoImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/app_icon.png"));
                     });
                 }
             }
@@ -389,23 +399,6 @@ namespace StoDamageMeter
             }
         }
 
-        private async void CheckUpdateMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            CheckUpdateMenuItem.IsEnabled = false;
-            CheckUpdateMenuItem.Header = "🔄 Checking...";
-            
-            await CheckForUpdatesAsync();
-            
-            CheckUpdateMenuItem.IsEnabled = true;
-            CheckUpdateMenuItem.Header = "🔄 Check for Updates";
-            
-            // Feedback wenn kein Update
-            if (UpdateAvailableMenuItem.Visibility == Visibility.Collapsed)
-            {
-                MessageBox.Show("You are using the latest version!", "Up to date", 
-                                MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
 
         private void UpdateAvailableMenuItem_Click(object sender, RoutedEventArgs e)
         {

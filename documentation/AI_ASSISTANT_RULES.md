@@ -4,6 +4,7 @@
 
 ### Build & Deployment
 - **NIEMALS** automatisch die app starten, immer bescheid geben
+- **NIEMALS** die Anwendung selbst testen oder ausführen - das macht der User
 - **NIEMALS** automatisch committen oder pushen ohne explizite Erlaubnis
 - **NIEMALS** Git-Operationen ohne vorherige Nachfrage durchführen
 - **NIEMALS** dotnet build bei einfachen Text-Änderungen ausführen
@@ -90,14 +91,15 @@
 3. **Feedback** einholen
 4. **Dokumentation** aktualisieren
 5. **Debug-Logs** temporär hinzufügen für Troubleshooting
+6. **NICHT selbst testen** - User testet die Anwendung
 
 ### Nach Änderungen
-1. **Funktionalität** testen
-2. **Code-Qualität** prüfen
-3. **Debug-Logs** entfernen (nach erfolgreichem Fix)
-4. **Build nur bei wichtigen Änderungen** (nicht bei Text-Änderungen)
-5. **Dokumentation** vervollständigen
-6. **Benutzer** informieren
+1. **Code-Qualität** prüfen
+2. **Debug-Logs** entfernen (nach erfolgreichem Fix)
+3. **Build nur bei wichtigen Änderungen** (nicht bei Text-Änderungen)
+4. **Dokumentation** vervollständigen
+5. **Benutzer** informieren
+6. **User testet** die Funktionalität - nicht der AI Assistant
 
 ## 🚨 Wichtige Erinnerungen
 

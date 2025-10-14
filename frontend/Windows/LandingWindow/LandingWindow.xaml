@@ -19,7 +19,6 @@
             
             <!-- Haupt-Logo -->
             <Image x:Name="LogoImage" 
-                   Source="/Assets/app_icon.png" 
                    Width="100" 
                    Height="100"
                    HorizontalAlignment="Center" 
@@ -52,11 +51,6 @@
                                   Header="📁 Select Combat Log" 
                                   Click="SelectLogFileButton_Click"
                                   Foreground="#FF6B6B"
-                                  Background="#1A1A1A"/>
-                        <MenuItem x:Name="CheckUpdateMenuItem"
-                                  Header="🔄 Check for Updates" 
-                                  Click="CheckUpdateMenuItem_Click"
-                                  Foreground="#B0B0B0"
                                   Background="#1A1A1A"/>
                         <MenuItem x:Name="UpdateAvailableMenuItem"
                                   Header="🔔 Update Available - v2.1.0" 

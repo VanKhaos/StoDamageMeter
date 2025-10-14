@@ -40,7 +40,7 @@ namespace StoDamageMeter.Services
         private const string GITHUB_API_URL = "https://api.github.com/repos/VanKhaos/StoDamageMeter/releases/latest";
         
         // Test-Modus für Update-Simulation
-        private const bool TEST_MODE = true; // Setze auf false für Produktion
+        private const bool TEST_MODE = false; // Setze auf false für Produktion
 
         public UpdateCheckService()
         {
@@ -102,9 +102,8 @@ namespace StoDamageMeter.Services
 
         public Version GetCurrentVersion()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var version = assembly.GetName().Version;
-            return version ?? new Version(2, 0, 0, 0);
+            // Einfache Versionserkennung - hardcoded für Stabilität
+            return new Version(2, 0, 0, 0);
         }
 
         private Version ParseVersion(string tagName)
