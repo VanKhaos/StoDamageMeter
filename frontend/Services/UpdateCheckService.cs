@@ -10,7 +10,7 @@ namespace StoDamageMeter.Services
     public class GitHubRelease
     {
         [JsonPropertyName("tag_name")]
-        public string TagName { get; set; } = string.Empty; // "v2.0.0"
+        public string TagName { get; set; } = string.Empty; // "v2.0.1"
         
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
@@ -46,7 +46,7 @@ namespace StoDamageMeter.Services
         {
             _httpClient = new HttpClient();
             _httpClient.Timeout = TimeSpan.FromSeconds(10);
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "STO-Damage-Meter/2.0.0");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "STO-Damage-Meter/2.0.1");
         }
 
         public async Task<UpdateInfo?> CheckForUpdatesAsync()
@@ -103,7 +103,7 @@ namespace StoDamageMeter.Services
         public Version GetCurrentVersion()
         {
             // Einfache Versionserkennung - hardcoded für Stabilität
-            return new Version(2, 0, 0, 0);
+            return new Version(2, 0, 1, 0);
         }
 
         private Version ParseVersion(string tagName)
