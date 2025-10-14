@@ -136,6 +136,29 @@ cd ..
 
 ### 2. Release erstellen
 
+#### 🚀 Vollautomatisch (Empfohlen):
+
+```powershell
+# Alles automatisch - ein Befehl!
+.\scripts\create_full_release.ps1
+
+# Oder mit spezifischer Version:
+.\scripts\create_full_release.ps1 -Version "2.1.0"
+
+# Oder mit Release-Typ:
+.\scripts\create_full_release.ps1 -ReleaseType "minor"  # 2.0.1 → 2.1.0
+```
+
+**Was automatisch passiert:**
+- ✅ Version-Nummern aktualisieren (alle 4 Dateien)
+- ✅ Changelog aus Git-Commits generieren
+- ✅ GitHub Pages aktualisieren
+- ✅ Release bauen und ZIP erstellen
+- ✅ Git commit, tag und push
+- ✅ GitHub Release erstellen mit Changelog
+
+#### 🔧 Manuell (falls gewünscht):
+
 ```powershell
 # Release-Ordner erstellen
 .\scripts\create_release.ps1 -Version "1.2.3"
@@ -233,6 +256,34 @@ gh release create v1.2.3 `
 
 ---
 
+## 🤖 GitHub Action (Automatische Releases)
+
+### Vollautomatische Releases mit GitHub Actions
+
+Wenn du einen Git-Tag erstellst, läuft automatisch eine GitHub Action:
+
+```bash
+# Tag erstellen (löst automatisch GitHub Action aus)
+git tag v2.1.0
+git push origin v2.1.0
+```
+
+**Was die GitHub Action automatisch macht:**
+- ✅ **Backend bauen** (Python + PyInstaller)
+- ✅ **Frontend bauen** (.NET 9.0)
+- ✅ **Launcher bauen**
+- ✅ **Release-Paket erstellen** (mit PowerShell-Scripts)
+- ✅ **ZIP erstellen**
+- ✅ **GitHub Release erstellen** (automatisch)
+- ✅ **ZIP hochladen** (automatisch)
+- ✅ **Changelog aus CHANGELOG.md** (automatisch)
+
+### Workflow-Datei: `.github/workflows/release.yml`
+
+Die GitHub Action ist bereits konfiguriert und läuft automatisch bei jedem Tag-Push.
+
+---
+
 ## 📤 Git Workflow
 
 ### 1. Änderungen commiten
@@ -296,6 +347,33 @@ git checkout version/1.2
 ---
 
 ## ✅ Checkliste
+
+### 🚀 Vollautomatisch (Empfohlen):
+
+**Ein Befehl für alles:**
+```powershell
+.\scripts\create_full_release.ps1
+```
+
+**Checkliste (automatisch erledigt):**
+- [x] CHANGELOG.md aktualisiert (automatisch aus Git-Commits)
+- [x] Launcher-Version aktualisiert (automatisch)
+- [x] Frontend-Version aktualisiert (automatisch)
+- [x] UpdateCheckService-Version aktualisiert (automatisch)
+- [x] User-Agent String aktualisiert (automatisch)
+- [x] GitHub Pages Version aktualisiert (automatisch)
+- [x] Release gebaut (automatisch)
+- [x] Release-ZIP erstellt (automatisch)
+- [x] Git committed & gepusht (automatisch)
+- [x] GitHub Release erstellt (automatisch)
+- [x] ZIP-Datei hochgeladen (automatisch)
+- [x] Release-Notes aus CHANGELOG (automatisch)
+
+**Du musst nur noch:**
+- [ ] Release testen (Download-Link testen)
+- [ ] Community informieren (Discord, Reddit, etc.)
+
+### 🔧 Manuell (falls gewünscht):
 
 Vor dem Release:
 
@@ -435,6 +513,21 @@ Remove-Item -Path "Releases\StoDamageMeter_v1.2.3\App\logs\*.log" -Force
 
 ## 🎯 Quick Command Reference
 
+### 🚀 Vollautomatisch (Empfohlen):
+
+```powershell
+# Alles in einem Befehl!
+.\scripts\create_full_release.ps1
+
+# Mit spezifischer Version:
+.\scripts\create_full_release.ps1 -Version "2.1.0"
+
+# Mit Release-Typ:
+.\scripts\create_full_release.ps1 -ReleaseType "minor"  # 2.0.1 → 2.1.0
+```
+
+### 🔧 Manuell (falls gewünscht):
+
 ```powershell
 # Version updaten
 .\update_page_version.ps1
@@ -454,6 +547,14 @@ git checkout version/1.2
 
 # GitHub Release (CLI)
 gh release create v1.2.3 --title "v1.2.3" --notes-file CHANGELOG.md Releases/StoDamageMeter_v1.2.3.zip
+```
+
+### 🤖 GitHub Action (Automatisch):
+
+```bash
+# Tag erstellen (löst GitHub Action aus)
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 ---
