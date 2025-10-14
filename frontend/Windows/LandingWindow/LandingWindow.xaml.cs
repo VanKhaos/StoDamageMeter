@@ -1,9 +1,16 @@
 using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
+using StoDamageMeter.Services;
+using StoDamageMeter.Models;
 
 namespace StoDamageMeter
 {
@@ -13,13 +20,94 @@ namespace StoDamageMeter
         private Point _lastMousePosition;
         private LiveCombatOverlay? _overlay = null;
         private bool _isPinned = false;
-        private DispatcherTimer? _hideTimer = null;
         private double _zoomFactor = 1.2; // Default Zoom-Faktor
+        
+        // Global selected log file path
+        public static string? SelectedLogFilePath { get; set; }
+        
+        // Global combat data cache
+        public static List<CombatInfo>? CachedCombatData { get; set; }
+        
+        // Update menu items based on log file status
+        private void UpdateLogFileMenuItemColor()
+        {
+            bool hasValidLogFile = !string.IsNullOrEmpty(SelectedLogFilePath) && File.Exists(SelectedLogFilePath);
+            
+            if (SelectLogFileMenuItem != null)
+            {
+                if (hasValidLogFile)
+                {
+                    // Log file selected and exists - Green
+                    SelectLogFileMenuItem.Foreground = new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50)); // Green
+                }
+                else
+                {
+                    // No log file selected or file doesn't exist - Red
+                    SelectLogFileMenuItem.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x6B)); // Red
+                }
+            }
+            
+            // Enable/disable other menu items based on log file status
+            if (StatisticsMenuItem != null)
+                StatisticsMenuItem.IsEnabled = hasValidLogFile;
+            
+            if (GraphMenuItem != null)
+                GraphMenuItem.IsEnabled = hasValidLogFile;
+            
+            if (OverlayMenuItem != null)
+                OverlayMenuItem.IsEnabled = hasValidLogFile;
+        }
+
+        private async Task LoadStatisticsDataAsync()
+        {
+            if (string.IsNullOrEmpty(SelectedLogFilePath) || !File.Exists(SelectedLogFilePath))
+                return;
+
+            try
+            {
+                // Show loading text
+                LoadingSpinnerGrid.Visibility = Visibility.Visible;
+                
+                // Get backend service
+                var backendService = App.ServiceProvider.GetRequiredService<IOSCRBackendService>();
+                
+                // Load combat data
+                var response = await backendService.GetAvailableCombatsWithProgressAsync(
+                    SelectedLogFilePath, 
+                    50 // maxCombats
+                );
+                
+                // Small delay for visual effect
+                await Task.Delay(500);
+                
+                if (response.Success && response.Combats != null)
+                {
+                    // Cache the combat data
+                    CachedCombatData = response.Combats.OrderByDescending(c => c.Date).ThenByDescending(c => c.Time).ToList();
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't show MessageBox to avoid interrupting user
+                System.Diagnostics.Debug.WriteLine($"Error loading statistics data: {ex.Message}");
+            }
+            finally
+            {
+                // Hide loading text after a short delay
+                await Task.Delay(500);
+                LoadingSpinnerGrid.Visibility = Visibility.Collapsed;
+            }
+        }
+
 
         public LandingWindow()
         {
             InitializeComponent();
             SetZoom(_zoomFactor);
+            
+            // Update log file menu item color on startup
+            UpdateLogFileMenuItemColor();
             
             // Keyboard Shortcuts für Zoom
             KeyDown += LandingWindow_KeyDown;
@@ -57,59 +145,17 @@ namespace StoDamageMeter
             LogoImage.ReleaseMouseCapture();
         }
 
-        #endregion
-
-        #region Hover Animations
-
-        private void ShowButtons(object sender, MouseEventArgs e)
+        private void LogoImage_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Timer stoppen und zurücksetzen falls er läuft
-            if (_hideTimer != null)
-            {
-                _hideTimer.Stop();
-                _hideTimer = null;
-            }
+            // Update log file menu item color before showing context menu
+            UpdateLogFileMenuItemColor();
             
-            // Alle Icons und Buttons einblenden
-            var fadeInAnimation = (Storyboard)FindResource("FadeInAnimation");
-            fadeInAnimation?.Begin();
-            
-            // Buttons klickbar machen
-            IconPanel.IsHitTestVisible = true;
-            ClosePinPanel.IsHitTestVisible = true;
-        }
-
-        private void StartHideTimer(object sender, MouseEventArgs e)
-        {
-            // Timer stoppen falls er bereits läuft
-            _hideTimer?.Stop();
-            
-            // Neuen Timer erstellen für 2,5 Sekunden Verzögerung
-            _hideTimer = new DispatcherTimer();
-            _hideTimer.Interval = TimeSpan.FromSeconds(2.5);
-            _hideTimer.Tick += (s, args) =>
-            {
-                _hideTimer?.Stop();
-                _hideTimer = null;
-                
-                // Alle Icons und Buttons ausblenden
-                var fadeOutAnimation = (Storyboard)FindResource("FadeOutAnimation");
-                fadeOutAnimation?.Begin();
-                
-                // Nach Animation Buttons nicht mehr klickbar machen
-                if (fadeOutAnimation != null)
-                {
-                    fadeOutAnimation.Completed += (s2, e2) =>
-                    {
-                        IconPanel.IsHitTestVisible = false;
-                        ClosePinPanel.IsHitTestVisible = false;
-                    };
-                }
-            };
-            _hideTimer.Start();
+            // ContextMenu wird automatisch angezeigt durch XAML-Definition
+            // Hier könnten wir zusätzliche Logik hinzufügen falls nötig
         }
 
         #endregion
+
 
         #region Button Click Handlers
 
@@ -128,15 +174,13 @@ namespace StoDamageMeter
                 {
                     // Fenster festpinnen
                     Topmost = true;
-                    PinIcon.Text = "📍"; // Leerer Pin (zeigt "Unpin" an)
-                    PinButton.ToolTip = "Unpin Window";
+                    PinMenuItem.Header = "📍 Unpin";
                 }
                 else
                 {
                     // Fenster entpinnen
                     Topmost = false;
-                    PinIcon.Text = "📌"; // Gefüllter Pin (zeigt "Pin" an)
-                    PinButton.ToolTip = "Pin Window";
+                    PinMenuItem.Header = "📌 Pin";
                 }
             }
             catch (Exception ex)
@@ -146,10 +190,21 @@ namespace StoDamageMeter
             }
         }
 
-        private void DashboardButton_Click(object sender, RoutedEventArgs e)
+        private void StatisticsButton_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Implement Dashboard functionality
-            MessageBox.Show("Dashboard wird noch implementiert...", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Öffne CombatStatistic Window
+                var statisticsWindow = new CombatStatistic();
+                statisticsWindow.Show();
+                
+                // Log-Datei wird automatisch geladen durch AutoLoadLogFileAsync im Loaded Event
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fehler beim Öffnen der Statistics: {ex.Message}", "Fehler", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void GraphButton_Click(object sender, RoutedEventArgs e)
@@ -185,6 +240,36 @@ namespace StoDamageMeter
             }
         }
 
+        private void SelectLogFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Select Combat Log File",
+                    Filter = "Log files (*.log)|*.log",
+                    DefaultExt = "log"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    // Store selected log file path globally
+                    SelectedLogFilePath = openFileDialog.FileName;
+                    
+                    // Update menu item color
+                    UpdateLogFileMenuItemColor();
+                    
+                    // Start loading statistics data immediately
+                    _ = LoadStatisticsDataAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fehler beim Auswählen der Log-Datei: {ex.Message}", "Fehler", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void LogButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -193,7 +278,7 @@ namespace StoDamageMeter
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "Combat Log auswählen",
-                    Filter = "Log Files (*.log)|*.log|All Files (*.*)|*.*",
+                    Filter = "Log Files (*.log)|*.log",
                     InitialDirectory = @"C:\Program Files (x86)\Star Trek Online\Star Trek Online\Live\logs\GameClient",
                     FileName = "combatlog.log"
                 };
@@ -221,8 +306,8 @@ namespace StoDamageMeter
 
         private void SetZoom(double factor)
         {
-            // Zoom-Faktor begrenzen (1.0 - 3.0)
-            _zoomFactor = Math.Max(1.0, Math.Min(3.0, factor));
+            // Zoom-Faktor begrenzen (0.5 - 3.0) - jetzt auch kleiner als 1.0 möglich
+            _zoomFactor = Math.Max(0.3, Math.Min(3.0, factor));
             
             // Window-Größe basierend auf Basis-Größe (100x100) und Zoom-Faktor
             const double baseSize = 100.0;

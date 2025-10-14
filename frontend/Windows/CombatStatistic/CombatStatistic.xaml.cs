@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,32 +22,32 @@ using Wpf.Ui.Controls;
 namespace StoDamageMeter;
 
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+/// Interaction logic for CombatStatistic.xaml
 /// </summary>
-public partial class MainWindow : FluentWindow
-{
-    private readonly IOSCRBackendService _backendService;
-    private readonly CombatStatsRenderer _statsRenderer;
-    private readonly CombatLogWatcherService _logWatcher;
-    private readonly ILogger<MainWindow> _logger;
-    private LiveCombatViewModel? _liveCombatViewModel;
-    private CancellationTokenSource? _loadingCancellation;
-    private List<CombatInfo>? _loadedCombats;
-    private CombatData? _currentCombatData;
-    private string? _currentLogPath;
+    public partial class CombatStatistic : Window
+    {
+        private readonly IOSCRBackendService _backendService;
+        private readonly CombatStatsRenderer _statsRenderer;
+        private readonly CombatLogWatcherService _logWatcher;
+        private readonly ILogger<CombatStatistic> _logger;
+        private CancellationTokenSource? _loadingCancellation;
+        private List<CombatInfo>? _loadedCombats;
+        private CombatData? _currentCombatData;
+        private string? _currentLogPath;
+        private bool _isPinned = false;
     
     // Sorting state
     private string _currentSortColumn = "TotalDamageWithCompanions"; // Default
     private bool _sortAscending = false; // Default: descending
 
-    public MainWindow()
+    public CombatStatistic()
     {
         InitializeComponent();
         
         // Backend Service aus DI Container holen
         _backendService = App.ServiceProvider.GetRequiredService<IOSCRBackendService>();
         _logWatcher = App.ServiceProvider.GetRequiredService<CombatLogWatcherService>();
-        _logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
+        _logger = App.ServiceProvider.GetRequiredService<ILogger<CombatStatistic>>();
         
         // Stats Renderer initialisieren
         _statsRenderer = new CombatStatsRenderer((Style)this.FindResource("NoToggleIconExpanderStyle"));
@@ -59,30 +60,16 @@ public partial class MainWindow : FluentWindow
         StatsHeaderComponent.ColumnHeaderClicked += OnColumnHeaderClicked;
         
         // TEST LOG
-        _logger.LogInformation("=== MainWindow Constructor - Logging Test ===");
+        _logger.LogInformation("=== CombatStatistic Constructor - Logging Test ===");
         
-        // Live Combat View Model initialisieren
-        InitializeLiveCombatViewModel();
         
         // Initial Status Check
         _ = CheckBackendStatusAsync();
+        
+        // Automatically load log file if one is selected
+        Loaded += async (s, e) => await AutoLoadLogFileAsync();
     }
 
-    private void InitializeLiveCombatViewModel()
-    {
-        var logger = App.ServiceProvider.GetRequiredService<ILogger<LiveCombatViewModel>>();
-        _liveCombatViewModel = new LiveCombatViewModel(
-            _backendService,
-            _logWatcher,
-            logger,
-            Dispatcher
-        );
-
-        _liveCombatViewModel.CombatCompleted += OnLiveCombatCompleted;
-
-        // Set ViewModel to LiveCombatView Component
-        LiveCombatViewComponent.SetViewModel(_liveCombatViewModel);
-    }
 
     private async void OnLiveCombatCompleted(object? sender, CombatData completedCombat)
     {
@@ -114,27 +101,6 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        // DEBUG: Console Output falls Logging nicht funktioniert
-        Console.WriteLine($"[DEBUG] Tab changed to index: {MainTabControl.SelectedIndex}");
-        
-        var logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-        logger.LogInformation($"Tab changed to index: {MainTabControl.SelectedIndex}");
-        
-        // Live-Parsing läuft IMMER sobald ein Log geladen ist, unabhängig vom Tab
-        // Tab-Wechsel hat keinen Einfluss mehr auf Live-Parsing
-        if (MainTabControl.SelectedIndex == 1) // Live Combat Tab
-        {
-            Console.WriteLine($"[DEBUG] Live Combat tab selected");
-            logger.LogInformation($"Live Combat tab selected");
-        }
-        else // Historical Damage Out Tab (Dashboard)
-        {
-            Console.WriteLine("[DEBUG] Dashboard tab selected");
-            logger.LogInformation("Dashboard tab selected");
-        }
-    }
 
     private async Task CheckBackendStatusAsync()
     {
@@ -163,9 +129,6 @@ public partial class MainWindow : FluentWindow
     {
         Dispatcher.Invoke(() =>
         {
-            // Progress in UI anzeigen
-            LoadingProgressBar.Value = e.ProgressPercentage;
-            LoadingStatusText.Text = e.Message;
             
             System.Diagnostics.Debug.WriteLine($"Analysis Progress: {e.Message} ({e.ProgressPercentage}%)");
         });
@@ -235,31 +198,57 @@ public partial class MainWindow : FluentWindow
         #endif
     }
 
-    private async void BrowseButton_Click(object sender, RoutedEventArgs e)
+    private async Task AutoLoadLogFileAsync()
     {
-        var openFileDialog = new OpenFileDialog
+        // Verwende die vom Landing Window ausgewählte Log-Datei
+        string? logFilePath = LandingWindow.SelectedLogFilePath;
+        
+        if (string.IsNullOrEmpty(logFilePath) || !File.Exists(logFilePath))
         {
-            Title = "Select Combat Log File",
-            Filter = "Log files (*.log)|*.log|All files (*.*)|*.*",
-            DefaultExt = "log"
-        };
-
-        if (openFileDialog.ShowDialog() == true)
-        {
-            // WICHTIG: Stoppe Live-Parsing BEVOR wir neue Datei laden
-            // Sonst verliert FileWatcher Verbindung wenn Datei getrimmt wird
-            if (_liveCombatViewModel != null)
-            {
-                await _liveCombatViewModel.StopLiveParsing();
-                _logger.LogInformation("Stopped live parsing before loading new log file");
-            }
-            
-            LogFilePathTextBox.Text = openFileDialog.FileName;
-            
-            // Automatisch Combat-Liste laden
-            // Live-Parsing wird automatisch in LoadCombatListAsync gestartet
-            await LoadCombatListAsync(openFileDialog.FileName);
+            return;
         }
+
+        try
+        {
+            // Prüfe ob bereits gecachte Daten vorhanden sind
+            if (LandingWindow.CachedCombatData != null && LandingWindow.CachedCombatData.Count > 0)
+            {
+                // Verwende gecachte Daten
+                _loadedCombats = LandingWindow.CachedCombatData;
+                
+                // WICHTIG: Setze _currentLogPath für Combat-Details
+                _currentLogPath = logFilePath;
+                
+                // Update UI direkt mit gecachten Daten
+                Dispatcher.Invoke(() =>
+                {
+                    CombatListViewComponent.SetCombats(_loadedCombats);
+                    
+                    // Automatisch ersten Combat auswählen UND laden
+                    if (_loadedCombats.Count > 0)
+                    {
+                        CombatListViewComponent.SelectFirst();
+                        _ = LoadCombatDetailsAsync(_loadedCombats[0]);
+                    }
+                });
+                
+                _logger.LogInformation($"Loaded {_loadedCombats.Count} combats from cache");
+            }
+            else
+            {
+                // Fallback: Lade Daten neu
+                await LoadCombatListAsync(logFilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error auto-loading combat log: {Message}", ex.Message);
+        }
+    }
+
+    private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AutoLoadLogFileAsync();
     }
 
     private async Task LoadCombatListAsync(string logPath, bool isInitialLoad = true)
@@ -286,10 +275,6 @@ public partial class MainWindow : FluentWindow
             _loadingCancellation?.Cancel();
             _loadingCancellation = new CancellationTokenSource();
 
-            // Show progress UI
-            LoadingProgressBar.Visibility = Visibility.Visible;
-            LoadingStatusText.Visibility = Visibility.Visible;
-            BrowseButton.IsEnabled = false;
 
             AppendResult($"Calling GetAvailableCombatsWithProgressAsync...");
             
@@ -344,20 +329,7 @@ public partial class MainWindow : FluentWindow
 
             AppendResult($"Loaded {sortedCombats.Count} combats from log file");
             
-            // ✅ Live Combat Tab aktivieren nach erfolgreichem Laden
-            Dispatcher.Invoke(() =>
-            {
-                LiveCombatTab.IsEnabled = true;
-                _logger.LogInformation("Live Combat tab enabled after combat log loaded");
-            });
             
-            // ✅ Live-Parsing automatisch starten nach erfolgreichem Laden
-            if (_liveCombatViewModel != null && !string.IsNullOrEmpty(logPath))
-            {
-                _logger.LogInformation("Starting live parsing automatically after log loaded");
-                Console.WriteLine("[DEBUG] Starting live parsing automatically...");
-                await _liveCombatViewModel.StartLiveParsing(logPath);
-            }
         }
         catch (OperationCanceledException)
         {
@@ -385,9 +357,7 @@ public partial class MainWindow : FluentWindow
             // Hide progress UI
             Dispatcher.Invoke(() =>
             {
-                LoadingProgressBar.Visibility = Visibility.Collapsed;
-                LoadingStatusText.Visibility = Visibility.Collapsed;
-                BrowseButton.IsEnabled = true;
+
             });
         }
     }
@@ -396,7 +366,7 @@ public partial class MainWindow : FluentWindow
     {
         try
         {
-            var logPath = LogFilePathTextBox.Text;
+            var logPath = LandingWindow.SelectedLogFilePath;
             if (string.IsNullOrEmpty(logPath) || !System.IO.File.Exists(logPath))
             {
                 AppendResult("Please select a valid log file first.");
@@ -419,9 +389,6 @@ public partial class MainWindow : FluentWindow
     {
         System.Diagnostics.Debug.WriteLine($"Combat selected: {selectedCombat.Date} {selectedCombat.Time}");
         
-        // IMMER zum Dashboard wechseln bei Combat-Klick
-        MainTabControl.SelectedIndex = 0;
-        _logger.LogInformation("Switched to Dashboard tab after combat selection");
         
         _ = LoadCombatDetailsAsync(selectedCombat);
     }
@@ -722,19 +689,42 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
-    {
-        // Schließe das Overlay-Fenster falls geöffnet
-        LiveCombatViewComponent?.Cleanup();
-        
-        // Stoppe Live-Parsing
-        if (_liveCombatViewModel != null)
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            _liveCombatViewModel.StopLiveParsing().Wait();
+            
+            
+            base.OnClosing(e);
         }
-        
-        base.OnClosing(e);
-    }
+
+        #region Title Bar Events
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Only allow dragging if not pinned
+            if (!_isPinned)
+            {
+                this.DragMove();
+            }
+        }
+
+        private void PinButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isPinned = !_isPinned;
+            this.Topmost = _isPinned;
+            
+            // Update icon
+            PinIcon.Text = _isPinned ? "📍" : "📌";
+            
+            // Update title bar cursor to show if draggable
+            TitleBarBorder.Cursor = _isPinned ? Cursors.Arrow : Cursors.SizeAll;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        #endregion
 
     protected override void OnClosed(EventArgs e)
     {
