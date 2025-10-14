@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-01-14
+
+### Fixed
+- **Window-Binding-System Verbesserungen**
+  - Fenster verschwinden nicht mehr beim Klicken oder Interagieren
+  - LiveCombatOverlay schließt sich nicht mehr sofort nach dem Öffnen
+  - Alle UI-Elemente bleiben vollständig interaktiv nach Drag-Vorgängen
+  - Fenster bleiben immer im Vordergrund (Topmost) wenn sichtbar
+  - Verbesserte STO-Window-Clipping für alle Fenster
+
+### Changed
+- **Zentralisiertes Window-Binding-System**
+  - Migration von individueller Window-Binding-Logik zu zentralem `ApplicationWindowBindingService`
+  - Vereinfachte Sichtbarkeits-Logik: Fenster bleiben sichtbar, solange STO läuft
+  - Standard WPF `DragMove()` statt manueller Drag-Logik für bessere Event-Behandlung
+  - Entfernung von komplexer User-Interaktion-Tracking-Logik
+
+### Technical Improvements
+- **Code-Bereinigung**
+  - Entfernung aller unnötigen Debug-Console-Logs
+  - Vereinfachte Window-Lifecycle-Management
+  - Optimierte Timer-Frequenz (500ms statt 100ms)
+  - Reduzierte CPU-Overhead durch zentrale Verwaltung
+
 ## [2.0.0] - 2025-10-14
 
 ### Added

@@ -10,9 +10,40 @@ $BackendPath = Join-Path $RootPath "backend"
 $DebugPath = Join-Path $RootPath "Debug"
 $LogsPath = Join-Path $DebugPath "logs"
 
+# 0. Alle laufenden Anwendungsprozesse beenden
+Write-Host "`n[0/4] Stopping running application processes..." -ForegroundColor Yellow
+
+# Prozesse finden und beenden
+$processesToStop = @("StoDamageMeter", "OSCRBackend", "StoDamageMeter.Launcher")
+
+$stoppedProcesses = @()
+foreach ($processName in $processesToStop) {
+    $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
+    if ($processes) {
+        foreach ($process in $processes) {
+            Write-Host "Stopping process: $($process.ProcessName) (PID: $($process.Id))" -ForegroundColor Yellow
+            try {
+                $process.Kill()
+                $process.WaitForExit(5000)
+                $stoppedProcesses += $process.ProcessName
+                Write-Host "Process stopped successfully" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "Could not stop process: $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+    }
+}
+
+if ($stoppedProcesses.Count -gt 0) {
+    Write-Host "Stopped $($stoppedProcesses.Count) process(es): $($stoppedProcesses -join ', ')" -ForegroundColor Green
+    Start-Sleep -Seconds 2
+} else {
+    Write-Host "No running application processes found" -ForegroundColor Green
+}
 
 # 1. Backend bauen (nur wenn geändert)
-Write-Host "`n[1/3] Checking Backend..." -ForegroundColor Yellow
+Write-Host "`n[1/4] Checking Backend..." -ForegroundColor Yellow
 $BackendExe = Join-Path $BackendPath "dist\OSCRBackend.exe"
 $BackendSource = Join-Path $BackendPath "working_oscr_backend.py"
 $BackendDeploy = Join-Path $RootPath "Deploy\OSCRBackend.exe"
@@ -52,7 +83,7 @@ Copy-Item $BackendExe $BackendDeploy -Force
 Write-Host "Backend copied to Deploy folder" -ForegroundColor Green
 
 # 2. Frontend Debug bauen
-Write-Host "`n[2/3] Building Frontend (Debug)..." -ForegroundColor Yellow
+Write-Host "`n[2/4] Building Frontend (Debug)..." -ForegroundColor Yellow
 Push-Location $FrontendPath
 $buildResult = dotnet build frontend.csproj --configuration Debug 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -65,35 +96,16 @@ Pop-Location
 Write-Host "Frontend build completed" -ForegroundColor Green
 
 # 3. Debug-Ordner ist bereits korrekt befüllt
-Write-Host "`n[3/3] Debug build completed!" -ForegroundColor Yellow
-
-# Debug-Ordner ist bereits durch dotnet build befüllt
-# Backend wird automatisch durch Build.targets kopiert
+Write-Host "`n[3/4] Debug build completed!" -ForegroundColor Yellow
 Write-Host "Debug files are ready in: $DebugPath" -ForegroundColor Green
 
-# README erstellen
-$ReadmeContent = @"
-# STO Damage Meter - Debug Build
-
-Entwicklungsversion mit Debug-Symbolen und erweiterten Logs.
-
-## Start
-Starte die Anwendung mit: StoDamageMeter.exe
-
-## Logs
-- Frontend: logs\backend_service_debug.log
-- Backend: logs\oscr_backend.log
-
-## Debug-Builds aktualisieren
-Im Projektverzeichnis ausführen:
-.\build_debug.ps1
-
-Build-Zeit: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-"@
-
-Set-Content -Path "$DebugPath\README.txt" -Value $ReadmeContent -Encoding UTF8
+# 4. Finale Zusammenfassung
+Write-Host "`n[4/4] Build Summary:" -ForegroundColor Yellow
+Write-Host "Application processes stopped" -ForegroundColor Green
+Write-Host "Backend built and deployed" -ForegroundColor Green  
+Write-Host "Frontend built successfully" -ForegroundColor Green
+Write-Host "Debug files ready" -ForegroundColor Green
 
 Write-Host "`n=== Build abgeschlossen! ===" -ForegroundColor Green
 Write-Host "Debug-Version verfügbar in: $DebugPath" -ForegroundColor Cyan
 Write-Host "Starten mit: .\Debug\StoDamageMeter.exe" -ForegroundColor Cyan
-

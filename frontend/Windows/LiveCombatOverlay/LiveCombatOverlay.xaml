@@ -10,7 +10,6 @@
         MinHeight="150"
         MinWidth="300"
         Background="Transparent"
-        Topmost="True"
         WindowStyle="None"
         AllowsTransparency="True"
         ResizeMode="CanResizeWithGrip">

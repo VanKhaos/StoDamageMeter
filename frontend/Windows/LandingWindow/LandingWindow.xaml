@@ -65,7 +65,7 @@
                                   Foreground="#B0B0B0"
                                   Background="#1A1A1A"/>
                         <MenuItem Header="🗙 Close" 
-                                  Click="CloseButton_Click"
+                                  Click="CloseMenuItem_Click"
                                   Foreground="#B0B0B0"
                                   Background="#1A1A1A"/>
                     </ContextMenu>

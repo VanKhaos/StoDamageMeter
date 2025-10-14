@@ -9,9 +9,11 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using StoDamageMeter.Services;
 using StoDamageMeter.Models;
+using StoDamageMeter.ViewModels;
 
 namespace StoDamageMeter
 {
@@ -23,6 +25,10 @@ namespace StoDamageMeter
         private bool _isPinned = false;
         private double _zoomFactor = 1.2; // Default Zoom-Faktor
         private readonly UpdateCheckService _updateCheckService;
+        private LiveCombatViewModel? _liveCombatViewModel;
+        
+        // STO Window Binding
+        private ApplicationWindowBindingService? _windowBindingService;
         
         // Global selected log file path
         public static string? SelectedLogFilePath { get; set; }
@@ -87,6 +93,11 @@ namespace StoDamageMeter
                     // Cache the combat data
                     CachedCombatData = response.Combats.OrderByDescending(c => c.Date).ThenByDescending(c => c.Time).ToList();
                     
+                    // Start Live Combat Tracking
+                    if (_liveCombatViewModel != null)
+                    {
+                        _ = _liveCombatViewModel.StartLiveParsing(SelectedLogFilePath);
+                    }
                 }
             }
             catch (Exception ex)
@@ -107,6 +118,16 @@ namespace StoDamageMeter
         {
             InitializeComponent();
             _updateCheckService = App.ServiceProvider.GetRequiredService<UpdateCheckService>();
+            
+           // Initialize Live Combat ViewModel
+           var backendService = App.ServiceProvider.GetRequiredService<IOSCRBackendService>();
+           var fileWatcher = App.ServiceProvider.GetRequiredService<CombatLogWatcherService>();
+           var logger = App.ServiceProvider.GetRequiredService<ILogger<LiveCombatViewModel>>();
+           _liveCombatViewModel = new LiveCombatViewModel(backendService, fileWatcher, logger, Dispatcher);
+           
+           // Initialize Window Binding Service
+           _windowBindingService = App.ServiceProvider.GetRequiredService<ApplicationWindowBindingService>();
+            
             SetZoom(_zoomFactor);
 
             // Set default logo
@@ -120,6 +141,11 @@ namespace StoDamageMeter
 
             // Check for updates on startup (fire-and-forget, non-blocking)
             Loaded += OnLoaded;
+            
+           // Register this window for STO Window Binding
+           _windowBindingService?.RegisterWindow(this);
+           
+           // ContextMenu Interaktions-Handler
         }
 
         #region Window Drag & Drop
@@ -143,8 +169,20 @@ namespace StoDamageMeter
                 double deltaX = currentPosition.X - _lastMousePosition.X;
                 double deltaY = currentPosition.Y - _lastMousePosition.Y;
 
-                Left += deltaX;
-                Top += deltaY;
+                double newLeft = Left + deltaX;
+                double newTop = Top + deltaY;
+
+                // STO-Grenzen prüfen und Clipping anwenden
+                var windowBinding = new WindowBindingService();
+                if (windowBinding.TryGetStoBounds(out var stoBounds))
+                {
+                    // Begrenze auf STO-Fenster
+                    newLeft = Math.Max(stoBounds.Left, Math.Min(newLeft, stoBounds.Right - Width));
+                    newTop = Math.Max(stoBounds.Top, Math.Min(newTop, stoBounds.Bottom - Height));
+                }
+
+                Left = newLeft;
+                Top = newTop;
             }
         }
 
@@ -165,11 +203,60 @@ namespace StoDamageMeter
 
         #endregion
 
+        protected override void OnContentRendered(EventArgs e)
+        {
+            base.OnContentRendered(e);
+            
+            // Markiere als manuell geöffnet
+            _windowBindingService?.MarkWindowAsManuallyOpened(this);
+        }
+
+        private void PositionWindowInSto(Window window)
+        {
+            try
+            {
+                var windowBinding = new WindowBindingService();
+                
+                if (windowBinding.TryGetStoBounds(out var stoBounds))
+                {
+                    // Positioniere das Fenster innerhalb des STO-Fensters
+                    window.Left = stoBounds.Left + 50; // 50px vom linken Rand
+                    window.Top = stoBounds.Top + 50;   // 50px vom oberen Rand
+                    
+                    // Stelle sicher, dass das Fenster nicht außerhalb des STO-Fensters ist
+                    if (window.Left + window.Width > stoBounds.Right)
+                        window.Left = stoBounds.Right - window.Width - 10;
+                    if (window.Top + window.Height > stoBounds.Bottom)
+                        window.Top = stoBounds.Bottom - window.Height - 10;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Falls STO nicht läuft oder Fehler auftreten, verwende Standard-Position
+                System.Diagnostics.Debug.WriteLine($"Could not position window in STO: {ex.Message}");
+            }
+        }
 
         #region Button Click Handlers
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            // Fenster nur ausblenden, nicht schließen
+            this.Visibility = Visibility.Collapsed;
+        }
+
+        private void CloseMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // Context Menu Close soll die Anwendung wirklich schließen
+            // Stop live combat tracking before shutdown
+            if (_liveCombatViewModel != null && _liveCombatViewModel.IsActive)
+            {
+                _ = _liveCombatViewModel.StopLiveParsing();
+            }
+            
+            // Cleanup STO Window Binding
+            // Window Binding Service wird automatisch von der App verwaltet
+            
             Application.Current.Shutdown();
         }
 
@@ -205,6 +292,10 @@ namespace StoDamageMeter
             {
                 // Öffne CombatStatistic Window
                 var statisticsWindow = new CombatStatistic();
+                
+                // Positioniere das Fenster innerhalb des STO-Fensters
+                PositionWindowInSto(statisticsWindow);
+                
                 statisticsWindow.Show();
                 
                 // Log-Datei wird automatisch geladen durch AutoLoadLogFileAsync im Loaded Event
@@ -233,6 +324,12 @@ namespace StoDamageMeter
                     {
                         _overlay = new LiveCombatOverlay();
                         _overlay.Closed += (s, args) => _overlay = null; // Reset bei Schließen
+                        
+                        // Connect ViewModel to Overlay
+                        if (_liveCombatViewModel != null)
+                        {
+                            _overlay.SetViewModel(_liveCombatViewModel);
+                        }
                     }
                     _overlay.Show();
                 }
@@ -262,6 +359,12 @@ namespace StoDamageMeter
 
                 if (openFileDialog.ShowDialog() == true)
                 {
+                    // Stop current live combat tracking if running
+                    if (_liveCombatViewModel != null && _liveCombatViewModel.IsActive)
+                    {
+                        _ = _liveCombatViewModel.StopLiveParsing();
+                    }
+                    
                     // Store selected log file path globally
                     SelectedLogFilePath = openFileDialog.FileName;
                     
@@ -350,6 +453,14 @@ namespace StoDamageMeter
                         e.Handled = true;
                         break;
                 }
+            }
+            
+            // Verhindere dass die Anwendung sich schließt bei anderen Shortcuts
+            if (e.Key == Key.Escape)
+            {
+                // ESC soll die Anwendung nur ausblenden, nicht schließen
+                this.Hide();
+                e.Handled = true;
             }
         }
 

@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,9 @@ namespace StoDamageMeter;
         private CombatData? _currentCombatData;
         private string? _currentLogPath;
         private bool _isPinned = false;
+        
+        // STO Window Binding
+        private ApplicationWindowBindingService? _windowBindingService;
     
     // Sorting state
     private string _currentSortColumn = "TotalDamageWithCompanions"; // Default
@@ -58,6 +62,13 @@ namespace StoDamageMeter;
         // Component Events verbinden
         CombatListViewComponent.CombatSelected += OnCombatSelected;
         StatsHeaderComponent.ColumnHeaderClicked += OnColumnHeaderClicked;
+        
+           // Initialize Window Binding Service
+           _windowBindingService = App.ServiceProvider.GetRequiredService<ApplicationWindowBindingService>();
+           _windowBindingService?.RegisterWindow(this);
+           
+           // Keyboard Shortcuts
+           KeyDown += CombatStatistic_KeyDown;
         
         // TEST LOG
         _logger.LogInformation("=== CombatStatistic Constructor - Logging Test ===");
@@ -751,9 +762,25 @@ namespace StoDamageMeter;
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // Only allow dragging if not pinned
-            if (!_isPinned)
+            if (!_isPinned && e.ClickCount == 1)
             {
+                // Use standard WPF DragMove for better event handling
                 this.DragMove();
+                
+                // Apply STO bounds clipping after drag
+                var windowBinding = new WindowBindingService();
+                if (windowBinding.TryGetStoBounds(out var stoBounds))
+                {
+                    // Ensure window stays within STO bounds
+                    double newLeft = Math.Max(stoBounds.Left, Math.Min(Left, stoBounds.Right - Width));
+                    double newTop = Math.Max(stoBounds.Top, Math.Min(Top, stoBounds.Bottom - Height));
+                    
+                    if (newLeft != Left || newTop != Top)
+                    {
+                        Left = newLeft;
+                        Top = newTop;
+                    }
+                }
             }
         }
 
@@ -770,7 +797,19 @@ namespace StoDamageMeter;
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            // Fenster nur ausblenden, nicht schließen
+            this.Visibility = Visibility.Collapsed;
+        }
+
+        private void CombatStatistic_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Verhindere dass die Anwendung sich schließt bei Shortcuts
+            if (e.Key == Key.Escape)
+            {
+                // ESC soll die Anwendung nur ausblenden, nicht schließen
+                this.Hide();
+                e.Handled = true;
+            }
         }
 
         #endregion
@@ -782,6 +821,18 @@ namespace StoDamageMeter;
         {
             _backendService.AnalysisProgress -= OnAnalysisProgress;
         }
+        
+        // Cleanup STO Window Binding
+        // Window Binding Service wird automatisch von der App verwaltet
+        
         base.OnClosed(e);
+    }
+
+    protected override void OnContentRendered(EventArgs e)
+    {
+        base.OnContentRendered(e);
+        
+        // Markiere als manuell geöffnet
+        _windowBindingService?.MarkWindowAsManuallyOpened(this);
     }
 }

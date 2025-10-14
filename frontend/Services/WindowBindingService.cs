@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace StoDamageMeter.Services
@@ -56,15 +57,43 @@ namespace StoDamageMeter.Services
         {
             var stoProcess = GetStoProcess();
             if (stoProcess == null)
+            {
                 return false;
+            }
 
             IntPtr foregroundWindow = GetForegroundWindow();
             if (foregroundWindow == IntPtr.Zero)
+            {
                 return false;
+            }
 
             GetWindowThreadProcessId(foregroundWindow, out uint foregroundProcessId);
+            bool isStoActive = foregroundProcessId == stoProcess.Id && !IsIconic(foregroundWindow);
             
-            return foregroundProcessId == stoProcess.Id && !IsIconic(foregroundWindow);
+            
+            return isStoActive;
+        }
+
+        public uint GetForegroundProcessId()
+        {
+            IntPtr foregroundWindow = GetForegroundWindow();
+            if (foregroundWindow == IntPtr.Zero)
+                return 0;
+
+            GetWindowThreadProcessId(foregroundWindow, out uint foregroundProcessId);
+            return foregroundProcessId;
+        }
+
+        public bool IsStoProcessRunning()
+        {
+            var stoProcess = GetStoProcess();
+            return stoProcess != null && !stoProcess.HasExited;
+        }
+
+        public uint GetStoProcessId()
+        {
+            var stoProcess = GetStoProcess();
+            return (uint)(stoProcess?.Id ?? 0);
         }
 
         /// <summary>
@@ -112,23 +141,23 @@ namespace StoDamageMeter.Services
             _lastProcessCheck = DateTime.Now;
             _cachedStoProcess = null;
 
-            foreach (var processName in _stoProcessNames)
-            {
-                var processes = Process.GetProcessesByName(processName);
-                if (processes.Length > 0)
-                {
-                    _cachedStoProcess = processes[0];
-                    
-                    // Cleanup: Schließe andere Prozess-Handles
-                    for (int i = 1; i < processes.Length; i++)
-                    {
-                        processes[i].Dispose();
-                    }
-                    
-                    return _cachedStoProcess;
-                }
-            }
-
+           foreach (var processName in _stoProcessNames)
+           {
+               var processes = Process.GetProcessesByName(processName);
+               
+               if (processes.Length > 0)
+               {
+                   _cachedStoProcess = processes[0];
+                   
+                   // Cleanup: Schließe andere Prozess-Handles
+                   for (int i = 1; i < processes.Length; i++)
+                   {
+                       processes[i].Dispose();
+                   }
+                   
+                   return _cachedStoProcess;
+               }
+           }
             return null;
         }
 
