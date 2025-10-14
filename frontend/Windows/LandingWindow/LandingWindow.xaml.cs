@@ -21,6 +21,7 @@ namespace StoDamageMeter
         private LiveCombatOverlay? _overlay = null;
         private bool _isPinned = false;
         private double _zoomFactor = 1.2; // Default Zoom-Faktor
+        private readonly UpdateCheckService _updateCheckService;
         
         // Global selected log file path
         public static string? SelectedLogFilePath { get; set; }
@@ -104,6 +105,7 @@ namespace StoDamageMeter
         public LandingWindow()
         {
             InitializeComponent();
+            _updateCheckService = App.ServiceProvider.GetRequiredService<UpdateCheckService>();
             SetZoom(_zoomFactor);
             
             // Update log file menu item color on startup
@@ -111,6 +113,9 @@ namespace StoDamageMeter
             
             // Keyboard Shortcuts für Zoom
             KeyDown += LandingWindow_KeyDown;
+            
+            // Check for updates on startup (fire-and-forget, non-blocking)
+            Loaded += OnLoaded;
         }
 
         #region Window Drag & Drop
@@ -341,6 +346,76 @@ namespace StoDamageMeter
                         e.Handled = true;
                         break;
                 }
+            }
+        }
+
+        #endregion
+
+        #region Update Check Methods
+
+        private async void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            // Check for updates (fire-and-forget, non-blocking)
+            _ = CheckForUpdatesAsync();
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                var updateInfo = await _updateCheckService.CheckForUpdatesAsync();
+                
+                if (updateInfo?.UpdateAvailable == true)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        UpdateAvailableMenuItem.Header = $"🔔 Update Available - v{updateInfo.LatestVersion}";
+                        UpdateAvailableMenuItem.Visibility = Visibility.Visible;
+                        UpdateAvailableMenuItem.Tag = updateInfo.ReleaseUrl;
+                    });
+                }
+                else
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        UpdateAvailableMenuItem.Visibility = Visibility.Collapsed;
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silent fail - Update check nicht kritisch
+                System.Diagnostics.Debug.WriteLine($"Update check failed: {ex.Message}");
+            }
+        }
+
+        private async void CheckUpdateMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CheckUpdateMenuItem.IsEnabled = false;
+            CheckUpdateMenuItem.Header = "🔄 Checking...";
+            
+            await CheckForUpdatesAsync();
+            
+            CheckUpdateMenuItem.IsEnabled = true;
+            CheckUpdateMenuItem.Header = "🔄 Check for Updates";
+            
+            // Feedback wenn kein Update
+            if (UpdateAvailableMenuItem.Visibility == Visibility.Collapsed)
+            {
+                MessageBox.Show("You are using the latest version!", "Up to date", 
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void UpdateAvailableMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (UpdateAvailableMenuItem.Tag is string url)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
             }
         }
 

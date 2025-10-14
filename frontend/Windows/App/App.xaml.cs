@@ -32,6 +32,9 @@ public partial class App : Application
         // Combat Log Watcher Service
         services.AddSingleton<CombatLogWatcherService>();
 
+        // Update Check Service
+        services.AddSingleton<UpdateCheckService>();
+
         // Service Provider erstellen
         ServiceProvider = services.BuildServiceProvider();
 
