@@ -2,7 +2,7 @@
 # Erstellt eine ZIP-Datei aus dem Release-Ordner
 
 param(
-    [string]$Version = "1.1.0"
+    [string]$Version = "2.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,8 +11,8 @@ Write-Host "=== STO Damage Meter - ZIP Creator ===" -ForegroundColor Cyan
 Write-Host "Version: $Version" -ForegroundColor Green
 Write-Host ""
 
-# Pfade definieren
-$ProjectRoot = $PSScriptRoot
+# Pfade definieren (Script ist in scripts/ Ordner)
+$ProjectRoot = Split-Path $PSScriptRoot -Parent
 $ReleasePath = Join-Path $ProjectRoot "Releases"
 $SourcePath = Join-Path $ReleasePath "StoDamageMeter_v$Version"
 $ZipPath = Join-Path $ReleasePath "StoDamageMeter_v$Version.zip"

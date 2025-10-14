@@ -19,7 +19,6 @@
             
             <!-- Haupt-Logo -->
             <Image x:Name="LogoImage" 
-                   Source="/Assets/app_icon.png" 
                    Width="100" 
                    Height="100"
                    HorizontalAlignment="Center" 
@@ -38,13 +37,13 @@
                                   IsEnabled="False"/>
                         <MenuItem x:Name="GraphMenuItem"
                                   Header="📈 Graph" 
-                                  Click="GraphButton_Click"
+                            Click="GraphButton_Click"
                                   Foreground="#B0B0B0"
                                   Background="#1A1A1A"
                                   IsEnabled="False"/>
                         <MenuItem x:Name="OverlayMenuItem"
                                   Header="🎯 Combat Overlay" 
-                                  Click="OverlayButton_Click"
+                            Click="OverlayButton_Click"
                                   Foreground="#B0B0B0"
                                   Background="#1A1A1A"
                                   IsEnabled="False"/>
@@ -53,6 +52,12 @@
                                   Click="SelectLogFileButton_Click"
                                   Foreground="#FF6B6B"
                                   Background="#1A1A1A"/>
+                        <MenuItem x:Name="UpdateAvailableMenuItem"
+                                  Header="🔔 Update Available - v2.1.0" 
+                                  Click="UpdateAvailableMenuItem_Click"
+                                  Foreground="#4CAF50"
+                                  Background="#1A1A1A"
+                                  Visibility="Collapsed"/>
                         <Separator Background="#333333"/>
                         <MenuItem x:Name="PinMenuItem" 
                                   Header="📌 Pin" 
@@ -113,9 +118,9 @@
                                 </EventTrigger>
                             </TextBlock.Triggers>
                         </TextBlock>
-                    </StackPanel>
+            </StackPanel>
                 </Border>
-            </Grid>
+                        </Grid>
             
         </Grid>
     </Viewbox>

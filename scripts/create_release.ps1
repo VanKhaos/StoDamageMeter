@@ -2,7 +2,7 @@
 # Erstellt ein vollständiges, eigenständiges Release-Paket
 
 param(
-    [string]$Version = "1.1.0"
+    [string]$Version = "2.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,8 +11,8 @@ Write-Host "=== STO Damage Meter - Release Builder ===" -ForegroundColor Cyan
 Write-Host "Version: $Version" -ForegroundColor Green
 Write-Host ""
 
-# Pfade definieren
-$ProjectRoot = $PSScriptRoot
+# Pfade definieren (Script ist in scripts/ Ordner)
+$ProjectRoot = Split-Path $PSScriptRoot -Parent
 $FrontendPath = Join-Path $ProjectRoot "frontend"
 $BackendPath = Join-Path $ProjectRoot "backend"
 $ReleasePath = Join-Path $ProjectRoot "Releases"

@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-10-14
+
+### Added
+- **Material Design in XAML Toolkit Integration**
+  - Modern UI components with Material Design styling
+  - Material Design icons and buttons throughout the application
+  - Elevated cards with shadow effects for better visual hierarchy
+  - Circular progress bars for loading indicators
+- **Enhanced UI Components**
+  - Material Design IconButtons for Pin/Close functionality
+  - PackIcon components for consistent iconography
+  - Material Design Cards for elevated content areas
+  - Custom ListBox styling with proper hover/selection effects
+
+### Changed
+- **Complete UI Modernization**
+  - Replaced WPF UI components with Material Design equivalents
+  - Updated color scheme to maintain Star Trek theme with Material Design
+  - Improved visual consistency across all windows and components
+  - Enhanced user experience with modern Material Design patterns
+- **Color System Overhaul**
+  - Fixed #454545 Material Design default color issue
+  - Implemented custom Material Design color overrides for dark theme
+  - Maintained Star Trek blue (#5B9BD5) and orange (#FFA500) accent colors
+  - Consistent dark color palette throughout the application
+- **Combat List Improvements**
+  - Custom ListBoxItem styling for proper hover/selection effects
+  - Optimized padding and spacing for better readability
+  - Enhanced visual feedback for user interactions
+
+### Fixed
+- **Material Design Color Issues**
+  - Resolved #454545 default Material Design card background color
+  - Implemented comprehensive color overrides for dark theme consistency
+  - Fixed ListBox background transparency issues
+- **UI Consistency**
+  - Unified color scheme across all components
+  - Consistent hover and selection effects
+  - Proper Material Design elevation and shadow effects
+
+### Technical
+- **Dependencies**
+  - Added MaterialDesignInXAML.Toolkit NuGet package
+  - Updated App.xaml with Material Design theme configuration
+  - Integrated Material Design 3 standards
+- **Architecture**
+  - Maintained existing functionality while modernizing UI
+  - Preserved Star Trek theme identity
+  - Enhanced maintainability with Material Design patterns
+
 ## [1.2.4] - 2025-10-11
 
 ### Added
