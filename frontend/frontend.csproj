@@ -9,6 +9,7 @@
     <RootNamespace>StoDamageMeter</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <!-- Debug: Mit Konsole (für Logs) -->
@@ -52,6 +53,7 @@
   <ItemGroup>
     <Resource Include="Assets\app_icon.ico" />
     <Resource Include="Assets\app_icon.png" />
+    <Resource Include="Assets\DPS_Meter_Logo_Green.png" />
   </ItemGroup>
 
   <!-- Build-Targets für Backend-Integration importieren -->
