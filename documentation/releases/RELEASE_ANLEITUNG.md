@@ -10,7 +10,7 @@
   - `StoDamageMeter.exe` (Hauptanwendung)
   - `OSCRBackend.exe` (Backend, 7.7 MB)
   - `README.txt` (Benutzer-Anleitung)
-  - `appsettings.json` (Konfiguration)
+  - Konfiguration wurde entfernt (hardcoded)
   - Alle notwendigen .NET Runtime-Dateien (self-contained)
   - Alle Dependencies (WPF-UI, Microsoft.Extensions, etc.)
 

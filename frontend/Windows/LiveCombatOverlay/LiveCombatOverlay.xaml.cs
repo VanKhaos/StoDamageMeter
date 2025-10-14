@@ -11,7 +11,7 @@ using StoDamageMeter.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace StoDamageMeter.Components.LiveCombat
+namespace StoDamageMeter
 {
     public partial class LiveCombatOverlay : Window
     {
@@ -124,20 +124,8 @@ namespace StoDamageMeter.Components.LiveCombat
 
         private void LoadConfiguration()
         {
-            try
-            {
-                var configuration = App.ServiceProvider.GetService<IConfiguration>();
-                if (configuration != null)
-                {
-                    // Lade Window-Binding-Einstellung (Default: true)
-                    _bindToStoWindow = configuration.GetValue("LiveCombat:BindToStoWindow", true);
-                }
-            }
-            catch (Exception)
-            {
-                // Fallback: Default-Wert verwenden
-                _bindToStoWindow = true;
-            }
+            // Window-Binding ist immer aktiviert (nicht konfigurierbar)
+            _bindToStoWindow = true;
         }
 
         private void DurationTimer_Tick(object? sender, EventArgs e)

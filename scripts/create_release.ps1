@@ -158,11 +158,11 @@ $ReadmeContent = @"
 
 ## ⚙️ Konfiguration
 
-Die Datei `appsettings.json` kann bearbeitet werden für:
-- Backend-Pfad anpassen
-- Max. Anzahl Combats ändern (Standard: 20)
-- Sekunden zwischen Combats anpassen (Standard: 30)
-- Min. Lines pro Combat anpassen (Standard: 20)
+Die Anwendung verwendet optimierte hardcoded Einstellungen:
+- Backend-Pfad: OSCRBackend.exe (automatisch erkannt)
+- Max. Anzahl Combats: 20 (optimiert für Performance)
+- Sekunden zwischen Combats: 45 (automatische Combat-Erkennung)
+- Min. Lines pro Combat: 20 (Filter für relevante Combats)
 
 ## 🔧 Systemanforderungen
 
@@ -226,7 +226,7 @@ $LanguageDir = Join-Path $ReleaseVersionPath "Language"
 $CoreApp = Join-Path $AppDir "StoDamageMeter.Core.exe"
 $LauncherApp = Join-Path $ReleaseVersionPath "StoDamageMeter.exe"
 $BackendInApp = Join-Path $AppDir "OSCRBackend.exe"
-$AppSettingsInApp = Join-Path $AppDir "appsettings.json"
+# appsettings.json wurde entfernt - alle Einstellungen sind jetzt hardcoded
 
 $ValidationErrors = @()
 
@@ -245,9 +245,7 @@ if (-not (Test-Path $LanguageDir)) {
 if (-not (Test-Path $BackendInApp)) {
     $ValidationErrors += "Backend not found in App directory: $BackendInApp"
 }
-if (-not (Test-Path $AppSettingsInApp)) {
-    $ValidationErrors += "appsettings.json not found in App directory: $AppSettingsInApp"
-}
+# appsettings.json wurde entfernt - Validierung nicht mehr nötig
 
 if ($ValidationErrors.Count -gt 0) {
     Write-Host ""
@@ -283,7 +281,7 @@ Write-Host "  Root:" -ForegroundColor White
 Write-Host "    - StoDamageMeter.exe (Launcher)" -ForegroundColor Gray
 Write-Host "    - README.txt" -ForegroundColor Gray
 Write-Host "    - CHANGELOG.txt" -ForegroundColor Gray
-Write-Host "    - App/ (Core-Anwendung + Backend + Config + alle DLLs)" -ForegroundColor Gray
+Write-Host "    - App/ (Core-Anwendung + Backend + alle DLLs)" -ForegroundColor Gray
 Write-Host "    - Language/ (Sprachressourcen)" -ForegroundColor Gray
 Write-Host ""
 

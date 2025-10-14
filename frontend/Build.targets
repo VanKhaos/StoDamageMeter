@@ -109,7 +109,7 @@
       <AllRuntimeFiles Include="$(PublishDir)*.json" />
     </ItemGroup>
 
-    <!-- Core-App und alle DLLs nach App/ verschieben (inkl. OSCRBackend.exe und appsettings.json) -->
+    <!-- Core-App und alle DLLs nach App/ verschieben (inkl. OSCRBackend.exe) -->
     <Move SourceFiles="@(AllDlls)" DestinationFolder="$(AppDir)" />
     <Move SourceFiles="@(AllExes)" DestinationFolder="$(AppDir)" />
     <Move SourceFiles="@(AllRuntimeFiles)" DestinationFolder="$(AppDir)" />

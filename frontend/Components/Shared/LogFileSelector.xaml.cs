@@ -24,7 +24,7 @@ namespace StoDamageMeter.Components.Shared
             var dialog = new OpenFileDialog
             {
                 Title = "Select Combat Log File",
-                Filter = "Log files (*.log)|*.log|All files (*.*)|*.*",
+                Filter = "Log files (*.log)|*.log",
                 CheckFileExists = true
             };
 

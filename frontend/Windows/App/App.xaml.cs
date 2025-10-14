@@ -1,7 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using Microsoft.Extensions.Configuration;
+﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StoDamageMeter.Services;
@@ -19,12 +16,6 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Konfiguration laden
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
         // Services registrieren
         var services = new ServiceCollection();
         
@@ -35,9 +26,6 @@ public partial class App : Application
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
-        // Konfiguration
-        services.AddSingleton<IConfiguration>(configuration);
-
         // OSCR Backend Service
         services.AddSingleton<IOSCRBackendService, OSCRBackendService>();
 
@@ -47,16 +35,13 @@ public partial class App : Application
         // Service Provider erstellen
         ServiceProvider = services.BuildServiceProvider();
 
-        // MainWindow starten (nur einmal)
-        var mainWindow = new MainWindow();
-        mainWindow.WindowState = WindowState.Normal;
-        mainWindow.Topmost = true;
-        mainWindow.Show();
-        mainWindow.Activate();
-        mainWindow.Topmost = false;
+        // LandingWindow starten (neuer Einstiegspunkt)
+        var landingWindow = new LandingWindow();
+        landingWindow.Show();
+        landingWindow.Activate();
         
-        // MainWindow als Application MainWindow setzen
-        Application.Current.MainWindow = mainWindow;
+        // LandingWindow als Application MainWindow setzen
+        Application.Current.MainWindow = landingWindow;
     }
 
     protected override void OnExit(ExitEventArgs e)

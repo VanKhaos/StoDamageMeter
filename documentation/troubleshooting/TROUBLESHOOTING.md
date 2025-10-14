@@ -179,7 +179,7 @@ MemoryError: ...
 **Ursache:** Zeit zwischen Combats falsch konfiguriert
 
 **Lösung:**
-1. Öffne `appsettings.json` im Anwendungsordner
+1. Alle Einstellungen sind jetzt hardcoded - keine Konfigurationsdatei mehr
 2. Ändere `"SecondsBetweenCombats": 30` auf einen höheren Wert (z.B. 60)
 3. Speichern und Anwendung neu starten
 

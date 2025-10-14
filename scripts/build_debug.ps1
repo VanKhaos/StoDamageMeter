@@ -8,22 +8,48 @@ $RootPath = Split-Path $PSScriptRoot -Parent
 $FrontendPath = Join-Path $RootPath "frontend"
 $BackendPath = Join-Path $RootPath "backend"
 $DebugPath = Join-Path $RootPath "Debug"
+$LogsPath = Join-Path $DebugPath "logs"
 
-# 1. Backend bauen (falls noch nicht vorhanden)
+
+# 1. Backend bauen (nur wenn geändert)
 Write-Host "`n[1/3] Checking Backend..." -ForegroundColor Yellow
 $BackendExe = Join-Path $BackendPath "dist\OSCRBackend.exe"
+$BackendSource = Join-Path $BackendPath "working_oscr_backend.py"
+$BackendDeploy = Join-Path $RootPath "Deploy\OSCRBackend.exe"
+
+# Prüfen ob Backend existiert und ob es neuer ist als die Quelle
+$needsBuild = $false
 if (-not (Test-Path $BackendExe)) {
-    Write-Host "Backend not found, building..." -ForegroundColor Yellow
+    Write-Host "Backend executable not found, building..." -ForegroundColor Yellow
+    $needsBuild = $true
+} else {
+    $sourceTime = (Get-Item $BackendSource).LastWriteTime
+    $exeTime = (Get-Item $BackendExe).LastWriteTime
+    if ($sourceTime -gt $exeTime) {
+        Write-Host "Backend source changed, rebuilding..." -ForegroundColor Yellow
+        $needsBuild = $true
+    } else {
+        Write-Host "Backend is up to date" -ForegroundColor Green
+    }
+}
+
+if ($needsBuild) {
+    Write-Host "Building Backend with PyInstaller..." -ForegroundColor Yellow
     Push-Location $BackendPath
-    pyinstaller --clean working_oscr.spec
+    pyinstaller --onefile --name OSCRBackend working_oscr_backend.py
     Pop-Location
     
     if (-not (Test-Path $BackendExe)) {
         Write-Host "ERROR: Backend build failed!" -ForegroundColor Red
         exit 1
     }
+    Write-Host "Backend built successfully: $BackendExe" -ForegroundColor Green
 }
-Write-Host "Backend OK: $BackendExe" -ForegroundColor Green
+
+# Backend nach Deploy kopieren (immer, falls es sich geändert hat)
+Write-Host "Copying Backend to Deploy folder..." -ForegroundColor Yellow
+Copy-Item $BackendExe $BackendDeploy -Force
+Write-Host "Backend copied to Deploy folder" -ForegroundColor Green
 
 # 2. Frontend Debug bauen
 Write-Host "`n[2/3] Building Frontend (Debug)..." -ForegroundColor Yellow

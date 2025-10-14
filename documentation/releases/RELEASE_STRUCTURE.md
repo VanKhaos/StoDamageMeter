@@ -43,7 +43,7 @@ StoDamageMeter.dll              # Anwendungs-Bibliothek
 StoDamageMeter.deps.json        # Dependency-Informationen
 StoDamageMeter.runtimeconfig.json  # Runtime-Konfiguration
 OSCRBackend.exe                 # Python Backend (7.7 MB)
-appsettings.json                # Konfiguration
+# Konfiguration wurde entfernt - alle Einstellungen sind hardcoded
 createdump.exe                  # .NET Crash Dump Tool
 ```
 
@@ -171,7 +171,7 @@ Die eigentliche WPF-Anwendung mit allen Features:
 Root/ (414 Dateien)
 ├── StoDamageMeter.exe
 ├── OSCRBackend.exe
-├── appsettings.json
+# appsettings.json wurde entfernt
 ├── README.txt
 ├── 240+ DLL-Dateien 📚📚📚
 ├── cs/ de/ es/ fr/ it/ ja/ ko/ pl/ pt-BR/ ru/ tr/ zh-Hans/ zh-Hant/

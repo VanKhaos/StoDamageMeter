@@ -1,0 +1,122 @@
+<Window x:Class="StoDamageMeter.LandingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="STO Damage Meter" 
+        Height="120" 
+        Width="120"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+    </Window.Resources>
+    
+    <Viewbox Stretch="Uniform">
+        <Grid Width="100" Height="100">
+            
+            <!-- Haupt-Logo -->
+            <Image x:Name="LogoImage" 
+                   Source="/Assets/app_icon.png" 
+                   Width="100" 
+                   Height="100"
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center"
+                   MouseLeftButtonDown="LogoImage_MouseLeftButtonDown"
+                   MouseMove="LogoImage_MouseMove"
+                   MouseLeftButtonUp="LogoImage_MouseLeftButtonUp"
+                   MouseRightButtonDown="LogoImage_MouseRightButtonDown">
+                <Image.ContextMenu>
+                    <ContextMenu Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1">
+                        <MenuItem x:Name="StatisticsMenuItem"
+                                  Header="📊 Statistics" 
+                                  Click="StatisticsButton_Click"
+                                  Foreground="#B0B0B0"
+                                  Background="#1A1A1A"
+                                  IsEnabled="False"/>
+                        <MenuItem x:Name="GraphMenuItem"
+                                  Header="📈 Graph" 
+                                  Click="GraphButton_Click"
+                                  Foreground="#B0B0B0"
+                                  Background="#1A1A1A"
+                                  IsEnabled="False"/>
+                        <MenuItem x:Name="OverlayMenuItem"
+                                  Header="🎯 Combat Overlay" 
+                                  Click="OverlayButton_Click"
+                                  Foreground="#B0B0B0"
+                                  Background="#1A1A1A"
+                                  IsEnabled="False"/>
+                        <MenuItem x:Name="SelectLogFileMenuItem"
+                                  Header="📁 Select Combat Log" 
+                                  Click="SelectLogFileButton_Click"
+                                  Foreground="#FF6B6B"
+                                  Background="#1A1A1A"/>
+                        <Separator Background="#333333"/>
+                        <MenuItem x:Name="PinMenuItem" 
+                                  Header="📌 Pin" 
+                                  Click="PinButton_Click"
+                                  Foreground="#B0B0B0"
+                                  Background="#1A1A1A"/>
+                        <MenuItem Header="🗙 Close" 
+                                  Click="CloseButton_Click"
+                                  Foreground="#B0B0B0"
+                                  Background="#1A1A1A"/>
+                    </ContextMenu>
+                </Image.ContextMenu>
+            </Image>
+            
+            <!-- Loading Spinner - Overlay on Logo -->
+            <Grid x:Name="LoadingSpinnerGrid"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Visibility="Collapsed"
+                  Width="100"
+                  Height="100"
+                  Panel.ZIndex="1">
+                <Border Background="#80000000"
+                        CornerRadius="50"
+                        Width="100"
+                        Height="100">
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <TextBlock x:Name="LoadingText"
+                                   Text="Loading..."
+                                   Foreground="White"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center">
+                            <TextBlock.RenderTransform>
+                                <ScaleTransform x:Name="LoadingTextScale" ScaleX="1" ScaleY="1"/>
+                            </TextBlock.RenderTransform>
+                            <TextBlock.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <!-- Pulsing Animation -->
+                                            <DoubleAnimation Storyboard.TargetName="LoadingTextScale"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           From="1" To="1.1" Duration="0:0:0.8"
+                                                           AutoReverse="True"/>
+                                            <DoubleAnimation Storyboard.TargetName="LoadingTextScale"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           From="1" To="1.1" Duration="0:0:0.8"
+                                                           AutoReverse="True"/>
+                                            <!-- Opacity Animation -->
+                                            <DoubleAnimation Storyboard.TargetName="LoadingText"
+                                                           Storyboard.TargetProperty="Opacity"
+                                                           From="0.7" To="1" Duration="0:0:0.8"
+                                                           AutoReverse="True"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </TextBlock.Triggers>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            
+        </Grid>
+    </Viewbox>
+</Window>

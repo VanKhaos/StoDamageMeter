@@ -22,11 +22,11 @@ if sys.stderr.encoding != 'utf-8':
 # Logging konfigurieren
 # Logger mit File-Handler konfigurieren
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Console Handler
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 
 # File Handler - schreibt ins logs/ Unterverzeichnis mit Rotation
 # Bestimme das Verzeichnis der .exe (oder des Scripts)
@@ -52,7 +52,7 @@ file_handler = RotatingFileHandler(
     backupCount=3,  # Halte 3 Backup-Dateien (oscr_backend.log.1, .2, .3)
     encoding='utf-8'
 )
-file_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.DEBUG)
 
 # Format
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -64,8 +64,6 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 # Log-Pfad ausgeben damit Benutzer weiß wo die Log-Datei ist
-logger.info(f"=== OSCR Backend Started ===")
-logger.info(f"Log file: {log_file_path}")
 
 # Echte OSCR-Funktionalität mit korrekten Combat-Patterns
 class WorkingOSCR:
@@ -101,6 +99,19 @@ class WorkingOSCR:
                 return datetime(year, month, day, hour, minute, int(second), int((second % 1) * 1000000))
             return None
         except:
+            return None
+    
+    def _parse_time_from_line(self, line):
+        """Parst den Timestamp aus einer Combat-Log-Zeile"""
+        try:
+            # Format: "YY:MM:DD:HH:MM:SS.ms::rest_of_line"
+            if '::' in line:
+                timestamp_str = line.split('::')[0]
+                parsed_time = self.parse_timestamp(timestamp_str)
+                return parsed_time
+            else:
+                return None
+        except Exception as e:
             return None
     
     def _extract_primary_damage_type(self, damage_type_string: str) -> str:
@@ -309,7 +320,6 @@ class WorkingOSCR:
     
     def isolate_combats(self, path: str, max_combats: int = -1):
         """Echte Combat-Isolation basierend auf Zeit-Differenzen"""
-        logger.info(f"Isolating combats from: {path}")
         
         if not os.path.exists(path):
             raise FileNotFoundError(f"Log file not found: {path}")
@@ -321,7 +331,6 @@ class WorkingOSCR:
             with open(path, 'r', encoding='utf-8-sig', errors='replace') as f:
                 lines = f.readlines()
             
-            logger.info(f"Read {len(lines)} lines from log (chronological order)")
             
             # Combat-Daten sammeln (chronologisch, ältester zuerst)
             current_combat_lines = []
@@ -400,7 +409,6 @@ class WorkingOSCR:
                                         date_str = "2025-10-09"
                                         time_str = "00:00:00"
                             except Exception as e:
-                                logger.warning(f"Error parsing combat timestamp: {e}")
                                 date_str = "2025-10-09"
                                 time_str = "00:00:00"
                             
@@ -464,7 +472,6 @@ class WorkingOSCR:
                                 date_str = "2025-10-09"
                                 time_str = "00:00:00"
                     except Exception as e:
-                        logger.warning(f"Error parsing combat timestamp: {e}")
                         date_str = "2025-10-09"
                         time_str = "00:00:00"
                     
@@ -482,12 +489,10 @@ class WorkingOSCR:
                         combat_type
                     ))
             
-            logger.info(f"Found {len(combats)} combats (chronological)")
             
             # Falls Limit gesetzt: Nur die LETZTEN N Combats nehmen (neueste)
             if max_combats > 0 and len(combats) > max_combats:
                 combats_to_return = combats[-max_combats:]  # Letzte N = neueste
-                logger.info(f"Limiting to last {max_combats} combats (newest)")
             else:
                 combats_to_return = combats
             
@@ -508,16 +513,13 @@ class WorkingOSCR:
                     c_type
                 ))
             
-            logger.info(f"Returning {len(renumbered_combats)} combats (newest first)")
             return renumbered_combats
             
         except Exception as e:
-            logger.error(f"Error isolating combats: {e}")
             return []
     
     def analyze_log_file(self, log_path: str, max_combats: int = 1):
         """Echte Combat-Analyse mit korrekten Patterns"""
-        logger.info(f"Analyzing log file: {log_path}")
         
         if not os.path.exists(log_path):
             raise FileNotFoundError(f"Log file not found: {log_path}")
@@ -542,7 +544,6 @@ class WorkingOSCR:
             
             self.combats.append(combat)
         
-        logger.info(f"Analyzed {len(self.combats)} combats")
     
     def _analyze_combat_lines_direct(self, combat_lines: list, combat_type: str = None, duration: float = 60.0):
         """
@@ -721,11 +722,9 @@ class WorkingOSCR:
                         if duration > 0:
                             ability.dps = ability.total_damage / duration
             
-            logger.info(f"Live combat analysis: {len(players)} players, {damage_events} damage events, {processed_lines} lines processed")
             return players
             
         except Exception as e:
-            logger.error(f"Error in _analyze_combat_lines_direct: {e}")
             return {}
     
     def _analyze_combat_players(self, log_path: str, start_byte: int, end_byte: int, combat_type: str = None):
@@ -916,16 +915,8 @@ class WorkingOSCR:
                     player.accuracy_percent = (total_hits / total_attacks) * 100.0
             
             # Keine Fallback-Daten mehr - leere Liste wenn keine Spieler gefunden
-            if not players:
-                logger.info(f"Combat analysis complete: No players found, {damage_events} damage events, {processed_lines} lines processed")
-            else:
-                logger.info(f"Combat analysis complete: {len(players)} players, {damage_events} damage events")
             
         except Exception as e:
-            logger.error(f"Error analyzing players: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            # Keine Fallback-Daten - leere Liste zurückgeben
             players = {}
         
         return players
@@ -1046,18 +1037,50 @@ def get_health_status():
             "timestamp": datetime.now().isoformat()
         }
 
-def get_available_combats(log_path, max_combats=20):
+def get_available_combats(log_path, max_combats=100):
     """Verfügbare Combats abrufen (Default: letzte 20)"""
     try:
         if not os.path.exists(log_path):
             raise FileNotFoundError(f"Log file not found: {log_path}")
         
-        logger.info(f"Loading combats with maxCombats={max_combats}")
         parser = WorkingOSCR(log_path)
-        combats = parser.isolate_combats(log_path, max_combats)
+        # Lade alle Combats und dann die neuesten N
+        all_combats = parser.isolate_combats(log_path, -1)  # Alle Combats
+        if max_combats > 0 and len(all_combats) > max_combats:
+            combats = all_combats[:max_combats]  # Neueste N Combats
+        else:
+            combats = all_combats
         
         combats_data = []
         for c_id, c_map, c_date, c_time, c_difficulty, c_byte_start, c_byte_end, c_type in combats:
+            # Calculate duration using the same logic as JSON debug log
+            duration = 0
+            try:
+                # Use the same method as isolate_combats - read line by line
+                with open(log_path, 'r', encoding='utf-8-sig', errors='replace') as f:
+                    all_lines = f.readlines()
+                
+                # c_byte_start and c_byte_end are actually line indices in isolate_combats
+                start_line_idx = c_byte_start
+                end_line_idx = c_byte_end
+                
+                # Get the actual lines from the log
+                if start_line_idx < len(all_lines) and end_line_idx <= len(all_lines):
+                    # Get first and last lines of this combat
+                    if end_line_idx - start_line_idx >= 2:
+                        start_line = all_lines[start_line_idx].strip()
+                        end_line = all_lines[end_line_idx - 1].strip()
+                        
+                        # Parse timestamps using the same method as JSON debug
+                        start_time = parser._parse_time_from_line(start_line)
+                        end_time = parser._parse_time_from_line(end_line)
+                        
+                        # Calculate combat time
+                        if start_time and end_time:
+                            duration = (end_time - start_time).total_seconds()
+            except Exception as e:
+                duration = 0
+            
             combats_data.append({
                 "id": c_id,
                 "map": c_map,
@@ -1066,7 +1089,8 @@ def get_available_combats(log_path, max_combats=20):
                 "difficulty": c_difficulty,
                 "byteStart": c_byte_start,
                 "byteEnd": c_byte_end,
-                "type": c_type
+                "type": c_type,
+                "duration": duration
             })
         
         return {
@@ -1293,7 +1317,6 @@ def analyze_single_combat(log_path, combat_id, settings=None):
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
-        logger.error(f"Error analyzing single combat: {e}")
         return {
             'success': False,
             'combats': [],
@@ -1437,7 +1460,6 @@ def live_parse_log(log_path: str, from_byte_offset: int = 0, combat_timeout_seco
         }
     
     except Exception as e:
-        logger.error(f"Error in live_parse_log: {e}", exc_info=True)
         return {
             'success': False,
             'error': str(e),
@@ -1578,7 +1600,6 @@ def incremental_combat_update(log_path: str, combat_lines: list, settings: dict 
         }
     
     except Exception as e:
-        logger.error(f"Error in incremental_combat_update: {e}", exc_info=True)
         return {
             'success': False,
             'error': str(e),

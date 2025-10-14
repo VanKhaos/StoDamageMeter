@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 2 Sekunden Verzögerung beim Öffnen (Zeit um zu STO zu wechseln)
   - Nutzt Standard Windows-APIs (GetForegroundWindow, GetWindowRect)
   - EULA-konform: Keine Prozess-Manipulation, nur Fenster-Status
-  - Konfigurierbar via appsettings.json (BindToStoWindow: true/false)
+  - Window-Binding ist immer aktiviert (hardcoded)
 
 ### Fixed
 - **Ability DPS Berechnung:** Korrigierte DPS-Werte für Abilities
