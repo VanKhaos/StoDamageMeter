@@ -525,6 +525,56 @@ section {
   font-family: 'Courier New', monospace;
 }
 
+.installation-warning {
+  max-width: 900px;
+  margin: 30px auto 0;
+  padding: 25px;
+  background: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid var(--danger-color);
+  border-radius: 5px;
+  color: var(--text-secondary);
+}
+
+.installation-warning h3 {
+  color: var(--danger-color);
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.installation-warning p {
+  margin-bottom: 15px;
+}
+
+.warning-steps {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+.warning-steps strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 10px;
+}
+
+.warning-steps ol {
+  padding-left: 20px;
+}
+
+.warning-steps li {
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.warning-explanation {
+  font-style: italic;
+  color: var(--text-secondary);
+  border-top: 1px solid rgba(244, 67, 54, 0.3);
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
 /* ============================================
    Safety Section
    ============================================ */

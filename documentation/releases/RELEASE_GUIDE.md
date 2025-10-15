@@ -59,7 +59,33 @@ Füge einen neuen Eintrag für die neue Version hinzu:
            Opacity="0.7"/>
 ```
 
-### 3. GitHub Pages Version aktualisieren
+### 3. Frontend-Version aktualisieren
+
+**Datei:** `frontend/frontend.csproj`
+
+```xml
+<Version>1.2.3</Version>
+```
+
+### 4. UpdateCheckService-Version aktualisieren
+
+**Datei:** `frontend/Services/UpdateCheckService.cs`
+
+```csharp
+public Version GetCurrentVersion()
+{
+    // Einfache Versionserkennung - hardcoded für Stabilität
+    return new Version(1, 2, 3, 0);  // ⚠️ WICHTIG: Hier Version anpassen!
+}
+```
+
+**Auch User-Agent String aktualisieren:**
+
+```csharp
+_httpClient.DefaultRequestHeaders.Add("User-Agent", "STO-Damage-Meter/1.2.3");
+```
+
+### 5. GitHub Pages Version aktualisieren
 
 **Option A: Mit Helper-Script**
 
@@ -86,7 +112,7 @@ In `docs/index.html` an **5 Stellen** die Version ändern:
 Auch das Datum aktualisieren:
 - **Zeile ~249:** `Veröffentlicht am 11. Oktober 2025` → `Veröffentlicht am 15. Oktober 2025`
 
-### 4. README.md Version-Badge aktualisieren (optional)
+### 6. README.md Version-Badge aktualisieren (optional)
 
 ```markdown
 [![Version](https://img.shields.io/badge/Version-1.2.3-blue.svg)]
@@ -109,6 +135,29 @@ cd ..
 - ✅ Launcher zeigt richtige Version
 
 ### 2. Release erstellen
+
+#### 🚀 Vollautomatisch (Empfohlen):
+
+```powershell
+# Alles automatisch - ein Befehl!
+.\scripts\create_full_release.ps1
+
+# Oder mit spezifischer Version:
+.\scripts\create_full_release.ps1 -Version "2.1.0"
+
+# Oder mit Release-Typ:
+.\scripts\create_full_release.ps1 -ReleaseType "minor"  # 2.0.1 → 2.1.0
+```
+
+**Was automatisch passiert:**
+- ✅ Version-Nummern aktualisieren (alle 4 Dateien)
+- ✅ Changelog aus Git-Commits generieren
+- ✅ GitHub Pages aktualisieren
+- ✅ Release bauen und ZIP erstellen
+- ✅ Git commit, tag und push
+- ✅ GitHub Release erstellen mit Changelog
+
+#### 🔧 Manuell (falls gewünscht):
 
 ```powershell
 # Release-Ordner erstellen
@@ -207,6 +256,34 @@ gh release create v1.2.3 `
 
 ---
 
+## 🤖 GitHub Action (Automatische Releases)
+
+### Vollautomatische Releases mit GitHub Actions
+
+Wenn du einen Git-Tag erstellst, läuft automatisch eine GitHub Action:
+
+```bash
+# Tag erstellen (löst automatisch GitHub Action aus)
+git tag v2.1.0
+git push origin v2.1.0
+```
+
+**Was die GitHub Action automatisch macht:**
+- ✅ **Backend bauen** (Python + PyInstaller)
+- ✅ **Frontend bauen** (.NET 9.0)
+- ✅ **Launcher bauen**
+- ✅ **Release-Paket erstellen** (mit PowerShell-Scripts)
+- ✅ **ZIP erstellen**
+- ✅ **GitHub Release erstellen** (automatisch)
+- ✅ **ZIP hochladen** (automatisch)
+- ✅ **Changelog aus CHANGELOG.md** (automatisch)
+
+### Workflow-Datei: `.github/workflows/release.yml`
+
+Die GitHub Action ist bereits konfiguriert und läuft automatisch bei jedem Tag-Push.
+
+---
+
 ## 📤 Git Workflow
 
 ### 1. Änderungen commiten
@@ -271,15 +348,46 @@ git checkout version/1.2
 
 ## ✅ Checkliste
 
+### 🚀 Vollautomatisch (Empfohlen):
+
+**Ein Befehl für alles:**
+```powershell
+.\scripts\create_full_release.ps1
+```
+
+**Checkliste (automatisch erledigt):**
+- [x] CHANGELOG.md aktualisiert (automatisch aus Git-Commits)
+- [x] Launcher-Version aktualisiert (automatisch)
+- [x] Frontend-Version aktualisiert (automatisch)
+- [x] UpdateCheckService-Version aktualisiert (automatisch)
+- [x] User-Agent String aktualisiert (automatisch)
+- [x] GitHub Pages Version aktualisiert (automatisch)
+- [x] Release gebaut (automatisch)
+- [x] Release-ZIP erstellt (automatisch)
+- [x] Git committed & gepusht (automatisch)
+- [x] GitHub Release erstellt (automatisch)
+- [x] ZIP-Datei hochgeladen (automatisch)
+- [x] Release-Notes aus CHANGELOG (automatisch)
+
+**Du musst nur noch:**
+- [ ] Release testen (Download-Link testen)
+- [ ] Community informieren (Discord, Reddit, etc.)
+
+### 🔧 Manuell (falls gewünscht):
+
 Vor dem Release:
 
 - [ ] CHANGELOG.md aktualisiert
 - [ ] Launcher-Version aktualisiert (`Launcher/SplashScreen.xaml`)
+- [ ] **Frontend-Version aktualisiert** (`frontend/frontend.csproj`) ⚠️
+- [ ] **UpdateCheckService-Version aktualisiert** (`frontend/Services/UpdateCheckService.cs`) ⚠️
+- [ ] **User-Agent String aktualisiert** (`UpdateCheckService.cs`) ⚠️
 - [ ] GitHub Pages Version aktualisiert (`docs/index.html`)
 - [ ] README.md Version-Badge aktualisiert
 - [ ] Release gebaut (`scripts\create_release.ps1`)
 - [ ] Release-ZIP erstellt (`scripts\create_release_zip.ps1`)
 - [ ] Release getestet (Anwendung funktioniert)
+- [ ] **Update-Benachrichtigung getestet** (keine falschen "neue Version verfügbar" Meldungen) ⚠️
 - [ ] Git committed & gepusht (beide Branches)
 
 Release erstellen:
@@ -346,6 +454,33 @@ git diff main version/1.2
 2. Stelle sicher dass ZIP-Datei unter "Assets" erscheint
 3. Release muss "Published" sein (nicht "Draft")
 
+### Problem: Update-Benachrichtigung zeigt "neue Version verfügbar" obwohl aktuelle Version
+
+**Ursache:** Version-Nummern in der Anwendung sind nicht aktualisiert
+
+**Symptom:** Anwendung zeigt "🔔 Update Available - v2.0.1" obwohl 2.0.1 die aktuelle Version ist
+
+**Lösung:**
+```powershell
+# Prüfe alle Version-Stellen:
+grep -r "2.0.0" frontend/
+grep -r "2.0.0" Launcher/
+
+# Aktualisiere alle Version-Nummern:
+# 1. frontend/frontend.csproj: <Version>2.0.1</Version>
+# 2. frontend/Services/UpdateCheckService.cs: return new Version(2, 0, 1, 0);
+# 3. UpdateCheckService.cs: "STO-Damage-Meter/2.0.1"
+# 4. Launcher/SplashScreen.xaml: "Version 2.0.1"
+
+# Release neu erstellen:
+.\scripts\create_release.ps1 -Version "2.0.1"
+.\scripts\create_release_zip.ps1 -Version "2.0.1"
+```
+
+**Prävention:** 
+- Immer alle 4 Version-Stellen bei Release aktualisieren (siehe Checkliste)
+- Update-Benachrichtigung nach Release testen
+
 ### Problem: ZIP-Datei ist riesig (mehrere GB)
 
 **Ursache:** Log-Dateien wurden nicht entfernt
@@ -378,6 +513,21 @@ Remove-Item -Path "Releases\StoDamageMeter_v1.2.3\App\logs\*.log" -Force
 
 ## 🎯 Quick Command Reference
 
+### 🚀 Vollautomatisch (Empfohlen):
+
+```powershell
+# Alles in einem Befehl!
+.\scripts\create_full_release.ps1
+
+# Mit spezifischer Version:
+.\scripts\create_full_release.ps1 -Version "2.1.0"
+
+# Mit Release-Typ:
+.\scripts\create_full_release.ps1 -ReleaseType "minor"  # 2.0.1 → 2.1.0
+```
+
+### 🔧 Manuell (falls gewünscht):
+
 ```powershell
 # Version updaten
 .\update_page_version.ps1
@@ -397,6 +547,14 @@ git checkout version/1.2
 
 # GitHub Release (CLI)
 gh release create v1.2.3 --title "v1.2.3" --notes-file CHANGELOG.md Releases/StoDamageMeter_v1.2.3.zip
+```
+
+### 🤖 GitHub Action (Automatisch):
+
+```bash
+# Tag erstellen (löst GitHub Action aus)
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 ---
