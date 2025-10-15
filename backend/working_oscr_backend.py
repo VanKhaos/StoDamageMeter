@@ -1844,7 +1844,8 @@ def main():
                     "timestamp": datetime.now().isoformat()
                 }
             
-            logger.info(json.dumps(result, ensure_ascii=False, indent=2))
+            # JSON-Antworten müssen in Console ausgegeben werden (nicht in Log-Datei)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
             logger.info("STO Damage Meter Working OSCR Backend")
             logger.info("Use with --api argument for JSON communication")
@@ -1855,7 +1856,8 @@ def main():
             "error": f"Backend error: {str(e)}",
             "timestamp": datetime.now().isoformat()
         }
-        logger.error(json.dumps(error_result, ensure_ascii=False, indent=2))
+        # JSON-Fehler müssen in Console ausgegeben werden (nicht in Log-Datei)
+        print(json.dumps(error_result, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
