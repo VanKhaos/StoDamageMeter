@@ -213,6 +213,48 @@ class WorkingOSCR:
         except Exception as e:
             return None
     
+    def is_damage_taken_or_healing(self, parsed_line: dict, player_name: str) -> tuple:
+        """
+        Prüft ob eine Zeile Schaden erhalten oder Heilung für den Spieler ist
+        
+        Returns: (is_damage_taken, is_healing_received, is_healing_given, damage_value)
+        """
+        if not parsed_line:
+            return False, False, False, 0.0
+        
+        target_name = parsed_line.get('target_name', '')
+        source_name = parsed_line.get('source_name', '')
+        owner_name = parsed_line.get('owner_name', '')
+        damage_values = parsed_line.get('damage_values', [])
+        
+        # Schaden erhalten: Target ist der Spieler, aber Source ist nicht der Spieler
+        is_damage_taken = (target_name == player_name and 
+                          source_name != player_name and 
+                          owner_name != player_name)
+        
+        # Heilung erhalten: Target ist der Spieler, Source ist der Spieler oder ein Companion
+        is_healing_received = (target_name == player_name and 
+                              (source_name == player_name or 
+                               any(marker in parsed_line.get('source_type', '') for marker in ['P[', '@'])))
+        
+        # Heilung gegeben: Source ist der Spieler, Target ist jemand anderes
+        is_healing_given = (source_name == player_name and 
+                           target_name != player_name and 
+                           target_name != '')
+        
+        # Damage-Wert extrahieren (erster positiver Wert)
+        damage_value = 0.0
+        for dmg_str in damage_values:
+            try:
+                dmg = float(dmg_str.strip())
+                if dmg > 0:
+                    damage_value = dmg
+                    break
+            except (ValueError, AttributeError):
+                continue
+        
+        return is_damage_taken, is_healing_received, is_healing_given, damage_value
+
     def determine_combat_type_from_line(self, parsed_line: dict) -> str:
         """
         Ermittelt Combat-Type (Space/Ground) basierend auf Target Type (höchste Priorität), dann Source Type
@@ -811,11 +853,14 @@ class WorkingOSCR:
             logger.debug(f"  - Successfully parsed: {processed_lines}")
             logger.debug(f"  - Skipped lines: {skipped_lines}")
             logger.debug(f"  - Small damage values (0-0.1): {small_damage_count}")
+            logger.debug(f"  - Unknown combat type: {unknown_type_count}")
+            logger.debug(f"  - Type mismatch: {type_mismatch_count}")
             logger.debug(f"  - Players found: {len(players)}")
             logger.debug(f"  - Combat duration: {duration:.1f}s")
             
             for player_name, stats in players.items():
                 logger.debug(f"  - {player_name}: {stats.total_damage:.0f} dmg, {stats.DPS:.0f} DPS, {stats.total_attacks} attacks")
+                logger.debug(f"    Damage taken: {stats.damage_taken:.0f}, Healing received: {stats.healing_received:.0f}, Healing given: {stats.healing_given:.0f}")
             
             return players
             
@@ -1139,6 +1184,11 @@ class WorkingPlayerStats:
         self.crit_percent = 0.0
         self.accuracy_percent = 0.0
         self.total_attacks = 0  # Fehlendes Attribut hinzugefügt
+        
+        # Neue Felder für Schaden erhalten und Heilung (nicht für DPS-Berechnung)
+        self.damage_taken = 0.0  # Schaden den der Spieler erhalten hat
+        self.healing_received = 0.0  # Heilung die der Spieler erhalten hat
+        self.healing_given = 0.0  # Heilung die der Spieler gegeben hat
         
         # Neue Felder für "mit Companions"
         self.total_damage_with_companions = total_damage
