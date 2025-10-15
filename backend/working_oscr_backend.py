@@ -24,9 +24,9 @@ if sys.stderr.encoding != 'utf-8':
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Console Handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+# Console Handler entfernt - nur File-Logging
+# console_handler = logging.StreamHandler()
+# console_handler.setLevel(logging.DEBUG)
 
 # File Handler - schreibt ins logs/ Unterverzeichnis mit Rotation
 # Bestimme das Verzeichnis der .exe (oder des Scripts)
@@ -56,11 +56,11 @@ file_handler.setLevel(logging.DEBUG)
 
 # Format
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
+# console_handler.setFormatter(formatter)  # Console Handler entfernt
 file_handler.setFormatter(formatter)
 
 # Handler hinzufügen
-logger.addHandler(console_handler)
+# logger.addHandler(console_handler)  # Console Handler entfernt
 logger.addHandler(file_handler)
 
 # Log-Pfad ausgeben damit Benutzer weiß wo die Log-Datei ist
@@ -1779,10 +1779,10 @@ def main():
                     "timestamp": datetime.now().isoformat()
                 }
             
-            print(json.dumps(result, ensure_ascii=False, indent=2))
+            logger.info(json.dumps(result, ensure_ascii=False, indent=2))
         else:
-            print("STO Damage Meter Working OSCR Backend")
-            print("Use with --api argument for JSON communication")
+            logger.info("STO Damage Meter Working OSCR Backend")
+            logger.info("Use with --api argument for JSON communication")
             
     except Exception as e:
         error_result = {
@@ -1790,7 +1790,7 @@ def main():
             "error": f"Backend error: {str(e)}",
             "timestamp": datetime.now().isoformat()
         }
-        print(json.dumps(error_result, ensure_ascii=False, indent=2))
+        logger.error(json.dumps(error_result, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
