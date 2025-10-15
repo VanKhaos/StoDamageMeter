@@ -743,6 +743,7 @@ class WorkingOSCR:
                     # Direkte Player-Damage
                     player.total_damage += damage_value
                     player.total_damage_with_companions += damage_value
+                    player.total_attacks += 1  # Player total_attacks inkrementieren
                     
                     # Player Ability
                     if ability_name and ability_name != "Unknown":
@@ -791,6 +792,18 @@ class WorkingOSCR:
                     for ability in companion.abilities.values():
                         if duration > 0:
                             ability.dps = ability.total_damage / duration
+                
+                # Player gesamt Crit/Acc % berechnen
+                total_attacks = sum(a.total_attacks for a in player.abilities.values())
+                total_crits = sum(a.crits for a in player.abilities.values())
+                total_hits = sum(a.hits for a in player.abilities.values())
+                
+                # Synchronisiere player.total_attacks mit Ability-Attacks
+                player.total_attacks = total_attacks
+                
+                if total_attacks > 0:
+                    player.crit_percent = (total_crits / total_attacks) * 100.0
+                    player.accuracy_percent = (total_hits / total_attacks) * 100.0
             
             # Debug-Logging für Live-Parsing
             logger.debug(f"Live Combat Analysis Stats:")
@@ -951,6 +964,7 @@ class WorkingOSCR:
                     # Direkte Player-Damage
                     player.total_damage += damage_value
                     player.total_damage_with_companions += damage_value
+                    player.total_attacks += 1  # Player total_attacks inkrementieren
                     
                     if damage_value > player.max_one_hit:
                         player.max_one_hit = damage_value
@@ -1004,6 +1018,9 @@ class WorkingOSCR:
                 total_attacks = sum(a.total_attacks for a in player.abilities.values())
                 total_crits = sum(a.crits for a in player.abilities.values())
                 total_hits = sum(a.hits for a in player.abilities.values())
+                
+                # Synchronisiere player.total_attacks mit Ability-Attacks
+                player.total_attacks = total_attacks
                 
                 if total_attacks > 0:
                     player.crit_percent = (total_crits / total_attacks) * 100.0
@@ -1121,6 +1138,7 @@ class WorkingPlayerStats:
         self.companions = {}  # Dict[str, WorkingCompanionStats]
         self.crit_percent = 0.0
         self.accuracy_percent = 0.0
+        self.total_attacks = 0  # Fehlendes Attribut hinzugefügt
         
         # Neue Felder für "mit Companions"
         self.total_damage_with_companions = total_damage
