@@ -23,6 +23,7 @@ public partial class App : Application
         services.AddLogging(builder =>
         {
             builder.AddConsole();
+            builder.AddProvider(new LoggingServiceFactory());
             builder.SetMinimumLevel(LogLevel.Information);
         });
 

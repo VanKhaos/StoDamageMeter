@@ -136,6 +136,42 @@ class WorkingOSCR:
         
         return ""
     
+    def _calculate_combat_duration(self, lines: list, start_idx: int, end_idx: int) -> float:
+        """
+        Berechnet Combat-Dauer aus Timestamps (erste bis letzte Zeile)
+        Verwendet gleiche Logik wie get_available_combats (Zeile 1056-1080)
+        
+        Args:
+            lines: Liste aller Log-Zeilen
+            start_idx: Start-Index des Combats
+            end_idx: End-Index des Combats (exklusiv)
+        
+        Returns:
+            Duration in Sekunden, 60.0 als Fallback
+        """
+        try:
+            if end_idx - start_idx >= 2:
+                start_line = lines[start_idx].strip()
+                end_line = lines[end_idx - 1].strip()
+                
+                start_time = self._parse_time_from_line(start_line)
+                end_time = self._parse_time_from_line(end_line)
+                
+                if start_time and end_time:
+                    duration = (end_time - start_time).total_seconds()
+                    if duration > 0:
+                        logger.debug(f"Calculated combat duration: {duration:.1f}s from {start_time} to {end_time}")
+                        return duration
+                    else:
+                        logger.warning(f"Invalid duration calculated: {duration}s")
+            else:
+                logger.warning(f"Not enough lines for duration calculation: {end_idx - start_idx} lines")
+        except Exception as e:
+            logger.warning(f"Could not calculate combat duration: {e}")
+        
+        logger.debug("Using fallback duration: 60.0s")
+        return 60.0
+    
     def parse_combat_log_line(self, line: str):
         """
         Parsed eine Combat-Log-Zeile vollständig
@@ -270,8 +306,10 @@ class WorkingOSCR:
         source_name = parsed_line.get('source_name', '')
         source_type = parsed_line.get('source_type', '')
         
-        # Nur Player-Events verarbeiten
-        if not owner_type or 'P[' not in owner_type:
+        # Nur Player-Events verarbeiten (erweitert um @ Marker)
+        if not owner_type:
+            return None
+        if not any(marker in owner_type for marker in ['P[', '@']):
             return None
         
         # Spieler-Handle extrahieren
@@ -513,9 +551,20 @@ class WorkingOSCR:
                     c_type
                 ))
             
+            # Debug-Logging für Combat-Isolation
+            logger.debug(f"Combat Isolation Stats:")
+            logger.debug(f"  - Total lines in log: {len(lines)}")
+            logger.debug(f"  - Combats found: {len(combats)}")
+            logger.debug(f"  - Combats returned: {len(renumbered_combats)}")
+            logger.debug(f"  - Max combats requested: {max_combats}")
+            
+            for i, (c_id, c_map, c_date, c_time, c_difficulty, c_byte_start, c_byte_end, c_type) in enumerate(renumbered_combats[:3]):  # Log first 3
+                logger.debug(f"  - Combat {c_id}: {c_map} ({c_type}) - Lines {c_byte_start}-{c_byte_end}")
+            
             return renumbered_combats
             
         except Exception as e:
+            logger.error(f"Error in isolate_combats: {e}")
             return []
     
     def analyze_log_file(self, log_path: str, max_combats: int = 1):
@@ -560,10 +609,29 @@ class WorkingOSCR:
         players = {}
         
         try:
+            # Berechne Duration aus combat_lines wenn möglich
+            calculated_duration = None
+            if combat_lines and len(combat_lines) >= 2:
+                first_parsed = self.parse_combat_log_line(combat_lines[0])
+                last_parsed = self.parse_combat_log_line(combat_lines[-1])
+                if first_parsed and last_parsed:
+                    start_time = first_parsed.get('timestamp')
+                    end_time = last_parsed.get('timestamp')
+                    if start_time and end_time:
+                        calculated_duration = (end_time - start_time).total_seconds()
+                        if calculated_duration > 0:
+                            logger.debug(f"Live parsing calculated duration: {calculated_duration:.1f}s")
+                        else:
+                            calculated_duration = None
+            
+            # Verwende berechnete Duration oder Fallback
+            duration = calculated_duration if calculated_duration and calculated_duration > 0 else duration
+            
             # Statistiken sammeln
             damage_events = 0
             skipped_lines = 0
             processed_lines = 0
+            small_damage_count = 0  # Damage-Werte zwischen 0 und 0.1
             
             for line in combat_lines:
                 # Parse vollständig
@@ -619,8 +687,10 @@ class WorkingOSCR:
                         dmg = float(val)
                         if dmg < 0:
                             continue
-                        if dmg > 0.1:
+                        if dmg > 0:  # Alle positiven Werte akzeptieren (vorher > 0.1)
                             damage_value = dmg
+                            if dmg <= 0.1:  # Zähle kleine Werte für Debugging
+                                small_damage_count += 1
                             break
                     except ValueError:
                         continue
@@ -722,9 +792,22 @@ class WorkingOSCR:
                         if duration > 0:
                             ability.dps = ability.total_damage / duration
             
+            # Debug-Logging für Live-Parsing
+            logger.debug(f"Live Combat Analysis Stats:")
+            logger.debug(f"  - Combat lines processed: {len(combat_lines)}")
+            logger.debug(f"  - Successfully parsed: {processed_lines}")
+            logger.debug(f"  - Skipped lines: {skipped_lines}")
+            logger.debug(f"  - Small damage values (0-0.1): {small_damage_count}")
+            logger.debug(f"  - Players found: {len(players)}")
+            logger.debug(f"  - Combat duration: {duration:.1f}s")
+            
+            for player_name, stats in players.items():
+                logger.debug(f"  - {player_name}: {stats.total_damage:.0f} dmg, {stats.DPS:.0f} DPS, {stats.total_attacks} attacks")
+            
             return players
             
         except Exception as e:
+            logger.error(f"Error in _analyze_combat_lines_direct: {e}")
             return {}
     
     def _analyze_combat_players(self, log_path: str, start_byte: int, end_byte: int, combat_type: str = None):
@@ -742,8 +825,12 @@ class WorkingOSCR:
             damage_events = 0
             skipped_lines = 0
             processed_lines = 0
+            small_damage_count = 0  # Damage-Werte zwischen 0 und 0.1
+            unknown_type_count = 0  # Zeilen mit unbekanntem Combat-Type
+            type_mismatch_count = 0  # Zeilen mit Type-Mismatch
             
-            combat_time = 60.0  # Angenommene Combat-Zeit
+            # Berechne echte Combat-Zeit aus Timestamps
+            combat_time = self._calculate_combat_duration(lines, start_byte, end_byte)
             
             for i in range(start_byte, min(end_byte, len(lines))):
                 line = lines[i]
@@ -754,12 +841,18 @@ class WorkingOSCR:
                     skipped_lines += 1
                     continue
                 
-                # Combat-Type-Filter
+                # Combat-Type-Filter (locker: None-Werte werden akzeptiert)
                 line_combat_type = self.determine_combat_type_from_line(parsed)
                 
-                if combat_type and line_combat_type != combat_type:
-                    skipped_lines += 1
-                    continue
+                if combat_type and line_combat_type:
+                    # Nur ignorieren wenn beide Types bekannt und unterschiedlich
+                    if line_combat_type != combat_type:
+                        type_mismatch_count += 1
+                        skipped_lines += 1
+                        continue
+                elif combat_type and not line_combat_type:
+                    # Zeile mit unbekanntem Type wird akzeptiert
+                    unknown_type_count += 1
                 
                 # Entity identifizieren
                 entity = self.identify_source_entity(parsed)
@@ -801,8 +894,10 @@ class WorkingOSCR:
                         # Überspringe negative Werte (Heilung/Shield)
                         if dmg < 0:
                             continue
-                        if dmg > 0.1:
+                        if dmg > 0:  # Alle positiven Werte akzeptieren (vorher > 0.1)
                             damage_value = dmg
+                            if dmg <= 0.1:  # Zähle kleine Werte für Debugging
+                                small_damage_count += 1
                             break
                     except ValueError:
                         continue
@@ -918,6 +1013,21 @@ class WorkingOSCR:
             
         except Exception as e:
             players = {}
+            logger.error(f"Error in _analyze_combat_players: {e}")
+        
+        # Debug-Logging für Parsing-Statistiken
+        logger.debug(f"Combat Analysis Stats:")
+        logger.debug(f"  - Total lines processed: {end_byte - start_byte}")
+        logger.debug(f"  - Successfully parsed: {processed_lines}")
+        logger.debug(f"  - Skipped lines: {skipped_lines}")
+        logger.debug(f"  - Small damage values (0-0.1): {small_damage_count}")
+        logger.debug(f"  - Unknown combat type: {unknown_type_count}")
+        logger.debug(f"  - Type mismatch: {type_mismatch_count}")
+        logger.debug(f"  - Players found: {len(players)}")
+        logger.debug(f"  - Combat duration: {combat_time:.1f}s")
+        
+        for player_name, stats in players.items():
+            logger.debug(f"  - {player_name}: {stats.total_damage:.0f} dmg, {stats.DPS:.0f} DPS, {stats.total_attacks} attacks")
         
         return players
 
