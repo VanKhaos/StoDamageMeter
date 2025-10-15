@@ -669,16 +669,25 @@ class WorkingOSCR:
             # Verwende berechnete Duration oder Fallback
             duration = calculated_duration if calculated_duration and calculated_duration > 0 else duration
             
-            # Statistiken sammeln
+            # Detaillierte Statistiken sammeln
             damage_events = 0
             skipped_lines = 0
             processed_lines = 0
             small_damage_count = 0  # Damage-Werte zwischen 0 und 0.1
             
+            # Neue detaillierte Statistiken
+            parse_failed_count = 0
+            no_entity_count = 0
+            no_damage_value_count = 0
+            damage_taken_count = 0
+            healing_received_count = 0
+            healing_given_count = 0
+            
             for line in combat_lines:
                 # Parse vollständig
                 parsed = self.parse_combat_log_line(line)
                 if not parsed:
+                    parse_failed_count += 1
                     skipped_lines += 1
                     continue
                 
@@ -852,7 +861,13 @@ class WorkingOSCR:
             logger.debug(f"  - Combat lines processed: {len(combat_lines)}")
             logger.debug(f"  - Successfully parsed: {processed_lines}")
             logger.debug(f"  - Skipped lines: {skipped_lines}")
+            logger.debug(f"  - Parse failed: {parse_failed_count}")
+            logger.debug(f"  - No entity found: {no_entity_count}")
+            logger.debug(f"  - No damage value: {no_damage_value_count}")
             logger.debug(f"  - Small damage values (0-0.1): {small_damage_count}")
+            logger.debug(f"  - Damage taken events: {damage_taken_count}")
+            logger.debug(f"  - Healing received events: {healing_received_count}")
+            logger.debug(f"  - Healing given events: {healing_given_count}")
             logger.debug(f"  - Unknown combat type: {unknown_type_count}")
             logger.debug(f"  - Type mismatch: {type_mismatch_count}")
             logger.debug(f"  - Players found: {len(players)}")
