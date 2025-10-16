@@ -8,7 +8,7 @@ Migration des Python OSCR-Backends zu einer vollständig in C# integrierten Comb
 
 ### 1.1 Datenmodelle erstellen
 
-**Datei:** `frontend/Services/CombatLogParser/Models/ParsedCombatLine.cs`
+**Datei:** `app/Services/CombatLogParser/Models/ParsedCombatLine.cs`
 
 Erstelle Klasse für geparste Combat-Log-Zeilen:
 
@@ -19,7 +19,7 @@ Erstelle Klasse für geparste Combat-Log-Zeilen:
 - `string AbilityName, DamageType, Flags`
 - `List<double> DamageValues`
 
-**Datei:** `frontend/Services/CombatLogParser/Models/CombatLineEntity.cs`
+**Datei:** `app/Services/CombatLogParser/Models/CombatLineEntity.cs`
 
 Erstelle Klasse für identifizierte Entities:
 
@@ -27,7 +27,7 @@ Erstelle Klasse für identifizierte Entities:
 - `bool IsCompanion`
 - `string? CompanionName, CompanionType`
 
-**Datei:** `frontend/Services/CombatLogParser/Models/PlayerStats.cs`
+**Datei:** `app/Services/CombatLogParser/Models/PlayerStats.cs`
 
 Port von `WorkingPlayerStats` aus Python:
 
@@ -37,7 +37,7 @@ Port von `WorkingPlayerStats` aus Python:
 - `Dictionary<string, CompanionStats> Companions`
 - `Dictionary<string, AbilityStats> Abilities`
 
-**Datei:** `frontend/Services/CombatLogParser/Models/CompanionStats.cs`
+**Datei:** `app/Services/CombatLogParser/Models/CompanionStats.cs`
 
 Port von `WorkingCompanionStats`:
 
@@ -46,7 +46,7 @@ Port von `WorkingCompanionStats`:
 - `int TotalAttacks, Hits, Crits`
 - `Dictionary<string, AbilityStats> Abilities`
 
-**Datei:** `frontend/Services/CombatLogParser/Models/AbilityStats.cs`
+**Datei:** `app/Services/CombatLogParser/Models/AbilityStats.cs`
 
 Port von `WorkingAbilityStats`:
 
@@ -57,7 +57,7 @@ Port von `WorkingAbilityStats`:
 
 ### 1.2 Combat-Log-Parser Basisklasse
 
-**Datei:** `frontend/Services/CombatLogParser/CombatLogLineParser.cs`
+**Datei:** `app/Services/CombatLogParser/CombatLogLineParser.cs`
 
 Port von Python `parse_combat_log_line()`:
 
@@ -108,7 +108,7 @@ public class CombatLogLineParser
 
 ### 2.1 Combat-Isolator
 
-**Datei:** `frontend/Services/CombatLogParser/CombatIsolator.cs`
+**Datei:** `app/Services/CombatLogParser/CombatIsolator.cs`
 
 Port von Python `isolate_combats()` (Zeile 401-530):
 
@@ -146,7 +146,7 @@ public class CombatSegment
 
 ### 2.2 Combat-Analyzer
 
-**Datei:** `frontend/Services/CombatLogParser/CombatAnalyzer.cs`
+**Datei:** `app/Services/CombatLogParser/CombatAnalyzer.cs`
 
 Port von Python `_analyze_combat_lines_direct()` (Zeile 650-850):
 
@@ -179,7 +179,7 @@ public class CombatAnalyzer
 
 ### 3.1 Native C# Backend Service
 
-**Datei:** `frontend/Services/NativeCombatLogService.cs`
+**Datei:** `app/Services/NativeCombatLogService.cs`
 
 Erstelle neuen Service der `IOSCRBackendService` implementiert:
 
@@ -238,7 +238,7 @@ public class NativeCombatLogService : IOSCRBackendService
 
 ### 3.2 Dependency Injection Update
 
-**Datei:** `frontend/Windows/App/App.xaml.cs`
+**Datei:** `app/Windows/App/App.xaml.cs`
 
 Service-Registration ändern:
 
@@ -258,7 +258,7 @@ services.AddSingleton<IOSCRBackendService, NativeCombatLogService>();
 
 ### 4.1 Asynchrones File-Reading
 
-**Datei:** `frontend/Services/CombatLogParser/AsyncFileReader.cs`
+**Datei:** `app/Services/CombatLogParser/AsyncFileReader.cs`
 
 Erstelle Helper für effizientes asynchrones Lesen:
 
@@ -294,8 +294,8 @@ public class AsyncFileReader
 - `backend/working_oscr_backend.py` → Löschen
 - `backend/http_oscr_backend.py` → Löschen
 - `backend/OSCRBackend.exe` → Löschen (aus Deploy/Debug)
-- `frontend/Services/OSCRBackendService.cs` → Löschen
-- `frontend/Services/HttpOSCRBackendService.cs` → Löschen
+- `app/Services/OSCRBackendService.cs` → Löschen
+- `app/Services/HttpOSCRBackendService.cs` → Löschen
 
 ### 5.2 Build-Scripts aktualisieren
 
@@ -306,7 +306,7 @@ Entferne Backend-Build-Schritte:
 - Keine Python-Backend-Kopie mehr
 - Keine OSCRBackend.exe mehr
 
-**Datei:** `frontend/Build.targets`
+**Datei:** `app/Build.targets`
 
 Entferne Backend-Copy-Tasks:
 

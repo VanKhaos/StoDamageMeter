@@ -1,12 +1,12 @@
-﻿## Session 12: Splashscreen fÃ¼r Launcher mit WPF
+## Session 12: Splashscreen für Launcher mit WPF
 
 **Datum:** 2025-10-10  
 **Dauer:** ~2 Stunden  
-**Fokus:** Animierter Splashscreen wÃ¤hrend Core-App-Start, Star Trek Design
+**Fokus:** Animierter Splashscreen während Core-App-Start, Star Trek Design
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
 1. **SplashScreen.xaml erstellt**
    - Frameless WPF Window (WindowStyle="None", AllowsTransparency="True")
@@ -19,37 +19,37 @@
 
 2. **Animierter Ladebalken**
    - Smooth Animation von links nach rechts
-   - Endlos-Loop wÃ¤hrend Ladevorgang
+   - Endlos-Loop während Ladevorgang
    - Blue Glow-Effekt (BlurEffect)
    - Dauer: 1.5 Sekunden pro Durchlauf
-   - ClipToBounds fÃ¼r saubere Kanten
+   - ClipToBounds für saubere Kanten
 
 3. **Fade-In/Fade-Out Animationen**
-   - Fade-In beim Start (0 â†’ 1 in 0.5s)
-   - Fade-Out beim SchlieÃŸen (1 â†’ 0 in 0.3s)
-   - Smooth Transition fÃ¼r professionelles Erscheinungsbild
+   - Fade-In beim Start (0 → 1 in 0.5s)
+   - Fade-Out beim Schließen (1 → 0 in 0.3s)
+   - Smooth Transition für professionelles Erscheinungsbild
 
 4. **Status-Text-Updates**
    - "Starting STO Damage Meter..." (Initial)
    - "Initializing components..." (nach 800ms)
    - "Starting application..." (nach 1200ms)
-   - Dynamisch aktualisierbar Ã¼ber `UpdateStatus()` Methode
+   - Dynamisch aktualisierbar über `UpdateStatus()` Methode
 
 5. **App.xaml und App.xaml.cs refactored**
    - WPF Application Entry Point erstellt
-   - `StartupUri="SplashScreen.xaml"` â†’ Splashscreen als erste Anzeige
-   - `ShutdownMode="OnExplicitShutdown"` â†’ Launcher kontrolliert Shutdown
+   - `StartupUri="SplashScreen.xaml"` → Splashscreen als erste Anzeige
+   - `ShutdownMode="OnExplicitShutdown"` → Launcher kontrolliert Shutdown
    - Asynchroner Core-App-Start in Background-Thread
-   - Automatisches Splashscreen-SchlieÃŸen nach Core-App-Start
+   - Automatisches Splashscreen-Schließen nach Core-App-Start
 
 6. **Program.cs vereinfacht**
    - Von 70 Zeilen auf 16 Zeilen reduziert (77% Reduktion!)
    - Nur noch WPF Application Entry Point
    - Gesamte Start-Logik in App.xaml.cs ausgelagert
-   - `[STAThread]` fÃ¼r WPF-KompatibilitÃ¤t
+   - `[STAThread]` für WPF-Kompatibilität
 
 7. **Timing-Optimierung**
-   - 800ms: Initiale VerzÃ¶gerung fÃ¼r visuelle Wirkung
+   - 800ms: Initiale Verzögerung für visuelle Wirkung
    - 400ms: Status-Update "Initializing components"
    - 200ms: Status-Update "Starting application"
    - 1500ms: Warten nach Core-App-Start (Window erscheint)
@@ -59,20 +59,20 @@
 8. **Launcher.csproj angepasst**
    - `<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>`
    - Verhindert doppelte Main-Entry-Points
-   - WPF SDK-Defaults fÃ¼r XAML-Files beibehalten
+   - WPF SDK-Defaults für XAML-Files beibehalten
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **Splashscreen-Architektur:**
 ```
-Program.Main() â†’ App.OnStartup() â†’ Show SplashScreen
-                                   â†“
+Program.Main() → App.OnStartup() → Show SplashScreen
+                                   ↓
                               Task.Run(StartCoreApp)
-                                   â†“
+                                   ↓
                               Wait for Core App
-                                   â†“
+                                   ↓
                               Fade-Out SplashScreen
-                                   â†“
+                                   ↓
                               Shutdown Launcher
 ```
 
@@ -132,7 +132,7 @@ private async Task StartCoreApplication(string[] args)
 }
 ```
 
-### ðŸ“ **Wichtige Dateien:**
+### 📁 **Wichtige Dateien:**
 
 **Neu erstellt:**
 - `Launcher/SplashScreen.xaml` - Splashscreen UI (146 Zeilen)
@@ -144,70 +144,70 @@ private async Task StartCoreApplication(string[] args)
 - `Launcher/Program.cs` - Von 70 auf 16 Zeilen vereinfacht
 - `Launcher/Launcher.csproj` - EnableDefaultApplicationDefinition=false
 
-**UnverÃ¤ndert:**
+**Unverändert:**
 - `scripts\create_release.ps1` - Funktioniert mit neuem Launcher
 - `scripts\create_release_zip.ps1` - Funktioniert automatisch
 
-### ðŸš¨ **GelÃ¶ste Probleme:**
+### 🚨 **Gelöste Probleme:**
 
-#### **Problem 1: LetterSpacing Property nicht verfÃ¼gbar**
+#### **Problem 1: LetterSpacing Property nicht verfügbar**
 - **Symptom:** `error MC3072: The property 'LetterSpacing' does not exist`
 - **Ursache:** LetterSpacing ist WinUI-Property, nicht WPF
-- **LÃ¶sung:** Property entfernt aus XAML
-- **Resultat:** âœ… Build erfolgreich
+- **Lösung:** Property entfernt aus XAML
+- **Resultat:** ✅ Build erfolgreich
 
 #### **Problem 2: Doppelter Entry Point**
 - **Symptom:** `error CS0017: Program has more than one entry point defined`
 - **Ursache:** WPF generiert automatisch Main() aus App.xaml
-- **LÃ¶sung:** `<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>`
-- **Resultat:** âœ… Manuelle Kontrolle Ã¼ber Entry Point
+- **Lösung:** `<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>`
+- **Resultat:** ✅ Manuelle Kontrolle über Entry Point
 
 #### **Problem 3: Duplicate Page Items**
 - **Symptom:** `error NETSDK1022: Duplicate 'Page' items`
-- **Ursache:** SDK fÃ¼gt XAML automatisch hinzu, manueller ItemGroup-Eintrag
-- **LÃ¶sung:** Manuelle ItemGroup entfernt, SDK-Defaults verwenden
-- **Resultat:** âœ… Sauberer Build ohne Duplikate
+- **Ursache:** SDK fügt XAML automatisch hinzu, manueller ItemGroup-Eintrag
+- **Lösung:** Manuelle ItemGroup entfernt, SDK-Defaults verwenden
+- **Resultat:** ✅ Sauberer Build ohne Duplikate
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
-1. **WPF Application-Modell:** App.xaml ist der Standard-Entry-Point fÃ¼r WPF
-2. **EnableDefaultApplicationDefinition:** Muss false sein fÃ¼r manuellen Main()
-3. **SDK Implicit Items:** WPF SDK fÃ¼gt XAML-Dateien automatisch hinzu
-4. **Splashscreen-Timing:** 2-3 Sekunden ideal fÃ¼r guten UX
+1. **WPF Application-Modell:** App.xaml ist der Standard-Entry-Point für WPF
+2. **EnableDefaultApplicationDefinition:** Muss false sein für manuellen Main()
+3. **SDK Implicit Items:** WPF SDK fügt XAML-Dateien automatisch hinzu
+4. **Splashscreen-Timing:** 2-3 Sekunden ideal für guten UX
 5. **Fade-Animationen:** Smooth Transitions wirken professionell
-6. **Async Task.Run:** Verhindert UI-Freeze wÃ¤hrend Core-App-Start
-7. **Dispatcher.Invoke:** Notwendig fÃ¼r UI-Updates aus Background-Threads
+6. **Async Task.Run:** Verhindert UI-Freeze während Core-App-Start
+7. **Dispatcher.Invoke:** Notwendig für UI-Updates aus Background-Threads
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Launcher kompiliert erfolgreich
-- âœ… Splashscreen zeigt korrekt an
-- âœ… Animationen laufen smooth
-- âœ… Core-App startet nach Splash
-- âœ… Launcher schlieÃŸt sich automatisch
-- âœ… Release v1.2.0 erstellt (268.84 MB, 415 Dateien)
-- âœ… ZIP erstellt (119.22 MB)
+- ✅ Launcher kompiliert erfolgreich
+- ✅ Splashscreen zeigt korrekt an
+- ✅ Animationen laufen smooth
+- ✅ Core-App startet nach Splash
+- ✅ Launcher schließt sich automatisch
+- ✅ Release v1.2.0 erstellt (268.84 MB, 415 Dateien)
+- ✅ ZIP erstellt (119.22 MB)
 
-### ðŸŽ¨ **UI-Features:**
+### 🎨 **UI-Features:**
 
 **Splashscreen-Design:**
-- âœ… Frameless Window mit Border-Glow
-- âœ… Star Trek Blue Theme
-- âœ… GroÃŸer Haupttitel mit Glow-Effekt
-- âœ… Untertitel und Version-Info
-- âœ… Animierter Ladebalken (endlos)
-- âœ… Status-Text (3 Phasen)
-- âœ… Fade-In beim Start
-- âœ… Fade-Out beim SchlieÃŸen
+- ✅ Frameless Window mit Border-Glow
+- ✅ Star Trek Blue Theme
+- ✅ Großer Haupttitel mit Glow-Effekt
+- ✅ Untertitel und Version-Info
+- ✅ Animierter Ladebalken (endlos)
+- ✅ Status-Text (3 Phasen)
+- ✅ Fade-In beim Start
+- ✅ Fade-Out beim Schließen
 
 **Benutzer-Erfahrung:**
-- âœ… Kein Konsolenfenster
-- âœ… Smooth Transitions
-- âœ… Professionelles Erscheinungsbild
-- âœ… Klare visuelle RÃ¼ckmeldung
-- âœ… Automatische AblÃ¤ufe (keine Interaktion nÃ¶tig)
+- ✅ Kein Konsolenfenster
+- ✅ Smooth Transitions
+- ✅ Professionelles Erscheinungsbild
+- ✅ Klare visuelle Rückmeldung
+- ✅ Automatische Abläufe (keine Interaktion nötig)
 
-### ðŸ“Š **Code-Statistiken:**
+### 📊 **Code-Statistiken:**
 
 **Launcher-Projekt:**
 - SplashScreen.xaml: 146 Zeilen
@@ -216,59 +216,59 @@ private async Task StartCoreApplication(string[] args)
 - App.xaml.cs: 106 Zeilen
 - Program.cs: 16 Zeilen (von 70)
 - **Gesamt:** ~301 Zeilen (vs. 70 vorher)
-- **FunktionalitÃ¤t:** +Splashscreen +Animationen +bessere UX
+- **Funktionalität:** +Splashscreen +Animationen +bessere UX
 
 **Release v1.2.0:**
 - Entpackt: 268.84 MB (415 Dateien)
 - ZIP: 119.22 MB
 - Launcher: ~12 MB (Single-File, Self-Contained)
 
-### ðŸš¨ **GelÃ¶ste Probleme (Post-Release):**
+### 🚨 **Gelöste Probleme (Post-Release):**
 
 #### **Problem 1: DllNotFoundException beim Launcher-Start**
 - **Symptom:** `System.DllNotFoundException: Dll was not found`
 - **Ursache:** WPF funktioniert nicht mit `PublishSingleFile=true`
-- **LÃ¶sung:** `PublishSingleFile=false` â†’ Multi-File-Deployment mit WPF-DLLs
-- **Resultat:** âœ… Launcher startet korrekt, 6 WPF-DLLs im Root
+- **Lösung:** `PublishSingleFile=false` → Multi-File-Deployment mit WPF-DLLs
+- **Resultat:** ✅ Launcher startet korrekt, 6 WPF-DLLs im Root
 
 #### **Problem 2: App.xaml StartupUri Konflikt**
 - **Symptom:** Launcher zeigte nichts an
 - **Ursache:** `StartupUri="SplashScreen.xaml"` und manuelle `Show()` im Code
-- **LÃ¶sung:** `StartupUri` entfernt, `Startup="Application_Startup"` Event verwendet
-- **Resultat:** âœ… Splashscreen erscheint korrekt
+- **Lösung:** `StartupUri` entfernt, `Startup="Application_Startup"` Event verwendet
+- **Resultat:** ✅ Splashscreen erscheint korrekt
 
-#### **Problem 3: Splashscreen verschwindet zu frÃ¼h**
-- **Symptom:** Splashscreen schlieÃŸt bevor Hauptfenster sichtbar ist
+#### **Problem 3: Splashscreen verschwindet zu früh**
+- **Symptom:** Splashscreen schließt bevor Hauptfenster sichtbar ist
 - **Ursache:** Feste Wartezeit (1500ms) reicht nicht
-- **LÃ¶sung:** Intelligente Fenster-Erkennung mit `MainWindowHandle` und `MainWindowTitle` Check
-- **Polling:** Alle 500ms prÃ¼fen ob Hauptfenster vorhanden, max. 10 Sekunden Timeout
-- **Resultat:** âœ… Splashscreen bleibt bis App vollstÃ¤ndig geladen ist
+- **Lösung:** Intelligente Fenster-Erkennung mit `MainWindowHandle` und `MainWindowTitle` Check
+- **Polling:** Alle 500ms prüfen ob Hauptfenster vorhanden, max. 10 Sekunden Timeout
+- **Resultat:** ✅ Splashscreen bleibt bis App vollständig geladen ist
 
-### ðŸ“Š **Finale Release-Struktur v1.2.0:**
+### 📊 **Finale Release-Struktur v1.2.0:**
 
 ```
 Root/
-â”œâ”€â”€ StoDamageMeter.exe         (Launcher - 11 MB)
-â”œâ”€â”€ D3DCompiler_47_cor3.dll    (WPF)
-â”œâ”€â”€ PenImc_cor3.dll            (WPF)
-â”œâ”€â”€ PresentationNative_cor3.dll (WPF)
-â”œâ”€â”€ vcruntime140_cor3.dll      (WPF)
-â”œâ”€â”€ wpfgfx_cor3.dll            (WPF)
-â”œâ”€â”€ README.txt
-â”œâ”€â”€ App/                       (257 Dateien, 252 MB)
-â”‚   â”œâ”€â”€ StoDamageMeter.Core.exe
-â”‚   â”œâ”€â”€ OSCRBackend.exe
-â”‚   # appsettings.json wurde entfernt
-â”‚   â””â”€â”€ [Runtime + DLLs]
-â””â”€â”€ Language/                  (13 Sprachordner)
+├── StoDamageMeter.exe         (Launcher - 11 MB)
+├── D3DCompiler_47_cor3.dll    (WPF)
+├── PenImc_cor3.dll            (WPF)
+├── PresentationNative_cor3.dll (WPF)
+├── vcruntime140_cor3.dll      (WPF)
+├── wpfgfx_cor3.dll            (WPF)
+├── README.txt
+├── App/                       (257 Dateien, 252 MB)
+│   ├── StoDamageMeter.Core.exe
+│   ├── OSCRBackend.exe
+│   # appsettings.json wurde entfernt
+│   └── [Runtime + DLLs]
+└── Language/                  (13 Sprachordner)
 ```
 
-**GrÃ¶ÃŸen:**
+**Größen:**
 - Entpackt: 276.84 MB (420 Dateien)
 - ZIP: ~120 MB
 - Root: 7 Dateien (Launcher + 6 WPF-DLLs)
 
-### âš¡ **Performance-Hinweis:**
+### ⚡ **Performance-Hinweis:**
 
 **Warum die App langsam startet (3-5 Sekunden):**
 1. **Self-Contained .NET Runtime** (~150 MB muss geladen werden)
@@ -277,11 +277,11 @@ Root/
 4. **Windows 11 Mica/Backdrop-Effekte**
 
 **Alternative (nicht implementiert):**
-- Framework-Dependent Deployment â†’ < 1 Sekunde Start
+- Framework-Dependent Deployment → < 1 Sekunde Start
 - Nachteil: Benutzer muss .NET 9 Runtime installieren
-- Entscheidung: Self-Contained fÃ¼r bessere Benutzerfreundlichkeit
+- Entscheidung: Self-Contained für bessere Benutzerfreundlichkeit
 
 ---
-**NÃ¤chste Session:** Live-Parsing-Modus (FileWatcher fÃ¼r Combat-Log), DPS-Graph
+**Nächste Session:** Live-Parsing-Modus (FileWatcher für Combat-Log), DPS-Graph
 
 

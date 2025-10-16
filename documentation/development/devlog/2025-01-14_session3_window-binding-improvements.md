@@ -90,11 +90,11 @@ this.DragMove();
 
 ## 📁 Geänderte Dateien
 
-### Frontend Services
+### App Services
 - `ApplicationWindowBindingService.cs` - Zentrales Window-Binding-System
 - `WindowBindingService.cs` - Vereinfachte STO-Detection
 
-### Frontend Windows
+### App Windows
 - `CombatStatistic.xaml.cs` - Vereinfachte Drag-Logik
 - `LiveCombatOverlay.xaml.cs` - Migration auf zentrales System
 - `LandingWindow.xaml.cs` - Vereinfachte Drag-Logik

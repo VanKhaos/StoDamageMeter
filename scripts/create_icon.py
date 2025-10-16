@@ -37,7 +37,7 @@ def png_to_ico(png_path, ico_path):
 
 if __name__ == "__main__":
     png_path = "assets/DPS_Meter_Logo_White.png"
-    ico_path = "frontend/Assets/app_icon.ico"
+    ico_path = "app/Assets/app_icon.ico"
     
     print("Converting PNG to ICO format...")
     success = png_to_ico(png_path, ico_path)

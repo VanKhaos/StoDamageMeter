@@ -222,7 +222,7 @@ Lade die neueste Version aus dem [Releases-Bereich](https://github.com/VanKhaos/
 ### Projekt-Struktur
 ```
 StoDamageMeter/
-├── frontend/          # WPF Frontend (C#, .NET 9)
+├── app/          # WPF App (C#, .NET 9)
 │   ├── Components/    # UI-Komponenten
 │   ├── Services/      # Backend-Kommunikation, FileWatcher
 │   ├── ViewModels/    # MVVM ViewModels
@@ -258,7 +258,7 @@ StoDamageMeter/
 
 ### Technologie-Stack
 
-**Frontend:**
+**App:**
 - .NET 9.0 (WPF)
 - WPF-UI Library (Fluent Design)
 - Microsoft.Extensions (DI, Logging, Configuration)

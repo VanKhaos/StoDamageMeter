@@ -5,7 +5,7 @@ Write-Host "=== Building STO Damage Meter (Debug Version) ===" -ForegroundColor 
 
 # Arbeitsverzeichnis (Script ist jetzt in scripts/ Ordner)
 $RootPath = Split-Path $PSScriptRoot -Parent
-$FrontendPath = Join-Path $RootPath "frontend"
+$FrontendPath = Join-Path $RootPath "app"
 $BackendPath = Join-Path $RootPath "backend"
 $DebugPath = Join-Path $RootPath "Debug"
 $LogsPath = Join-Path $DebugPath "logs"
@@ -82,18 +82,18 @@ Write-Host "Copying Backend to Deploy folder..." -ForegroundColor Yellow
 Copy-Item $BackendExe $BackendDeploy -Force
 Write-Host "Backend copied to Deploy folder" -ForegroundColor Green
 
-# 2. Frontend Debug bauen
-Write-Host "`n[2/4] Building Frontend (Debug)..." -ForegroundColor Yellow
+# 2. App Debug bauen
+Write-Host "`n[2/4] Building App (Debug)..." -ForegroundColor Yellow
 Push-Location $FrontendPath
-$buildResult = dotnet build frontend.csproj --configuration Debug 2>&1
+$buildResult = dotnet build app.csproj --configuration Debug 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Frontend build failed!" -ForegroundColor Red
+    Write-Host "ERROR: App build failed!" -ForegroundColor Red
     Write-Host $buildResult
     Pop-Location
     exit 1
 }
 Pop-Location
-Write-Host "Frontend build completed" -ForegroundColor Green
+Write-Host "App build completed" -ForegroundColor Green
 
 # 3. Debug-Ordner ist bereits korrekt befüllt
 Write-Host "`n[3/4] Debug build completed!" -ForegroundColor Yellow
@@ -103,7 +103,7 @@ Write-Host "Debug files are ready in: $DebugPath" -ForegroundColor Green
 Write-Host "`n[4/4] Build Summary:" -ForegroundColor Yellow
 Write-Host "Application processes stopped" -ForegroundColor Green
 Write-Host "Backend built and deployed" -ForegroundColor Green  
-Write-Host "Frontend built successfully" -ForegroundColor Green
+Write-Host "App built successfully" -ForegroundColor Green
 Write-Host "Debug files ready" -ForegroundColor Green
 
 Write-Host "`n=== Build abgeschlossen! ===" -ForegroundColor Green

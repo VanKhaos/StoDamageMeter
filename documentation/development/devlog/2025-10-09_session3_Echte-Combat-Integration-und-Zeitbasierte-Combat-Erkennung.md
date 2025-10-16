@@ -1,80 +1,80 @@
-﻿## Session 3: Echte Combat-Integration und Zeitbasierte Combat-Erkennung
+## Session 3: Echte Combat-Integration und Zeitbasierte Combat-Erkennung
 
 **Datum:** 2025-10-09  
 **Dauer:** ~3 Stunden  
 **Fokus:** Echte OSCR-Integration, korrektes Datum-Parsing, zeitbasierte Combat-Erkennung
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
 1. **WPF UI Theme-Anpassung auf Star Trek Blau**
    - Gold-Akzente durch Star Trek Blau (#5B9BD5) ersetzt
-   - Alle SystemAccentColor-Keys Ã¼berschrieben fÃ¼r konsistentes Blau-Theming
-   - SystemFillColorAccent und Legacy-Keys fÃ¼r vollstÃ¤ndige Abdeckung
-   - LÃ¶sung des "Pink/Purple Button"-Problems
+   - Alle SystemAccentColor-Keys überschrieben für konsistentes Blau-Theming
+   - SystemFillColorAccent und Legacy-Keys für vollständige Abdeckung
+   - Lösung des "Pink/Purple Button"-Problems
 
 2. **Echte Combat-Log-Integration (Keine Mock-Daten mehr)**
    - Alle Mock-Daten-Fallbacks entfernt
    - `working_oscr_backend.py` als produktives Backend etabliert
    - Robuste Fehlerbehandlung mit Fehlermeldungen statt Fallback
-   - File-Logging fÃ¼r Debugging auÃŸerhalb der IDE
+   - File-Logging für Debugging außerhalb der IDE
 
 3. **Zeitbasierte Combat-Erkennung**
    - **Problem:** Alte Version gruppierte nach Zeilen-Anzahl (alle 20 Zeilen = 1 Combat)
-   - **Resultat:** Falsche Combat-Erkennung mit Sekunden-AbstÃ¤nden
-   - **LÃ¶sung:** Komplette Neuimplementierung mit Timestamp-Parsing
+   - **Resultat:** Falsche Combat-Erkennung mit Sekunden-Abständen
+   - **Lösung:** Komplette Neuimplementierung mit Timestamp-Parsing
    - **Neue Logik:**
      - Parst Timestamps aus Log-Format (YY:MM:DD:HH:MM:SS.ms)
      - Berechnet Zeit-Differenzen zwischen Combat-Zeilen
      - Neuer Combat wenn >30 Sekunden Pause (konfigurierbar)
-     - Combat benÃ¶tigt mindestens 20 Zeilen
-   - **Ergebnis:** Echte Combats mit realistischen ZeitabstÃ¤nden (Minuten/Stunden)
+     - Combat benötigt mindestens 20 Zeilen
+   - **Ergebnis:** Echte Combats mit realistischen Zeitabständen (Minuten/Stunden)
 
 4. **Korrektes Datum-Parsing**
    - **Problem:** Log wurde von vorne gelesen, alle Combats hatten gleiches Datum
-   - **LÃ¶sung:** Log von hinten lesen (neueste Combats zuerst)
+   - **Lösung:** Log von hinten lesen (neueste Combats zuerst)
    - Jeder Combat bekommt sein eigenes Datum aus der jeweiligen Log-Zeile
    - Format: `20{YY}-{MM}-{DD}` korrekt geparst
 
 5. **Selectable Combat-Liste**
-   - Migration von `ItemsControl` zu `ListView` fÃ¼r Selection-Support
+   - Migration von `ItemsControl` zu `ListView` für Selection-Support
    - Custom Styling mit Hover- und Selection-Effekten:
      - Normal: Dunkelgrau (#1A1A1A)
      - Hover: Heller Grau (#2A2A2A) + blaue Border
      - Selected: Star Trek Blau (#1E3A5F) + blaue Border
-   - Event-Handler fÃ¼r zukÃ¼nftige Combat-Details-Anzeige
+   - Event-Handler für zukünftige Combat-Details-Anzeige
 
 6. **Progress-Reporting beim Combat-Laden**
    - ProgressBar und StatusText in "Combat Log Selection" Card
-   - Anzeige wÃ¤hrend des Ladevorgangs
+   - Anzeige während des Ladevorgangs
    - CancellationToken-Support zum Abbrechen
-   - UI bleibt responsive bei groÃŸen Log-Dateien
+   - UI bleibt responsive bei großen Log-Dateien
 
 7. **Standalone Backend-Build**
-   - PyInstaller-Integration fÃ¼r `OSCRBackend.exe` (7.7 MB)
-   - Keine Python-Installation erforderlich fÃ¼r Endnutzer
-   - `working_oscr.spec` fÃ¼r korrekten Build-Prozess
-   - Automatischer Build Ã¼ber `Build.targets` im Frontend
+   - PyInstaller-Integration für `OSCRBackend.exe` (7.7 MB)
+   - Keine Python-Installation erforderlich für Endnutzer
+   - `working_oscr.spec` für korrekten Build-Prozess
+   - Automatischer Build über `Build.targets` im App
    - Health-Check und Test-Integration
 
 8. **Optimierte Settings**
    - Max Combats: 20 (statt 10)
    - Sekunden zwischen Combats: 30 (statt 100)
-   - Combat Min Lines: 20 (unverÃ¤ndert)
+   - Combat Min Lines: 20 (unverändert)
    - Alle Settings sind jetzt hardcoded
 
-9. **Projekt-AufrÃ¤umung**
-   - Alle temporÃ¤ren Test-Batch-Dateien gelÃ¶scht
+9. **Projekt-Aufräumung**
+   - Alle temporären Test-Batch-Dateien gelöscht
    - Debug-Logs entfernt
    - Python `__pycache__` Verzeichnisse bereinigt
    - Nur produktive Dateien beibehalten
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **Star Trek Blue Theme:**
 ```xml
-<!-- Akzent-Farben Ã¼berschrieben -->
+<!-- Akzent-Farben überschrieben -->
 <Color x:Key="SystemAccentColor">#5B9BD5</Color>
 <SolidColorBrush x:Key="SystemFillColorAccentDefaultBrush" Color="#5B9BD5"/>
 ```
@@ -82,7 +82,7 @@
 #### **Zeitbasierte Combat-Erkennung:**
 ```python
 def parse_timestamp(self, time_str):
-    """YY:MM:DD:HH:MM:SS.ms â†’ datetime"""
+    """YY:MM:DD:HH:MM:SS.ms → datetime"""
     parts = time_str.split(':')
     year = int(parts[0]) + 2000
     month, day = int(parts[1]), int(parts[2])
@@ -102,7 +102,7 @@ if time_diff > seconds_between_combats:  # >30 Sekunden
 - Clean build directories
 - PyInstaller mit working_oscr.spec
 - Health-Check der .exe
-- Copy zu Frontend/Deploy
+- Copy zu app/Deploy
 ```
 
 #### **ListView mit Selection-Styling:**
@@ -121,12 +121,12 @@ if time_diff > seconds_between_combats:  # >30 Sekunden
 </ListView.ItemContainerStyle>
 ```
 
-### ðŸš¨ **GelÃ¶ste Probleme:**
+### 🚨 **Gelöste Probleme:**
 
 #### **Problem 1: Pink/Purple Button-Farben**
 - **Symptom:** Buttons und Text waren lila/pink statt blau
 - **Ursache:** WPF UI verwendet spezifische interne Resource-Keys
-- **LÃ¶sung:** Ãœberschreiben aller `SystemAccentColor` und `SystemFillColorAccent`-Keys
+- **Lösung:** Überschreiben aller `SystemAccentColor` und `SystemFillColorAccent`-Keys
 - **Resultat:** Konsistente blaue Akzente
 
 #### **Problem 2: Falsches Datum-Parsing**
@@ -134,63 +134,63 @@ if time_diff > seconds_between_combats:  # >30 Sekunden
 - **Ursache:** 
   - Log wurde von vorne gelesen
   - `last_combat_time` wurde nur am Combat-Start gesetzt
-- **LÃ¶sung:** 
+- **Lösung:** 
   - Log von hinten lesen (`reversed(lines)`)
-  - Timestamp fÃ¼r jede Combat-Zeile aktualisieren
+  - Timestamp für jede Combat-Zeile aktualisieren
 - **Resultat:** Korrekte Daten (2025-10-09, 2025-10-08, etc.)
 
 #### **Problem 3: Falsche Combat-Erkennung**
 - **Symptom:** Combats nur Sekunden auseinander (18:44:53, 18:44:52, 18:44:49)
 - **Ursache:** Combat-Gruppierung nach Zeilen-Anzahl statt Zeit
-- **LÃ¶sung:** Komplette Neuimplementierung mit Timestamp-basierter Erkennung
-- **Resultat:** Echte Combats mit realistischen AbstÃ¤nden (Minuten/Stunden)
+- **Lösung:** Komplette Neuimplementierung mit Timestamp-basierter Erkennung
+- **Resultat:** Echte Combats mit realistischen Abständen (Minuten/Stunden)
 
-#### **Problem 4: Backend nicht ausfÃ¼hrbar**
+#### **Problem 4: Backend nicht ausführbar**
 - **Symptom:** "Failed to execute backend command"
 - **Ursache:** 
   - PyInstaller war nicht installiert
   - `build_backend.py` verwendete falschen Entry-Point
-- **LÃ¶sung:** 
+- **Lösung:** 
   - PyInstaller installiert
   - `working_oscr.spec` erstellt
   - Build-Script auf korrekten Spec-File umgestellt
-  - AusfÃ¼hrliche File-Logging hinzugefÃ¼gt
+  - Ausführliche File-Logging hinzugefügt
 - **Resultat:** Funktionierende standalone .exe
 
-### ðŸ“ **Wichtige Dateien:**
+### 📁 **Wichtige Dateien:**
 
 **Erstellt/Aktualisiert:**
 - `backend/working_oscr_backend.py` - Produktives Backend mit zeitbasierter Combat-Erkennung
-- `backend/working_oscr.spec` - PyInstaller-Spec fÃ¼r Standalone-Build
+- `backend/working_oscr.spec` - PyInstaller-Spec für Standalone-Build
 - `backend/build_backend.py` - Build-Script mit Dependency-Checks
-- `frontend/MainWindow.xaml` - ListView statt ItemsControl, Blue Theme
-- `frontend/MainWindow.xaml.cs` - SelectionChanged Event-Handler
-- `frontend/App.xaml` - Star Trek Blue Color-Overrides
+- `app/MainWindow.xaml` - ListView statt ItemsControl, Blue Theme
+- `app/MainWindow.xaml.cs` - SelectionChanged Event-Handler
+- `app/App.xaml` - Star Trek Blue Color-Overrides
 - Combat-Settings sind jetzt hardcoded (20/30/20)
 
-**GelÃ¶scht (Cleanup):**
+**Gelöscht (Cleanup):**
 - `test_backend.bat`, `test_backends.bat`, `test_list_combats.bat`
 - `Deploy/oscr_backend_direct.py`
 - `Deploy/oscr_api.log`, `backend/oscr_api.log`
-- `frontend/bin/Debug/net9.0-windows/backend_service_debug.log`
-- `frontend/bin/Debug/net9.0-windows/frontend_debug.log`
+- `app/bin/Debug/net9.0-windows/backend_service_debug.log`
+- `app/bin/Debug/net9.0-windows/App_debug.log`
 - Alle `__pycache__/` Verzeichnisse
 
-### ðŸ“Š **Vor/Nach Vergleich:**
+### 📊 **Vor/Nach Vergleich:**
 
 #### **Combat-Erkennung:**
 ```
 VORHER (Falsch):
-2025-10-04  18:44:53.8  â† Nur 1-2 Sekunden
-2025-10-04  18:44:52.2  â† zwischen "Combats"
-2025-10-04  18:44:49.7  â† (Keine echten Combats!)
+2025-10-04  18:44:53.8  ← Nur 1-2 Sekunden
+2025-10-04  18:44:52.2  ← zwischen "Combats"
+2025-10-04  18:44:49.7  ← (Keine echten Combats!)
 
 NACHHER (Korrekt):
 2025-10-09  18:45:01.9  
-2025-10-09  18:43:20.8  â† ~2 Minuten Pause
-2025-10-09  18:41:22.4  â† ~2 Minuten Pause
-2025-10-09  00:22:19.1  â† 18 Stunden Pause
-2025-10-08  23:55:47.6  â† Vom Vortag!
+2025-10-09  18:43:20.8  ← ~2 Minuten Pause
+2025-10-09  18:41:22.4  ← ~2 Minuten Pause
+2025-10-09  00:22:19.1  ← 18 Stunden Pause
+2025-10-08  23:55:47.6  ← Vom Vortag!
 ```
 
 #### **Backend-Deployment:**
@@ -202,61 +202,61 @@ VORHER:
 
 NACHHER:
 - Standalone OSCRBackend.exe (7.7 MB)
-- Keine Python-Installation nÃ¶tig
-- Fertig fÃ¼r Verteilung an andere Spieler
+- Keine Python-Installation nötig
+- Fertig für Verteilung an andere Spieler
 ```
 
-### ðŸŽ¯ **Deployment-Bereit:**
+### 🎯 **Deployment-Bereit:**
 
-**Erforderliche Dateien fÃ¼r Verteilung:**
-- `StoDamageMeter.exe` (Frontend)
+**Erforderliche Dateien für Verteilung:**
+- `StoDamageMeter.exe` (App)
 - `OSCRBackend.exe` (Backend - standalone)
 - Konfiguration wurde entfernt (hardcoded)
 - Alle Microsoft.Extensions.*.dll (Dependencies)
 - `Wpf.Ui.dll` (UI-Library)
 
-**Keine Python-Installation erforderlich!** âœ…
+**Keine Python-Installation erforderlich!** ✅
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
-1. **WPF UI Theme-Overrides:** Alle mÃ¶glichen Keys Ã¼berschreiben fÃ¼r konsistentes Theming
-2. **Combat-Erkennung:** Zeit-basierte Gruppierung ist prÃ¤ziser als Zeilen-basierte
-3. **Datum-Parsing:** Log von hinten lesen fÃ¼r neueste Daten zuerst
-4. **PyInstaller:** Hidden imports und Spec-Files sind essentiell fÃ¼r komplexe Builds
-5. **File-Logging:** Unverzichtbar fÃ¼r Debugging auÃŸerhalb der IDE
+1. **WPF UI Theme-Overrides:** Alle möglichen Keys überschreiben für konsistentes Theming
+2. **Combat-Erkennung:** Zeit-basierte Gruppierung ist präziser als Zeilen-basierte
+3. **Datum-Parsing:** Log von hinten lesen für neueste Daten zuerst
+4. **PyInstaller:** Hidden imports und Spec-Files sind essentiell für komplexe Builds
+5. **File-Logging:** Unverzichtbar für Debugging außerhalb der IDE
 6. **ListView vs ItemsControl:** ListView bietet Selection-Support out-of-the-box
-7. **Projekt-Hygiene:** RegelmÃ¤ÃŸiges AufrÃ¤umen von Test-Dateien hÃ¤lt Projekt sauber
+7. **Projekt-Hygiene:** Regelmäßiges Aufräumen von Test-Dateien hält Projekt sauber
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Frontend kompiliert erfolgreich
-- âœ… Backend als Standalone .exe gebaut
-- âœ… Echte Combat-Daten werden geladen
-- âœ… Zeitbasierte Combat-Erkennung funktioniert
-- âœ… Datum-Parsing korrekt
-- âœ… Selectable Combat-Liste implementiert
-- âœ… Star Trek Blue Theme konsistent
-- âœ… Kein Python erforderlich fÃ¼r Deployment
-- âœ… Projekt aufgerÃ¤umt
+- ✅ App kompiliert erfolgreich
+- ✅ Backend als Standalone .exe gebaut
+- ✅ Echte Combat-Daten werden geladen
+- ✅ Zeitbasierte Combat-Erkennung funktioniert
+- ✅ Datum-Parsing korrekt
+- ✅ Selectable Combat-Liste implementiert
+- ✅ Star Trek Blue Theme konsistent
+- ✅ Kein Python erforderlich für Deployment
+- ✅ Projekt aufgeräumt
 
-### ðŸŽ¨ **UI-Status:**
+### 🎨 **UI-Status:**
 
 **Implementiert:**
-- âœ… Combat Log File Selection mit Browse-Button
-- âœ… Automatisches Laden nach File-Auswahl
-- âœ… Progress Bar mit Status-Text
-- âœ… Selectable Combat-Liste (neueste zuerst)
-- âœ… Hover- und Selection-Effekte
-- âœ… Responsive Layout
+- ✅ Combat Log File Selection mit Browse-Button
+- ✅ Automatisches Laden nach File-Auswahl
+- ✅ Progress Bar mit Status-Text
+- ✅ Selectable Combat-Liste (neueste zuerst)
+- ✅ Hover- und Selection-Effekte
+- ✅ Responsive Layout
 
 **Ausstehend:**
-- â³ Combat-Details beim AuswÃ¤hlen
-- â³ DPS-Statistiken
-- â³ Graph-Visualisierung
-- â³ Damage-Tabellen
-- â³ Filter-FunktionalitÃ¤t
+- ⏳ Combat-Details beim Auswählen
+- ⏳ DPS-Statistiken
+- ⏳ Graph-Visualisierung
+- ⏳ Damage-Tabellen
+- ⏳ Filter-Funktionalität
 
 ---
-**NÃ¤chste Session:** Combat-Details implementieren, DPS-Statistiken anzeigen, Graph-Integration
+**Nächste Session:** Combat-Details implementieren, DPS-Statistiken anzeigen, Graph-Integration
 
 

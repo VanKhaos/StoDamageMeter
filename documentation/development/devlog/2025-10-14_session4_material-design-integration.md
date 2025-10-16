@@ -120,10 +120,10 @@
 - Accessibility-Features implementieren
 
 ## 🔗 **Verwandte Dateien**
-- `frontend/Windows/App/App.xaml` - Material Design Integration
-- `frontend/Windows/CombatStatistic/CombatStatistic.xaml` - UI Modernisierung
-- `frontend/Components/Combat/CombatListView.xaml` - List Styling
-- `frontend/frontend.csproj` - MaterialDesignInXAML Package
+- `app/Windows/App/App.xaml` - Material Design Integration
+- `app/Windows/CombatStatistic/CombatStatistic.xaml` - UI Modernisierung
+- `app/Components/Combat/CombatListView.xaml` - List Styling
+- `app/App.csproj` - MaterialDesignInXAML Package
 
 ---
 **Status:** ✅ Abgeschlossen  

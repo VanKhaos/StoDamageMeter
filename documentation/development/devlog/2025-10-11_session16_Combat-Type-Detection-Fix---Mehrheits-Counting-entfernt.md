@@ -1,32 +1,32 @@
-﻿## Session 16: Combat-Type-Detection-Fix - Mehrheits-Counting entfernt
+## Session 16: Combat-Type-Detection-Fix - Mehrheits-Counting entfernt
 
 **Datum:** 2025-10-11  
 **Dauer:** ~30 Minuten  
 **Fokus:** Combat-Type-Erkennung korrigiert, Mehrheits-Counting-Logik entfernt
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
 1. **Combat-Type-Detection-Logik korrigiert**
    - **Problem:** Combat-Type wurde per Mehrheits-Counting (`space_count` vs `ground_count`) bestimmt
    - **Symptom:** User meldete "ich bin im Raum aber es wird Bodenkampf angezeigt"
-   - **Ursache:** Zu viele Zeilen wurden fÃ¤lschlicherweise als "Ground" erkannt
+   - **Ursache:** Zu viele Zeilen wurden fälschlicherweise als "Ground" erkannt
    - **User-Anforderung:**
      - Combat-Type wird **nur** anhand des Enemy-Types erkannt
      - Ein Combat kann **immer nur einen Type** haben (niemals gemischt)
-     - Type-Wechsel wÃ¤hrend Combat = **neuer Combat** (bereits implementiert)
+     - Type-Wechsel während Combat = **neuer Combat** (bereits implementiert)
      - Es gibt nur **Space** oder **Ground**
-   - **LÃ¶sung:**
+   - **Lösung:**
      - Erste erkannte Type-Zeile setzt `current_combat_type`
-     - Type bleibt dann **fix** fÃ¼r den gesamten Combat
-     - Kein Counting mehr nÃ¶tig
-   - **Code-Ã„nderungen:**
+     - Type bleibt dann **fix** für den gesamten Combat
+     - Kein Counting mehr nötig
+   - **Code-Änderungen:**
      ```python
      # VORHER:
      space_count = 0
      ground_count = 0
-     # ... zÃ¤hlen ...
+     # ... zählen ...
      if ground_count > space_count:
          combat_type = 'Ground'
      else:
@@ -46,20 +46,20 @@
    - PyInstaller-Build erfolgreich
    - OSCRBackend.exe in Debug/ und Deploy/ kopiert
 
-3. **Frontend neu kompiliert**
+3. **App neu kompiliert**
    - Debug-Build erstellt
    - Alle Dateien nach Debug/ kopiert
    - Keine Breaking Changes
 
 4. **Auto-Update-Feature verworfen**
    - User entschied sich gegen automatische Updates (vorerst)
-   - Feature fÃ¼r spÃ¤tere Session aufgeschoben
+   - Feature für spätere Session aufgeschoben
 
-5. **TODO-Liste aufgerÃ¤umt**
+5. **TODO-Liste aufgeräumt**
    - Alle bestehenden TODOs als `cancelled` markiert
-   - Saubere Liste fÃ¼r nÃ¤chste Session
+   - Saubere Liste für nächste Session
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **Vereinfachte Combat-Type-Logik:**
 
@@ -70,7 +70,7 @@ space_count = 0
 ground_count = 0
 current_combat_type = None
 
-# Bei jeder Zeile zÃ¤hlen
+# Bei jeder Zeile zählen
 if line_combat_type == 'Space':
     space_count += 1
     if not current_combat_type:
@@ -106,7 +106,7 @@ combat_type = current_combat_type if current_combat_type else 'Space'
 - Keine Mehrheits-Berechnung mehr
 - Deutlich wartbarer Code
 
-### ðŸ“ **Wichtige Dateien:**
+### 📁 **Wichtige Dateien:**
 
 **Aktualisiert:**
 - `backend/working_oscr_backend.py` - Logik vereinfacht
@@ -118,78 +118,78 @@ combat_type = current_combat_type if current_combat_type else 'Space'
 - `Debug/OSCRBackend.exe` - Aktualisiert
 - `Deploy/OSCRBackend.exe` - Aktualisiert
 
-**Keine Frontend-Ã„nderungen erforderlich**
+**Keine App-Änderungen erforderlich**
 
-### ðŸš¨ **GelÃ¶ste Probleme:**
+### 🚨 **Gelöste Probleme:**
 
 #### **Problem: Falscher Combat-Type trotz Combat-Type-Change-Erkennung**
 - **Symptom:** "ich bin im Raum aber es wird Bodenkampf angezeigt"
-- **User-ErklÃ¤rung:** "kann es sein das wir es mal ausgeschaltet haben aus einen grund damit die live daten funktionieren?"
-- **BestÃ¤tigung:** Ja, Combat-Type-Filter wurde fÃ¼r Live-Parsing deaktiviert (in `_analyze_combat_lines_direct`)
+- **User-Erklärung:** "kann es sein das wir es mal ausgeschaltet haben aus einen grund damit die live daten funktionieren?"
+- **Bestätigung:** Ja, Combat-Type-Filter wurde für Live-Parsing deaktiviert (in `_analyze_combat_lines_direct`)
 - **Aber:** Problem war in `isolate_combats()` Methode, nicht im Live-Parsing
 - **Root-Cause:** Mehrheits-Counting war fehlerhaft
-  - Viele Zeilen haben `None` als Type zurÃ¼ckgegeben
+  - Viele Zeilen haben `None` als Type zurückgegeben
   - Wenn mehr "Ground"-Zeilen erkannt wurden als "Space", wurde Combat als Ground klassifiziert
   - Auch wenn die **ersten** Zeilen eindeutig "Space" waren
-- **LÃ¶sung:** Erste erkannte Type-Zeile ist maÃŸgeblich
-- **Resultat:** âœ… Combat-Type wird korrekt erkannt
+- **Lösung:** Erste erkannte Type-Zeile ist maßgeblich
+- **Resultat:** ✅ Combat-Type wird korrekt erkannt
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
-1. **Erste Erkennung > Mehrheit:** Bei Combat-Type ist die erste eindeutige Erkennung zuverlÃ¤ssiger als Mehrheits-Counting
-2. **Einfacher Code ist besser:** Von 25 Zeilen auf 3 Zeilen reduziert, wartbarer und weniger fehleranfÃ¤llig
-3. **User-Feedback ernst nehmen:** "ich bin im Raum aber Bodenkampf" war prÃ¤zises Feedback fÃ¼r Bug-Identifikation
+1. **Erste Erkennung > Mehrheit:** Bei Combat-Type ist die erste eindeutige Erkennung zuverlässiger als Mehrheits-Counting
+2. **Einfacher Code ist besser:** Von 25 Zeilen auf 3 Zeilen reduziert, wartbarer und weniger fehleranfällig
+3. **User-Feedback ernst nehmen:** "ich bin im Raum aber Bodenkampf" war präzises Feedback für Bug-Identifikation
 4. **Live-Parsing-Filter war richtig:** Combat-Type-Filter in Live-Parsing zu deaktivieren war korrekte Entscheidung
 5. **Problem war woanders:** Bug war in der Combat-Isolation, nicht im Live-Parsing
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Backend kompiliert erfolgreich
-- âœ… Frontend kompiliert erfolgreich
-- âœ… OSCRBackend.exe neu gebaut (7.7 MB)
-- âœ… Debug-Version aktualisiert
-- âœ… Deploy-Version aktualisiert
-- âœ… Keine Linter-Fehler
-- âœ… Alle bestehenden Features funktional
+- ✅ Backend kompiliert erfolgreich
+- ✅ App kompiliert erfolgreich
+- ✅ OSCRBackend.exe neu gebaut (7.7 MB)
+- ✅ Debug-Version aktualisiert
+- ✅ Deploy-Version aktualisiert
+- ✅ Keine Linter-Fehler
+- ✅ Alle bestehenden Features funktional
 
-### ðŸŽ¨ **Code-QualitÃ¤t:**
+### 🎨 **Code-Qualität:**
 
 **Vorher:**
-- âŒ Komplizierte Mehrheits-Logik
-- âŒ Zwei Counting-Variablen
-- âŒ FehleranfÃ¤llige Berechnung
-- âŒ Falsche Combat-Type-Erkennung
+- ❌ Komplizierte Mehrheits-Logik
+- ❌ Zwei Counting-Variablen
+- ❌ Fehleranfällige Berechnung
+- ❌ Falsche Combat-Type-Erkennung
 
 **Nachher:**
-- âœ… Einfache "First-Match"-Logik
-- âœ… Nur eine State-Variable
-- âœ… Robuste Erkennung
-- âœ… Korrekte Combat-Type-Klassifikation
+- ✅ Einfache "First-Match"-Logik
+- ✅ Nur eine State-Variable
+- ✅ Robuste Erkennung
+- ✅ Korrekte Combat-Type-Klassifikation
 
-### ðŸ“Š **Git-Status:**
+### 📊 **Git-Status:**
 
-- Ã„nderungen in `backend/working_oscr_backend.py`
-- TODOs aufgerÃ¤umt (alle cancelled)
-- Bereit fÃ¼r Commit
+- Änderungen in `backend/working_oscr_backend.py`
+- TODOs aufgeräumt (alle cancelled)
+- Bereit für Commit
 
-### ðŸŽ¯ **NÃ¤chste Schritte (vom User verschoben):**
+### 🎯 **Nächste Schritte (vom User verschoben):**
 
-**Auto-Update-Feature (vorerst zurÃ¼ckgestellt):**
-- User mÃ¶chte sich Gedanken machen Ã¼ber:
+**Auto-Update-Feature (vorerst zurückgestellt):**
+- User möchte sich Gedanken machen über:
   - Update-Quelle (GitHub Releases vs. eigener Server)
-  - Update-PrÃ¼fung (automatisch vs. manuell)
+  - Update-Prüfung (automatisch vs. manuell)
   - Update-Installation (Download vs. In-Place)
   - Versionsnummern-Schema
-- Feature fÃ¼r spÃ¤tere Session vorgemerkt
+- Feature für spätere Session vorgemerkt
 
-**Sofort verfÃ¼gbar:**
-- âœ… Combat-Type-Detection funktioniert korrekt
-- âœ… Live Combat mit Overlay
-- âœ… Demo-Modus im Overlay
-- âœ… Spieler-spezifische Farben
-- âœ… Rank-Wechsel-Animationen
+**Sofort verfügbar:**
+- ✅ Combat-Type-Detection funktioniert korrekt
+- ✅ Live Combat mit Overlay
+- ✅ Demo-Modus im Overlay
+- ✅ Spieler-spezifische Farben
+- ✅ Rank-Wechsel-Animationen
 
 ---
-**NÃ¤chste Session:** Live-Modus testen mit echtem STO Combat, Performance-Tests, weitere Bug-Fixes
+**Nächste Session:** Live-Modus testen mit echtem STO Combat, Performance-Tests, weitere Bug-Fixes
 
 

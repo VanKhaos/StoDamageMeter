@@ -123,11 +123,11 @@ def test_executable():
         return False
 
 def copy_to_frontend():
-    """Kopiert die Executable ins Frontend-Verzeichnis"""
-    print("Copying executable to frontend...")
+    """Kopiert die Executable ins App-Verzeichnis"""
+    print("Copying executable to app...")
     
     exe_path = Path('dist/OSCRBackend.exe')
-    frontend_path = Path('../frontend/OSCRBackend.exe')
+    frontend_path = Path('../app/OSCRBackend.exe')
     
     if not exe_path.exists():
         print("FAIL Source executable not found")
@@ -167,11 +167,11 @@ def main():
     
     # Ins Frontend kopieren
     if not copy_to_frontend():
-        print("Warning: Could not copy to frontend")
+        print("Warning: Could not copy to app")
     
     print("\n=== Build completed successfully! ===")
     print("Executable location: dist/OSCRBackend.exe")
-    print("Frontend copy: ../frontend/OSCRBackend.exe")
+    print("App copy: ../app/OSCRBackend.exe")
     
     return 0
 

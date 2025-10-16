@@ -206,7 +206,7 @@ Root/ (7 Einträge + wenige DLLs)
    - Optimiert für WPF-Kompatibilität
    - ~12 MB Größe
 
-2. **Frontend bauen:**
+2. **App bauen:**
    - Self-Contained Publish
    - Alle DLLs inkludiert
    - Build.targets verschiebt automatisch:
@@ -224,7 +224,7 @@ Root/ (7 Einträge + wenige DLLs)
 
 ### Automatische Reorganisation
 
-Die Datei `frontend/Build.targets` enthält ein MSBuild-Target `ReorganizeReleaseStructure`:
+Die Datei `app/Build.targets` enthält ein MSBuild-Target `ReorganizeReleaseStructure`:
 - Läuft nach dem Publish
 - Erstellt App/, Language/ und Assets/ Ordner
 - Verschiebt Dateien automatisch
@@ -286,11 +286,11 @@ Launcher/                       # Launcher-Projekt
 ├── Launcher.csproj
 └── Program.cs
 
-frontend/
+app/
 ├── Build.targets              # ReorganizeReleaseStructure
 └── frontend.csproj            # GenerateAssemblyInfo=false
 
-scripts\create_release.ps1     # Baut Launcher + Frontend
+scripts\create_release.ps1     # Baut Launcher + App
 ```
 
 ---

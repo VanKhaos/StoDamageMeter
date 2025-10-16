@@ -1,56 +1,56 @@
-﻿## Session 2: Landing Window mit Zoom und Flacker-Fix
+## Session 2: Landing Window mit Zoom und Flacker-Fix
 
 **Datum:** 2025-10-14  
 **Dauer:** ~3 Stunden  
 **Fokus:** Neues Landing Window, Skalierbarkeit, Hover-Animationen
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 1. **Neues Landing Window**
    - Transparentes, framelesses Fenster (120x120px)
    - App-Logo als zentrales Element (100x100px)
    - Hover-aktivierte Buttons um das Logo herum
-   - Pin/Unpin-FunktionalitÃ¤t fÃ¼r Fenster-Position
+   - Pin/Unpin-Funktionalität für Fenster-Position
 
-2. **Button-Layout und FunktionalitÃ¤t**
+2. **Button-Layout und Funktionalität**
    - **Rechte Buttons:** Dashboard, Graph, Overlay, Log (vertikal gestapelt)
    - **Linke Buttons:** Close, Pin (vertikal gestapelt)
-   - **Farbige HintergrÃ¼nde** fÃ¼r jeden Button-Typ
-   - **2,5 Sekunden Timer** fÃ¼r Button-Sichtbarkeit
+   - **Farbige Hintergründe** für jeden Button-Typ
+   - **2,5 Sekunden Timer** für Button-Sichtbarkeit
 
 3. **Skalierbares Layout mit ViewBox**
-   - **ViewBox** mit `Stretch="Uniform"` fÃ¼r proportionale Skalierung
-   - **Basis-GrÃ¶ÃŸe:** 100x100px (Design-Referenz)
-   - **Zoom-FunktionalitÃ¤t:** 1.0x - 3.0x (Standard: 1.2x)
-   - **Keyboard Shortcuts:** Ctrl+/Ctrl-/Ctrl0 fÃ¼r Zoom
+   - **ViewBox** mit `Stretch="Uniform"` für proportionale Skalierung
+   - **Basis-Größe:** 100x100px (Design-Referenz)
+   - **Zoom-Funktionalität:** 1.0x - 3.0x (Standard: 1.2x)
+   - **Keyboard Shortcuts:** Ctrl+/Ctrl-/Ctrl0 für Zoom
 
 4. **Flacker-Problem behoben**
-   - **IsHitTestVisible-Logik** fÃ¼r Button-Klickbarkeit
-   - **Einheitliche Hover-Detection** Ã¼ber Grid statt individuelle Button-Events
-   - **Timer-Management** fÃ¼r 2,5s VerzÃ¶gerung
+   - **IsHitTestVisible-Logik** für Button-Klickbarkeit
+   - **Einheitliche Hover-Detection** über Grid statt individuelle Button-Events
+   - **Timer-Management** für 2,5s Verzögerung
 
-### ðŸš¨ **Probleme und LÃ¶sungen:**
+### 🚨 **Probleme und Lösungen:**
 
 #### **Problem 1: Button-Flackern beim Hover**
 - **Symptom:** Buttons flackerten beim schnellen Hover zwischen Elementen
 - **Ursache:** Individuelle MouseEnter/MouseLeave Events auf Buttons
-- **LÃ¶sung:** Zentrales HoverPanel mit IsHitTestVisible-Steuerung
-- **Code-Ã„nderung:** Events auf Grid-Level, Buttons werden nur bei Sichtbarkeit klickbar
+- **Lösung:** Zentrales HoverPanel mit IsHitTestVisible-Steuerung
+- **Code-Änderung:** Events auf Grid-Level, Buttons werden nur bei Sichtbarkeit klickbar
 
 #### **Problem 2: HoverPanel blockierte Button-Klicks**
-- **Symptom:** Buttons waren nicht klickbar wegen Ã¼berlagerndem Panel
-- **Ursache:** HoverPanel hatte hÃ¶chsten Z-Index
-- **LÃ¶sung:** IsHitTestVisible="False" fÃ¼r unsichtbare Buttons
-- **Code-Ã„nderung:** Dynamisches Umschalten der Klickbarkeit
+- **Symptom:** Buttons waren nicht klickbar wegen überlagerndem Panel
+- **Ursache:** HoverPanel hatte höchsten Z-Index
+- **Lösung:** IsHitTestVisible="False" für unsichtbare Buttons
+- **Code-Änderung:** Dynamisches Umschalten der Klickbarkeit
 
 #### **Problem 3: Layout-Skalierung**
-- **Symptom:** Buttons wurden bei verschiedenen FenstergrÃ¶ÃŸen falsch positioniert
-- **Ursache:** Feste Pixel-Werte fÃ¼r Margins und GrÃ¶ÃŸen
-- **LÃ¶sung:** ViewBox mit relativen Margins und Zoom-Funktion
-- **Code-Ã„nderung:** ViewBox + SetZoom() Methode mit Keyboard Shortcuts
+- **Symptom:** Buttons wurden bei verschiedenen Fenstergrößen falsch positioniert
+- **Ursache:** Feste Pixel-Werte für Margins und Größen
+- **Lösung:** ViewBox mit relativen Margins und Zoom-Funktion
+- **Code-Änderung:** ViewBox + SetZoom() Methode mit Keyboard Shortcuts
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **XAML-Struktur:**
 ```xml
@@ -66,20 +66,20 @@
 ```
 
 #### **Code-Behind Features:**
-- **Timer-Management:** DispatcherTimer fÃ¼r 2,5s VerzÃ¶gerung
+- **Timer-Management:** DispatcherTimer für 2,5s Verzögerung
 - **Zoom-System:** SetZoom() mit Keyboard Shortcuts
-- **Pin-FunktionalitÃ¤t:** Topmost-Toggle mit Icon-Wechsel
-- **Overlay-Management:** Single-Instance fÃ¼r LiveCombatOverlay
+- **Pin-Funktionalität:** Topmost-Toggle mit Icon-Wechsel
+- **Overlay-Management:** Single-Instance für LiveCombatOverlay
 
-### ðŸ“ **GeÃ¤nderte Dateien:**
-- `frontend/Windows/LandingWindow/LandingWindow.xaml` - Komplett neu erstellt
-- `frontend/Windows/LandingWindow/LandingWindow.xaml.cs` - Komplett neu erstellt
-- `frontend/Windows/App/App.xaml.cs` - Startup auf LandingWindow geÃ¤ndert
-- `frontend/frontend.csproj` - ApplicationDefinition hinzugefÃ¼gt
+### 📁 **Geänderte Dateien:**
+- `app/Windows/LandingWindow/LandingWindow.xaml` - Komplett neu erstellt
+- `app/Windows/LandingWindow/LandingWindow.xaml.cs` - Komplett neu erstellt
+- `app/Windows/App/App.xaml.cs` - Startup auf LandingWindow geändert
+- `app/App.csproj` - ApplicationDefinition hinzugefügt
 
-### ðŸŽ¯ **NÃ¤chste Schritte:**
-- Dashboard-Button FunktionalitÃ¤t implementieren
-- Graph-Button FunktionalitÃ¤t implementieren
+### 🎯 **Nächste Schritte:**
+- Dashboard-Button Funktionalität implementieren
+- Graph-Button Funktionalität implementieren
 - Log-Button Integration mit Backend
 - UI-Feintuning und Performance-Optimierung
 

@@ -59,9 +59,9 @@ Füge einen neuen Eintrag für die neue Version hinzu:
            Opacity="0.7"/>
 ```
 
-### 3. Frontend-Version aktualisieren
+### 3. App-Version aktualisieren
 
-**Datei:** `frontend/frontend.csproj`
+**Datei:** `app/frontend.csproj`
 
 ```xml
 <Version>1.2.3</Version>
@@ -69,7 +69,7 @@ Füge einen neuen Eintrag für die neue Version hinzu:
 
 ### 4. UpdateCheckService-Version aktualisieren
 
-**Datei:** `frontend/Services/UpdateCheckService.cs`
+**Datei:** `app/Services/UpdateCheckService.cs`
 
 ```csharp
 public Version GetCurrentVersion()
@@ -122,7 +122,7 @@ Auch das Datum aktualisieren:
 
 ## 🏗️ Release bauen
 
-### 1. Frontend bauen
+### 1. App bauen
 
 ```powershell
 cd frontend
@@ -270,7 +270,7 @@ git push origin v2.1.0
 
 **Was die GitHub Action automatisch macht:**
 - ✅ **Backend bauen** (Python + PyInstaller)
-- ✅ **Frontend bauen** (.NET 9.0)
+- ✅ **App bauen** (.NET 9.0)
 - ✅ **Launcher bauen**
 - ✅ **Release-Paket erstellen** (mit PowerShell-Scripts)
 - ✅ **ZIP erstellen**
@@ -358,7 +358,7 @@ git checkout version/1.2
 **Checkliste (automatisch erledigt):**
 - [x] CHANGELOG.md aktualisiert (automatisch aus Git-Commits)
 - [x] Launcher-Version aktualisiert (automatisch)
-- [x] Frontend-Version aktualisiert (automatisch)
+- [x] App-Version aktualisiert (automatisch)
 - [x] UpdateCheckService-Version aktualisiert (automatisch)
 - [x] User-Agent String aktualisiert (automatisch)
 - [x] GitHub Pages Version aktualisiert (automatisch)
@@ -379,8 +379,8 @@ Vor dem Release:
 
 - [ ] CHANGELOG.md aktualisiert
 - [ ] Launcher-Version aktualisiert (`Launcher/SplashScreen.xaml`)
-- [ ] **Frontend-Version aktualisiert** (`frontend/frontend.csproj`) ⚠️
-- [ ] **UpdateCheckService-Version aktualisiert** (`frontend/Services/UpdateCheckService.cs`) ⚠️
+- [ ] **App-Version aktualisiert** (`app/frontend.csproj`) ⚠️
+- [ ] **UpdateCheckService-Version aktualisiert** (`app/Services/UpdateCheckService.cs`) ⚠️
 - [ ] **User-Agent String aktualisiert** (`UpdateCheckService.cs`) ⚠️
 - [ ] GitHub Pages Version aktualisiert (`docs/index.html`)
 - [ ] README.md Version-Badge aktualisiert
@@ -463,12 +463,12 @@ git diff main version/1.2
 **Lösung:**
 ```powershell
 # Prüfe alle Version-Stellen:
-grep -r "2.0.0" frontend/
+grep -r "2.0.0" app/
 grep -r "2.0.0" Launcher/
 
 # Aktualisiere alle Version-Nummern:
-# 1. frontend/frontend.csproj: <Version>2.0.1</Version>
-# 2. frontend/Services/UpdateCheckService.cs: return new Version(2, 0, 1, 0);
+# 1. app/frontend.csproj: <Version>2.0.1</Version>
+# 2. app/Services/UpdateCheckService.cs: return new Version(2, 0, 1, 0);
 # 3. UpdateCheckService.cs: "STO-Damage-Meter/2.0.1"
 # 4. Launcher/SplashScreen.xaml: "Version 2.0.1"
 
@@ -498,7 +498,7 @@ Remove-Item -Path "Releases\StoDamageMeter_v1.2.3\App\logs\*.log" -Force
 - Das `scripts\create_release.ps1` Script entfernt Logs automatisch ab Version 1.2.2+
 - Ab Version 1.2.3: Log-Rotation implementiert (automatisch begrenzte Log-Größen)
   - Backend: max 10 MB pro Log, 3 Backup-Dateien
-  - Frontend Debug-Logs: nur in DEBUG-Builds, max 5-10 MB mit Rotation
+  - App Debug-Logs: nur in DEBUG-Builds, max 5-10 MB mit Rotation
 
 ---
 

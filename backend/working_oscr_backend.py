@@ -625,8 +625,8 @@ class WorkingOSCR:
                 combat_id=c_id,
                 map_name=c_map,
                 difficulty=c_difficulty,
-                start_time=datetime.now() - timedelta(minutes=5),
-                end_time=datetime.now(),
+                start_time=(datetime.now() - timedelta(minutes=5)).isoformat(),
+                end_time=datetime.now().isoformat(),
                 log_file=log_path
             )
             
@@ -868,8 +868,8 @@ class WorkingOSCR:
             logger.debug(f"  - Damage taken events: {damage_taken_count}")
             logger.debug(f"  - Healing received events: {healing_received_count}")
             logger.debug(f"  - Healing given events: {healing_given_count}")
-            logger.debug(f"  - Unknown combat type: {unknown_type_count}")
-            logger.debug(f"  - Type mismatch: {type_mismatch_count}")
+            # logger.debug(f"  - Unknown combat type: {unknown_type_count}")  # Variable nicht definiert in dieser Funktion
+            # logger.debug(f"  - Type mismatch: {type_mismatch_count}")  # Variable nicht definiert in dieser Funktion
             logger.debug(f"  - Players found: {len(players)}")
             logger.debug(f"  - Combat duration: {duration:.1f}s")
             
@@ -1098,8 +1098,8 @@ class WorkingOSCR:
         logger.debug(f"  - Successfully parsed: {processed_lines}")
         logger.debug(f"  - Skipped lines: {skipped_lines}")
         logger.debug(f"  - Small damage values (0-0.1): {small_damage_count}")
-        logger.debug(f"  - Unknown combat type: {unknown_type_count}")
-        logger.debug(f"  - Type mismatch: {type_mismatch_count}")
+        # logger.debug(f"  - Unknown combat type: {unknown_type_count}")  # Variable nicht definiert in dieser Funktion
+        # logger.debug(f"  - Type mismatch: {type_mismatch_count}")  # Variable nicht definiert in dieser Funktion
         logger.debug(f"  - Players found: {len(players)}")
         logger.debug(f"  - Combat duration: {combat_time:.1f}s")
         

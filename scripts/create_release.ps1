@@ -13,7 +13,7 @@ Write-Host ""
 
 # Pfade definieren (Script ist in scripts/ Ordner)
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
-$FrontendPath = Join-Path $ProjectRoot "frontend"
+$FrontendPath = Join-Path $ProjectRoot "app"
 $BackendPath = Join-Path $ProjectRoot "backend"
 $ReleasePath = Join-Path $ProjectRoot "Releases"
 $ReleaseVersionPath = Join-Path $ReleasePath "StoDamageMeter_v$Version"

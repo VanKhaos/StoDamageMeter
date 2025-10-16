@@ -1,42 +1,42 @@
-﻿## Session 6: Spalten-Trennlinien fÃ¼r bessere Lesbarkeit
+## Session 6: Spalten-Trennlinien für bessere Lesbarkeit
 
 **Datum:** 2025-10-10  
 **Dauer:** ~20 Minuten  
-**Fokus:** Vertikale Trennlinien zwischen Spalten fÃ¼r alle Ebenen
+**Fokus:** Vertikale Trennlinien zwischen Spalten für alle Ebenen
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
-1. **DurchgÃ¤ngige vertikale Trennlinien**
+1. **Durchgängige vertikale Trennlinien**
    - Linien zwischen allen Spalten sichtbar
    - Durchgehend von Header bis durch alle Ebenen:
      - Player-Ebene
      - Companion-Ebene  
      - Ability-Ebene (Player und Companion)
    - Konsistente Farbe: StarTrekBorderGray (#333333)
-   - DÃ¼nne 1px-Linien fÃ¼r subtile Abgrenzung
+   - Dünne 1px-Linien für subtile Abgrenzung
 
 2. **CreateTableCell Refactoring**
-   - RÃ¼ckgabewert: `Border` statt `TextBlock`
+   - Rückgabewert: `Border` statt `TextBlock`
    - TextBlock wird in Border gewrappt
    - `BorderThickness`: `1,0,0,0` (linker Border)
-   - Neuer Parameter `showLeftBorder` fÃ¼r FlexibilitÃ¤t
+   - Neuer Parameter `showLeftBorder` für Flexibilität
    - Alle Daten-Zellen nutzen die gleiche Methode
 
 3. **Name-Spalten angepasst**
    - Player-Namen in Border gewrappt
    - Companion-Namen in Border gewrappt  
    - Ability-Namen in Border gewrappt (2 Stellen)
-   - Rechter Border (`0,0,1,0`) fÃ¼r Trennlinie zur DPS-Spalte
+   - Rechter Border (`0,0,1,0`) für Trennlinie zur DPS-Spalte
 
 4. **Header-Buttons mit Borders**
    - Alle Header-Buttons haben `BorderThickness="1,0,0,0"`
    - Player/Ability Header als Border mit rechtem BorderThickness
-   - `HorizontalAlignment="Stretch"` fÃ¼r volle Spalten-Breite
+   - `HorizontalAlignment="Stretch"` für volle Spalten-Breite
    - Hover-Effekt bleibt erhalten
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **CreateTableCell - Vorher/Nachher:**
 
@@ -98,13 +98,13 @@ playerHeaderGrid.Children.Add(playerNameBorder);
 </Button>
 ```
 
-### ðŸ“ **Dateien geÃ¤ndert:**
+### 📁 **Dateien geändert:**
 
 **Aktualisiert:**
-- `frontend/MainWindow.xaml.cs` - CreateTableCell refactored, alle Name-Spalten mit Border
-- `frontend/MainWindow.xaml` - Header-Buttons mit BorderThickness, Player/Ability Header als Border
+- `app/MainWindow.xaml.cs` - CreateTableCell refactored, alle Name-Spalten mit Border
+- `app/MainWindow.xaml` - Header-Buttons mit BorderThickness, Player/Ability Header als Border
 
-### âœ… **Visuelle Verbesserungen:**
+### ✅ **Visuelle Verbesserungen:**
 
 **Vorher:**
 - Keine Spalten-Abgrenzung
@@ -113,33 +113,33 @@ playerHeaderGrid.Children.Add(playerNameBorder);
 
 **Nachher:**
 - Klare vertikale Trennlinien
-- DurchgÃ¤ngig von Header bis Ability-Ebene
+- Durchgängig von Header bis Ability-Ebene
 - Bessere Lesbarkeit und Orientierung
 - Professionelles Tabellen-Layout
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
 1. **Border-Wrapping:** Flexibler als direkte BorderThickness auf Controls
-2. **Konsistenz:** Gleiche Border-LÃ¶sung fÃ¼r alle Ebenen erhÃ¶ht Wartbarkeit
-3. **XAML Template-Borders:** BorderThickness im ControlTemplate fÃ¼r klickbare Elemente
-4. **Type-AmbiguitÃ¤t:** `System.Windows.Controls.Button` vs. `Wpf.Ui.Controls.Button` explizit auflÃ¶sen
+2. **Konsistenz:** Gleiche Border-Lösung für alle Ebenen erhöht Wartbarkeit
+3. **XAML Template-Borders:** BorderThickness im ControlTemplate für klickbare Elemente
+4. **Type-Ambiguität:** `System.Windows.Controls.Button` vs. `Wpf.Ui.Controls.Button` explizit auflösen
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Keine Linter-Fehler
-- âœ… Ambiguous Button-Referenz aufgelÃ¶st
-- âœ… Code kompiliert erfolgreich
-- âœ… Visuelle Verbesserung ohne Breaking Changes
+- ✅ Keine Linter-Fehler
+- ✅ Ambiguous Button-Referenz aufgelöst
+- ✅ Code kompiliert erfolgreich
+- ✅ Visuelle Verbesserung ohne Breaking Changes
 
-### ðŸŽ¨ **UI-QualitÃ¤t:**
+### 🎨 **UI-Qualität:**
 
-- âœ… DurchgÃ¤ngige Trennlinien (Header â†’ Player â†’ Companion â†’ Ability)
-- âœ… Subtile 1px-Linien stÃ¶ren nicht
-- âœ… Star Trek Theme konsistent (#333333)
-- âœ… Bessere Daten-Zuordnung in breiten Tabellen
-- âœ… Professionelles Table-Layout
+- ✅ Durchgängige Trennlinien (Header → Player → Companion → Ability)
+- ✅ Subtile 1px-Linien stören nicht
+- ✅ Star Trek Theme konsistent (#333333)
+- ✅ Bessere Daten-Zuordnung in breiten Tabellen
+- ✅ Professionelles Table-Layout
 
 ---
-**NÃ¤chste Session:** DPS-Graph implementieren, Filter-FunktionalitÃ¤t
+**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität
 
 

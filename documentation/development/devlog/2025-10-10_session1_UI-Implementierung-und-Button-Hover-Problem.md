@@ -1,12 +1,12 @@
-﻿## Session 1: UI-Implementierung und Button-Hover-Problem
+## Session 1: UI-Implementierung und Button-Hover-Problem
 
 **Datum:** 2025-10-10  
 **Dauer:** ~2 Stunden  
 **Fokus:** UI-Grundstruktur, Dark Theme, Button-Styling
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 1. **UI-Grundstruktur (Phase 1)**
    - Hauptfenster-Layout mit Grid-System
    - Header-Bar mit Logo und Navigation
@@ -17,7 +17,7 @@
    - Star Trek Farb-Schema (Blau/Gold auf Schwarz)
    - Konsistente Farb-Definitionen als Resources
    - Custom Window Controls (Minimize, Maximize, Close)
-   - Draggable Window-FunktionalitÃ¤t
+   - Draggable Window-Funktionalität
 
 3. **Linke Sidebar (Phase 2)**
    - Log-Pfad-Eingabe mit Browse-Button
@@ -27,31 +27,31 @@
 
 4. **Rechter Datenbereich (Phase 3 - Teilweise)**
    - Filter-Bar mit Buttons (Damage Out, Damage Taken, etc.)
-   - ComboBox fÃ¼r Auswahl
+   - ComboBox für Auswahl
    - DPS-Graph Platzhalter
    - Daten-Tabelle Platzhalter
 
-### ðŸš¨ **Probleme und LÃ¶sungen:**
+### 🚨 **Probleme und Lösungen:**
 
 #### **Problem 1: Resource-Referenzen funktionieren nicht**
 - **Symptom:** Button-Hover-Farben wurden nicht angewendet
 - **Ursache:** WPF Resource-System hatte Konflikte
-- **LÃ¶sung:** Direkte Farbwerte in Styles statt Resource-Referenzen
-- **Code-Ã„nderung:** `Value="{StaticResource ButtonHoverBrush}"` â†’ `Value="#B8860B"`
+- **Lösung:** Direkte Farbwerte in Styles statt Resource-Referenzen
+- **Code-Änderung:** `Value="{StaticResource ButtonHoverBrush}"` → `Value="#B8860B"`
 
 #### **Problem 2: Inconsistent Button-Styling**
 - **Symptom:** Verschiedene Buttons hatten unterschiedliche Hover-Effekte
-- **Ursache:** Explizite Properties Ã¼berschrieben Style-Definitionen
-- **LÃ¶sung:** Entfernung von `Foreground="White"` Properties
-- **Code-Ã„nderung:** Alle Buttons verwenden jetzt `MainButtonStyle` konsistent
+- **Ursache:** Explizite Properties überschrieben Style-Definitionen
+- **Lösung:** Entfernung von `Foreground="White"` Properties
+- **Code-Änderung:** Alle Buttons verwenden jetzt `MainButtonStyle` konsistent
 
 #### **Problem 3: WPF Style-Caching**
-- **Symptom:** Ã„nderungen an Styles wurden nicht angezeigt
+- **Symptom:** Änderungen an Styles wurden nicht angezeigt
 - **Ursache:** WPF cached Styles aggressiv
-- **LÃ¶sung:** Explizite Style-Definitionen mit `BasedOn` und direkten Farbwerten
-- **Debugging:** Test mit extrem auffÃ¤lligen Farben (#FF0000, #0000FF) zur Verifikation
+- **Lösung:** Explizite Style-Definitionen mit `BasedOn` und direkten Farbwerten
+- **Debugging:** Test mit extrem auffälligen Farben (#FF0000, #0000FF) zur Verifikation
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **Farb-Schema:**
 ```xml
@@ -80,47 +80,47 @@ ButtonHoverBrush: #B8860B (Gold)
 </Style>
 ```
 
-### ðŸš¨ **Offene Probleme:**
+### 🚨 **Offene Probleme:**
 
-#### **Button-Hover-Problem (NICHT GELÃ–ST)**
+#### **Button-Hover-Problem (NICHT GELÖST)**
 - **Symptom:** Buttons zeigen immer noch hellblaue Hover-Farben statt der definierten Farben
 - **Aktueller Status:** Problem persistiert trotz aller Versuche
-- **MÃ¶gliche Ursachen:**
-  - WPF Theme-System Ã¼berschreibt Custom Styles
-  - System-weite Button-Styles haben hÃ¶here PrioritÃ¤t
+- **Mögliche Ursachen:**
+  - WPF Theme-System überschreibt Custom Styles
+  - System-weite Button-Styles haben höhere Priorität
   - Windows 11 Theme-Konflikte
-- **NÃ¤chste Schritte fÃ¼r Session 2:**
+- **Nächste Schritte für Session 2:**
   - Template-basierte Button-Definitionen
-  - Explizite Style-Override mit `!important`-Ã¤quivalent
+  - Explizite Style-Override mit `!important`-äquivalent
   - System-Theme-Deaktivierung
 
-### ðŸ“ **Dateien geÃ¤ndert:**
-- `frontend/MainWindow.xaml` - Haupt-UI-Implementierung
-- `frontend/App.xaml.cs` - Dependency Injection Setup
+### 📁 **Dateien geändert:**
+- `app/MainWindow.xaml` - Haupt-UI-Implementierung
+- `app/App.xaml.cs` - Dependency Injection Setup
 - Backend-Konfiguration ist jetzt hardcoded
-- `frontend/Models/OSCRModels.cs` - Datenmodelle
-- `frontend/Services/OSCRBackendService.cs` - Backend-Integration
+- `app/Models/OSCRModels.cs` - Datenmodelle
+- `app/Services/OSCRBackendService.cs` - Backend-Integration
 
-### ðŸŽ¯ **NÃ¤chste Session Ziele:**
-1. **Button-Hover-Problem lÃ¶sen** (PrioritÃ¤t 1)
-2. **Phase 3 vervollstÃ¤ndigen** - DPS-Graph und Daten-Tabelle
+### 🎯 **Nächste Session Ziele:**
+1. **Button-Hover-Problem lösen** (Priorität 1)
+2. **Phase 3 vervollständigen** - DPS-Graph und Daten-Tabelle
 3. **Phase 4 starten** - Backend-Integration mit echten Daten
-4. **Performance-Optimierung** - GroÃŸe Combat-Logs handhaben
+4. **Performance-Optimierung** - Große Combat-Logs handhaben
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 - WPF Resource-System kann unvorhersehbare Konflikte verursachen
-- Direkte Farbwerte sind zuverlÃ¤ssiger als Resource-Referenzen
+- Direkte Farbwerte sind zuverlässiger als Resource-Referenzen
 - Style-Caching kann Debugging erschweren
 - Test mit extremen Farben hilft bei der Verifikation
-- System-Themes kÃ¶nnen Custom-Styles Ã¼berschreiben
+- System-Themes können Custom-Styles überschreiben
 
-### ðŸ”„ **Build-Status:**
-- âœ… Kompilierung erfolgreich
-- âœ… Backend-Integration funktional
-- âœ… UI-Grundstruktur implementiert
-- âŒ Button-Hover-Styling problematisch
+### 🔄 **Build-Status:**
+- ✅ Kompilierung erfolgreich
+- ✅ Backend-Integration funktional
+- ✅ UI-Grundstruktur implementiert
+- ❌ Button-Hover-Styling problematisch
 
 ---
-**NÃ¤chste Session:** Button-Hover-Problem lÃ¶sen und Phase 3/4 fortsetzen
+**Nächste Session:** Button-Hover-Problem lösen und Phase 3/4 fortsetzen
 
 

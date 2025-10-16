@@ -187,13 +187,13 @@ namespace StoDamageMeter;
         {
             var logsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
             System.IO.Directory.CreateDirectory(logsDir);
-            var logFile = System.IO.Path.Combine(logsDir, "frontend_debug.log");
+            var logFile = System.IO.Path.Combine(logsDir, "app_debug.log");
             
             // Prüfe Dateigröße und rotiere bei > 5 MB
             var fileInfo = new System.IO.FileInfo(logFile);
             if (fileInfo.Exists && fileInfo.Length > 5 * 1024 * 1024)
             {
-                // Rotiere: frontend_debug.log -> frontend_debug.log.1
+                // Rotiere: app_debug.log -> app_debug.log.1
                 var oldFile = logFile + ".1";
                 if (System.IO.File.Exists(oldFile))
                     System.IO.File.Delete(oldFile);
@@ -407,7 +407,7 @@ namespace StoDamageMeter;
                 $"{errorDetails}\n\n" +
                 $"Log-Dateien zur Fehlersuche:\n" +
                 $"- logs/oscr_backend.log (Backend-Fehler)\n" +
-                $"- logs/frontend_debug.log (Frontend-Fehler)\n\n" +
+                $"- logs/app_debug.log (App-Fehler)\n\n" +
                 $"Beide Dateien befinden sich im logs/ Ordner der Anwendung.",
                 "Fehler beim Laden",
                 System.Windows.MessageBoxButton.OK,

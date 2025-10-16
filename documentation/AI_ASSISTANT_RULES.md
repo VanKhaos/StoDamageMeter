@@ -153,7 +153,7 @@
 - **Struktur:**
   ```
   Debug\
-  ├── StoDamageMeter.exe      (Frontend mit Debug-Symbolen)
+  ├── StoDamageMeter.exe      (App mit Debug-Symbolen)
   ├── StoDamageMeter.pdb      (Debug-Symbole)
   ├── OSCRBackend.exe         (Backend)
   ├── appsettings.json
@@ -174,7 +174,7 @@
 - `documentation/development/devlog/` - Entwicklungs-Sessions (aufgeteilt nach Datum)
 - `build_debug.ps1` - Debug-Build-Script
 - `create_release.ps1` - Release-Build-Script
-- `frontend/Build.targets` - MSBuild Custom Targets
+- `app/Build.targets` - MSBuild Custom Targets
 - `Services/` - Business Logic
 - `Models/` - Datenmodelle
 

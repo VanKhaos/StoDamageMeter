@@ -1,36 +1,36 @@
-﻿## Session 9: Damage Types, Attacks Column, Component Cleanup
+## Session 9: Damage Types, Attacks Column, Component Cleanup
 
 **Datum:** 2025-10-10  
 **Dauer:** ~2 Stunden  
 **Fokus:** Types-Spalte mit Icons, Attacks-Spalte, Component-Refactoring, Debug-Cleanup
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
 1. **"Types" Spalte mit farbigen Damage-Type-Icons**
    - Neue Spalte zwischen "Crit %" und "Attacks"
-   - Unicode-Symbole fÃ¼r verschiedene Damage-Types:
-     - Physical: âš” (weiÃŸ)
-     - Energy: âš¡ (gelb)
-     - Kinetic: ðŸŽ¯ (orange)
-     - Radiation: â˜¢ (grÃ¼n)
-     - Antiproton: â—† (rot)
-     - Plasma: ðŸ”¥ (orange-rot)
-     - Tetryon: â„ (cyan)
-     - Polaron: â—‰ (lila)
-     - Disruptor: âš› (grÃ¼n)
-     - Phaser: â—ˆ (blau)
-     - Electrical: âš¡ (gelb)
-     - Cold: â„ (cyan)
-     - Toxic: â˜  (grÃ¼n)
-     - Psionic: ðŸ‘ (lila)
-     - Shield: â—™ (cyan)
-     - Proton: â— (grÃ¼n)
+   - Unicode-Symbole für verschiedene Damage-Types:
+     - Physical: ⚔ (weiß)
+     - Energy: ⚡ (gelb)
+     - Kinetic: 🎯 (orange)
+     - Radiation: ☢ (grün)
+     - Antiproton: ◆ (rot)
+     - Plasma: 🔥 (orange-rot)
+     - Tetryon: ❄ (cyan)
+     - Polaron: ◉ (lila)
+     - Disruptor: ⚛ (grün)
+     - Phaser: ◈ (blau)
+     - Electrical: ⚡ (gelb)
+     - Cold: ❄ (cyan)
+     - Toxic: ☠ (grün)
+     - Psionic: 👁 (lila)
+     - Shield: ◙ (cyan)
+     - Proton: ◐ (grün)
    - Tooltips mit Damage-Type-Namen
    - Backend: `_extract_primary_damage_type()` filtert irrelevante Types (Crit, DoT, Immune, Miss, Shield, Flank, Dodge)
    - Backend: `damage_types` Dictionary pro Ability
-   - Farbkodierung fÃ¼r bessere Lesbarkeit
+   - Farbkodierung für bessere Lesbarkeit
 
 2. **"Attacks" Spalte (ersetzt "Acc %")**
    - Zeigt Anzahl der Ability-Verwendungen
@@ -38,19 +38,19 @@
    - Companion-Zeile: Summe aller Companion-Abilities
    - Ability-Zeilen: Individuelle Attack-Counts
    - Backend: `total_attacks` Tracking im `WorkingAbilityStats`
-   - Frontend: Serialisierung und Anzeige
+   - App: Serialisierung und Anzeige
 
 3. **Companion-Icon entfernt**
-   - ðŸ¤– Emoji vor Companion-Namen entfernt
+   - 🤖 Emoji vor Companion-Namen entfernt
    - Cleanes Aussehen ohne visuelle Ablenkung
 
 4. **"Types" Header visuell angepasst**
    - Problem: Header war immer blau (wie sortiert)
    - Ursache: Hardcodierte Foreground-Farbe (#5B9BD5)
-   - LÃ¶sung: Foreground auf #B0B0B0 (gray) geÃ¤ndert
+   - Lösung: Foreground auf #B0B0B0 (gray) geändert
    - Header hat Hover-Effekt und Hand-Cursor (wie andere)
-   - Aber keine Sortier-FunktionalitÃ¤t
-   - `HorizontalContentAlignment="Center"` fÃ¼r zentrierte Ausrichtung
+   - Aber keine Sortier-Funktionalität
+   - `HorizontalContentAlignment="Center"` für zentrierte Ausrichtung
 
 5. **Spalten-Breiten-Optimierungen**
    - "Crit %" feste Breite (70px)
@@ -70,11 +70,11 @@
      - Debug-Log Parameter aus `_analyze_combat_players()` entfernt
      - Single Combat Debug (Zeile 1032-1034, 1053-1055)
    - `debug_log` Parameter komplett entfernt
-   - `if debug_log:` BlÃ¶cke entfernt
+   - `if debug_log:` Blöcke entfernt
    - Cleaner, produktionsreifer Code
 
-7. **Font-GrÃ¶ÃŸen-Anpassungen**
-   - Alle Table-Texte um 1px erhÃ¶ht
+7. **Font-Größen-Anpassungen**
+   - Alle Table-Texte um 1px erhöht
    - Header: FontSize 14
    - Player-Rows: FontSize 14
    - Companion-Rows: FontSize 14
@@ -83,16 +83,16 @@
 
 8. **Expander-Styles ausgelagert**
    - `NoToggleIconExpanderStyle` in separate Datei verschoben
-   - `frontend/Styles/ExpanderStyles.xaml` erstellt
+   - `app/Styles/ExpanderStyles.xaml` erstellt
    - Bessere Code-Organisation
    - Wiederverwendbarkeit
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
 #### **Damage-Type-Extraktion (Backend):**
 ```python
 def _extract_primary_damage_type(self, damage_type_str: str) -> str:
-    """Extrahiert primÃ¤ren Damage-Type aus String wie 'Physical|Crit|DoT'"""
+    """Extrahiert primären Damage-Type aus String wie 'Physical|Crit|DoT'"""
     if not damage_type_str:
         return ""
     
@@ -108,127 +108,127 @@ def _extract_primary_damage_type(self, damage_type_str: str) -> str:
     return ""
 ```
 
-#### **Damage-Type-Icon-Mapping (Frontend):**
+#### **Damage-Type-Icon-Mapping (App):**
 ```csharp
 private string GetDamageTypeIcon(string damageType)
 {
     return damageType switch
     {
-        "Physical" => "âš”",
-        "Energy" => "âš¡",
-        "Kinetic" => "ðŸŽ¯",
-        "Radiation" => "â˜¢",
-        "Antiproton" => "â—†",
-        "Plasma" => "ðŸ”¥",
-        "Tetryon" => "â„",
-        "Polaron" => "â—‰",
-        "Disruptor" => "âš›",
-        "Phaser" => "â—ˆ",
-        "Electrical" => "âš¡",
-        "Cold" => "â„",
-        "Toxic" => "â˜ ",
-        "Psionic" => "ðŸ‘",
-        "Shield" => "â—™",
-        "Proton" => "â—",
+        "Physical" => "⚔",
+        "Energy" => "⚡",
+        "Kinetic" => "🎯",
+        "Radiation" => "☢",
+        "Antiproton" => "◆",
+        "Plasma" => "🔥",
+        "Tetryon" => "❄",
+        "Polaron" => "◉",
+        "Disruptor" => "⚛",
+        "Phaser" => "◈",
+        "Electrical" => "⚡",
+        "Cold" => "❄",
+        "Toxic" => "☠",
+        "Psionic" => "👁",
+        "Shield" => "◙",
+        "Proton" => "◐",
         _ => ""
     };
 }
 ```
 
-#### **Farbkodierung (Frontend):**
+#### **Farbkodierung (App):**
 ```csharp
 private string GetDamageTypeColor(string damageType)
 {
     return damageType switch
     {
-        "Physical" => "#FFFFFF",    // WeiÃŸ
+        "Physical" => "#FFFFFF",    // Weiß
         "Energy" => "#FFD700",      // Gold
         "Kinetic" => "#FF8C00",     // Orange
-        "Radiation" => "#00FF00",   // GrÃ¼n
+        "Radiation" => "#00FF00",   // Grün
         "Antiproton" => "#FF0000",  // Rot
         "Plasma" => "#FF4500",      // Orange-Rot
         "Tetryon" => "#00CED1",     // Cyan
         "Polaron" => "#9370DB",     // Lila
-        "Disruptor" => "#32CD32",   // GrÃ¼n
+        "Disruptor" => "#32CD32",   // Grün
         "Phaser" => "#1E90FF",      // Blau
         "Electrical" => "#FFD700",  // Gold
         "Cold" => "#00CED1",        // Cyan
-        "Toxic" => "#00FF00",       // GrÃ¼n
+        "Toxic" => "#00FF00",       // Grün
         "Psionic" => "#9370DB",     // Lila
         "Shield" => "#00CED1",      // Cyan
-        "Proton" => "#00FF00",      // GrÃ¼n
+        "Proton" => "#00FF00",      // Grün
         _ => "#B0B0B0"              // Grau (fallback)
     };
 }
 ```
 
-### ðŸ“ **Wichtige Dateien:**
+### 📁 **Wichtige Dateien:**
 
 **Aktualisiert:**
-- `frontend/Components/Combat/CombatStatsHeader.xaml` - Types-Spalte hinzugefÃ¼gt
-- `frontend/Components/Combat/CombatStatsHeader.xaml.cs` - Spalten-Definitionen aktualisiert
-- `frontend/Services/CombatStatsRenderer.cs` - Damage-Type-Icons und Attacks-Logik
-- `frontend/Models/OSCRModels.cs` - `Attacks` und `DamageType` Properties hinzugefÃ¼gt
+- `app/Components/Combat/CombatStatsHeader.xaml` - Types-Spalte hinzugefügt
+- `app/Components/Combat/CombatStatsHeader.xaml.cs` - Spalten-Definitionen aktualisiert
+- `app/Services/CombatStatsRenderer.cs` - Damage-Type-Icons und Attacks-Logik
+- `app/Models/OSCRModels.cs` - `Attacks` und `DamageType` Properties hinzugefügt
 - `Deploy/working_oscr_backend.py` - Debug-Logs entfernt, Damage-Type-Extraktion
 
 **Neu erstellt:**
-- `frontend/Styles/ExpanderStyles.xaml` - Ausgelagerte Expander-Styles
+- `app/Styles/ExpanderStyles.xaml` - Ausgelagerte Expander-Styles
 
-### ðŸš¨ **GelÃ¶ste Probleme:**
+### 🚨 **Gelöste Probleme:**
 
 #### **Problem 1: "Types" Header immer blau**
-- **Symptom:** Types-Spalten-Header war immer blau, als wÃ¤re er sortiert
+- **Symptom:** Types-Spalten-Header war immer blau, als wäre er sortiert
 - **Ursache:** Hardcodierte `Foreground="#5B9BD5"` im XAML, Button nicht in `headerButtons` Array
-- **LÃ¶sung:** Foreground auf `#B0B0B0` (gray) geÃ¤ndert
+- **Lösung:** Foreground auf `#B0B0B0` (gray) geändert
 - **Resultat:** Konsistentes Aussehen mit anderen nicht-sortierten Headers
 
 #### **Problem 2: Attacks zeigt 0 an**
 - **Symptom:** Attacks-Spalte zeigte immer 0
 - **Ursache:** `analyze_single_combat` hatte veraltete Serialisierungs-Logik
-- **LÃ¶sung:** Serialisierung auf neues Format aktualisiert
+- **Lösung:** Serialisierung auf neues Format aktualisiert
 - **Resultat:** Korrekte Attack-Counts werden angezeigt
 
 #### **Problem 3: Viele Debug-Logs verschmutzen Konsole**
 - **Symptom:** stderr voller Debug-Prints
 - **Ursache:** Debug-Logs aus Entwicklungsphase nicht entfernt
-- **LÃ¶sung:** Alle Debug-Statements systematisch entfernt
+- **Lösung:** Alle Debug-Statements systematisch entfernt
 - **Resultat:** Cleaner Output, produktionsreifer Code
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
-1. **Unicode-Symbole:** Perfekt fÃ¼r Icons ohne Image-Assets
+1. **Unicode-Symbole:** Perfekt für Icons ohne Image-Assets
 2. **Farbkodierung:** Verbessert Lesbarkeit und User-Experience
 3. **Debug-Cleanup:** Wichtiger Schritt vor jedem Commit
-4. **Component-Isolation:** Styles auslagern fÃ¼r bessere Wartbarkeit
-5. **Font-GrÃ¶ÃŸen:** Kleine Anpassungen kÃ¶nnen groÃŸe Wirkung haben
+4. **Component-Isolation:** Styles auslagern für bessere Wartbarkeit
+5. **Font-Größen:** Kleine Anpassungen können große Wirkung haben
 6. **Property-Tracking:** `total_attacks` musste an mehreren Stellen implementiert werden
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Frontend kompiliert erfolgreich (Debug)
-- âœ… Backend kompiliert erfolgreich
-- âœ… Keine Linter-Fehler
-- âœ… Alle Features funktional
-- âœ… Debug-Logs entfernt
-- âœ… Code committed und gepusht
+- ✅ App kompiliert erfolgreich (Debug)
+- ✅ Backend kompiliert erfolgreich
+- ✅ Keine Linter-Fehler
+- ✅ Alle Features funktional
+- ✅ Debug-Logs entfernt
+- ✅ Code committed und gepusht
 
-### ðŸŽ¨ **UI-Status:**
+### 🎨 **UI-Status:**
 
 **Implementiert:**
-- âœ… Types-Spalte mit farbigen Icons
-- âœ… Attacks-Spalte mit Summen
-- âœ… Optimierte Spalten-Breiten
-- âœ… Companion ohne Icon
-- âœ… GrÃ¶ÃŸere Font-Sizes
-- âœ… Expander-Styles ausgelagert
+- ✅ Types-Spalte mit farbigen Icons
+- ✅ Attacks-Spalte mit Summen
+- ✅ Optimierte Spalten-Breiten
+- ✅ Companion ohne Icon
+- ✅ Größere Font-Sizes
+- ✅ Expander-Styles ausgelagert
 
 **Ausstehend:**
-- â³ DPS-Graph-Visualisierung
-- â³ Filter-FunktionalitÃ¤t (All/Space/Ground)
-- â³ Export-Funktion
-- â³ Live-Parsing-Modus
+- ⏳ DPS-Graph-Visualisierung
+- ⏳ Filter-Funktionalität (All/Space/Ground)
+- ⏳ Export-Funktion
+- ⏳ Live-Parsing-Modus
 
-### ðŸ“Š **Git-Commit:**
+### 📊 **Git-Commit:**
 
 ```
 Commit: 589a84d
@@ -241,6 +241,6 @@ Deletions: -125
 ```
 
 ---
-**NÃ¤chste Session:** DPS-Graph implementieren, Filter-FunktionalitÃ¤t aktivieren
+**Nächste Session:** DPS-Graph implementieren, Filter-Funktionalität aktivieren
 
 

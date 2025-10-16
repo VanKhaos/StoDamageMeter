@@ -20,7 +20,7 @@ Im gleichen Ordner wie StoDamageMeter.exe:
 ├── StoDamageMeter.exe
 └── logs/
     ├── oscr_backend.log      ← Backend-Fehler (Python)
-    ├── frontend_debug.log    ← Frontend-Fehler (C#)
+    ├── app_debug.log    ← App-Fehler (C#)
     ├── backend_debug.log     ← Backend-Kommunikation
     └── backend_service_debug.log ← Backend-Service-Details
 ```
@@ -28,7 +28,7 @@ Im gleichen Ordner wie StoDamageMeter.exe:
 ### **Log-Dateien öffnen:**
 1. Navigiere zum Ordner wo `StoDamageMeter.exe` liegt
 2. Öffne den `logs/` Unterordner
-3. Öffne `oscr_backend.log` oder `frontend_debug.log` mit Notepad
+3. Öffne `oscr_backend.log` oder `app_debug.log` mit Notepad
 4. Scrolle nach unten (neueste Einträge sind am Ende)
 
 ---
@@ -213,7 +213,7 @@ MemoryError: ...
 
 1. **Log-Dateien sammeln:**
    - `logs/oscr_backend.log`
-   - `logs/frontend_debug.log`
+   - `logs/app_debug.log`
    - `logs/backend_debug.log`
 
 2. **GitHub Issue erstellen:**
@@ -234,7 +234,7 @@ MemoryError: ...
 ### **Erweiterte Fehlersuche:**
 
 **Frontend-Log aktivieren:**
-1. Die Datei `logs/frontend_debug.log` wird automatisch erstellt
+1. Die Datei `logs/app_debug.log` wird automatisch erstellt
 2. Enthält alle Frontend-Aktivitäten
 3. Zeigt Backend-Kommunikation
 

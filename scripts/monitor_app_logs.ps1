@@ -2,7 +2,7 @@
 # Überwacht die Anwendungs-Logs um zu sehen ob der FileWatcher arbeitet
 
 param(
-    [string]$LogPath = "Debug\logs\frontend_debug.log"
+    [string]$LogPath = "Debug\logs\app_debug.log"
 )
 
 Write-Host "=== STO Damage Meter App Log Monitor ===" -ForegroundColor Cyan

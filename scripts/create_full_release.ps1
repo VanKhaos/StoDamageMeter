@@ -36,7 +36,7 @@ function Update-VersionInFile {
 
 function Get-CurrentVersion {
     # Extrahiere aktuelle Version aus frontend.csproj
-    $csprojContent = Get-Content "frontend/frontend.csproj" -Raw
+    $csprojContent = Get-Content "app/app.csproj" -Raw
     if ($csprojContent -match '<Version>([^<]+)</Version>') {
         return $matches[1]
     }
@@ -285,11 +285,11 @@ if ($confirm -ne "y" -and $confirm -ne "Y") {
 Write-ColorOutput "`n📝 Step 1: Updating version numbers..." $Blue
 
 # 4. Version-Nummern aktualisieren
-Update-VersionInFile "frontend/frontend.csproj" $currentVersion $Version
+Update-VersionInFile "app/app.csproj" $currentVersion $Version
 Update-VersionInFile "Launcher/SplashScreen.xaml" "Version $currentVersion" "Version $Version"
 
 # UpdateCheckService.cs - komplexere Ersetzung
-$updateServicePath = "frontend/Services/UpdateCheckService.cs"
+$updateServicePath = "app/Services/UpdateCheckService.cs"
 if (Test-Path $updateServicePath) {
     $content = Get-Content $updateServicePath -Raw
     $content = $content -replace "return new Version\(\d+, \d+, \d+, 0\);", "return new Version($($Version.Split('.')[0]), $($Version.Split('.')[1]), $($Version.Split('.')[2]), 0);"

@@ -1,17 +1,17 @@
-﻿## Session 17: Log-Rotation fÃ¼r alle Log-Dateien
+## Session 17: Log-Rotation für alle Log-Dateien
 
 **Datum:** 2025-10-11  
 **Dauer:** ~1 Stunde  
-**Fokus:** Implementierung von Log-Rotation fÃ¼r Backend und Frontend, Verhinderung von unbegrenztem Log-Wachstum
+**Fokus:** Implementierung von Log-Rotation für Backend und App, Verhinderung von unbegrenztem Log-Wachstum
 
-### ðŸŽ¯ **Was wir erreicht haben:**
+### 🎯 **Was wir erreicht haben:**
 
-#### âœ… **Erfolgreich implementiert:**
+#### ✅ **Erfolgreich implementiert:**
 
 1. **Backend Log-Rotation (Python)**
-   - **Problem:** User hatte 10 GB groÃŸe `backend_service_debug.log` durch Dauernutzung
-   - **Gefahr:** Endanwender kÃ¶nnten bei intensiver Nutzung (Live-Parsing Ã¼ber Tage/Wochen) ebenfalls mehrere GB Logs generieren
-   - **LÃ¶sung:** `RotatingFileHandler` statt einfacher `FileHandler`
+   - **Problem:** User hatte 10 GB große `backend_service_debug.log` durch Dauernutzung
+   - **Gefahr:** Endanwender könnten bei intensiver Nutzung (Live-Parsing über Tage/Wochen) ebenfalls mehrere GB Logs generieren
+   - **Lösung:** `RotatingFileHandler` statt einfacher `FileHandler`
    - **Konfiguration:**
      ```python
      from logging.handlers import RotatingFileHandler
@@ -23,17 +23,17 @@
          encoding='utf-8'
      )
      ```
-   - **Resultat:** Maximale GesamtgrÃ¶ÃŸe = 40 MB (10 MB + 3Ã—10 MB Backups)
+   - **Resultat:** Maximale Gesamtgröße = 40 MB (10 MB + 3×10 MB Backups)
    - **Datei:** `backend/working_oscr_backend.py`
 
-2. **Frontend Debug-Log-Rotation (C#)**
+2. **App Debug-Log-Rotation (C#)**
    - **Betroffen:** 
-     - `frontend_debug.log` (MainWindow.xaml.cs)
+     - `App_debug.log` (MainWindow.xaml.cs)
      - `backend_debug.log` (OSCRBackendService.cs)
-   - **LÃ¶sung:** 
+   - **Lösung:** 
      - Nur in `DEBUG`-Builds aktiv (via `#if DEBUG`)
-     - Manuelle GrÃ¶ÃŸen-PrÃ¼fung vor jedem Schreibvorgang
-     - Rotation bei > 5 MB (frontend) bzw. > 10 MB (backend)
+     - Manuelle Größen-Prüfung vor jedem Schreibvorgang
+     - Rotation bei > 5 MB (App) bzw. > 10 MB (backend)
    - **Code:**
      ```csharp
      #if DEBUG
@@ -52,7 +52,7 @@
 
 3. **Release-Script Log-Cleanup (PowerShell)**
    - **Problem:** Log-Dateien wurden im Release-Package mitgeliefert
-   - **LÃ¶sung:** `scripts\create_release.ps1` entfernt alle `*.log` Dateien vor ZIP-Erstellung
+   - **Lösung:** `scripts\create_release.ps1` entfernt alle `*.log` Dateien vor ZIP-Erstellung
    - **Code:**
      ```powershell
      # Log-Dateien entfernen
@@ -61,65 +61,65 @@
          Get-ChildItem -Path $LogsDir -Filter "*.log" -Recurse | Remove-Item -Force
      }
      ```
-   - **Resultat:** Release-ZIP enthÃ¤lt keine Log-Dateien mehr
+   - **Resultat:** Release-ZIP enthält keine Log-Dateien mehr
 
 4. **.gitignore erweitert**
-   - Neue EintrÃ¤ge:
+   - Neue Einträge:
      ```
      # Logs
      *.log
      **/logs/
      **/logs/*.log
-     frontend/bin/Debug/net9.0-windows/logs/
-     frontend/bin/Release/net9.0-windows/logs/
+     app/bin/Debug/net9.0-windows/logs/
+     app/bin/Release/net9.0-windows/logs/
      ```
    - **Resultat:** Logs werden nicht mehr committed
 
 5. **RELEASE_GUIDE.md aktualisiert**
-   - Neue Sektion "Troubleshooting: ZIP zu groÃŸ"
+   - Neue Sektion "Troubleshooting: ZIP zu groß"
    - Dokumentiert Log-Rotation-Feature (ab v1.2.3)
-   - ErklÃ¤rt maximale Log-GrÃ¶ÃŸen fÃ¼r Endanwender
+   - Erklärt maximale Log-Größen für Endanwender
 
-### ðŸ”§ **Technische Details:**
+### 🔧 **Technische Details:**
 
-#### **Maximale Log-GrÃ¶ÃŸen pro Build-Type:**
+#### **Maximale Log-Größen pro Build-Type:**
 
-| Build-Type | Log-Dateien | Max. GrÃ¶ÃŸe |
+| Build-Type | Log-Dateien | Max. Größe |
 |------------|-------------|------------|
-| **Release** | `oscr_backend.log` | 40 MB (10+3Ã—10) |
-| **Debug** | `oscr_backend.log` | 40 MB (10+3Ã—10) |
-| **Debug** | `frontend_debug.log` | 10 MB (5+5) |
+| **Release** | `oscr_backend.log` | 40 MB (10+3×10) |
+| **Debug** | `oscr_backend.log` | 40 MB (10+3×10) |
+| **Debug** | `App_debug.log` | 10 MB (5+5) |
 | **Debug** | `backend_debug.log` | 20 MB (10+10) |
-| **Release** | Frontend Debug-Logs | **0 MB** (nicht erstellt) |
+| **Release** | App Debug-Logs | **0 MB** (nicht erstellt) |
 
-**Gesamte Max-GrÃ¶ÃŸe:**
+**Gesamte Max-Größe:**
 - Release-Build: **~40 MB** (nur Backend)
-- Debug-Build: **~70 MB** (Backend + Frontend-Logs)
+- Debug-Build: **~70 MB** (Backend + App-Logs)
 
-### ðŸ“ **Wichtige Dateien:**
+### 📁 **Wichtige Dateien:**
 
 **Aktualisiert:**
 - `backend/working_oscr_backend.py` - RotatingFileHandler implementiert
-- `frontend/MainWindow.xaml.cs` - Debug-Log-Rotation + #if DEBUG
-- `frontend/Services/OSCRBackendService.cs` - Debug-Log-Rotation + #if DEBUG
+- `app/MainWindow.xaml.cs` - Debug-Log-Rotation + #if DEBUG
+- `app/Services/OSCRBackendService.cs` - Debug-Log-Rotation + #if DEBUG
 - `scripts\create_release.ps1` - Log-Cleanup vor ZIP-Erstellung
-- `.gitignore` - Log-Pattern hinzugefÃ¼gt
+- `.gitignore` - Log-Pattern hinzugefügt
 - `RELEASE_GUIDE.md` - Log-Rotation dokumentiert
 
-### ðŸš¨ **Verhinderte Probleme:**
+### 🚨 **Verhinderte Probleme:**
 
 #### **Problem: 10 GB Log-Datei beim Entwickler**
-- **Ursache:** Live-Parsing Ã¼ber mehrere Tage ohne Log-Rotation
+- **Ursache:** Live-Parsing über mehrere Tage ohne Log-Rotation
 - **Datei:** `backend_service_debug.log` (10 GB!)
 - **Symptom:** Release-ZIP-Erstellung fehlgeschlagen ("Datenstrom war zu lang")
-- **LÃ¶sung:** 
+- **Lösung:** 
   1. Log-Rotation implementiert
   2. Logs aus Release-Package entfernt
   3. `.gitignore` aktualisiert
-- **Resultat:** âœ… Problem kann nicht mehr auftreten
+- **Resultat:** ✅ Problem kann nicht mehr auftreten
 
 #### **Potenzielle Endanwender-Szenarien:**
-- **Szenario 1:** Spieler lÃ¤sst App 24/7 mit Live-Parsing laufen
+- **Szenario 1:** Spieler lässt App 24/7 mit Live-Parsing laufen
   - **Ohne Rotation:** Mehrere GB innerhalb von Wochen
   - **Mit Rotation:** Maximal 40 MB
 - **Szenario 2:** Intensiver Raider mit vielen Combat-Log-Analysen
@@ -127,68 +127,68 @@
   - **Mit Rotation:** Maximal 40 MB
 - **Szenario 3:** Debugging durch Entwickler
   - **Ohne Rotation:** Debug-Logs ohne Limit
-  - **Mit Rotation:** Max. 70 MB (Ã¼berschaubar)
+  - **Mit Rotation:** Max. 70 MB (überschaubar)
 
-### ðŸ’¡ **Lessons Learned:**
+### 💡 **Lessons Learned:**
 
-1. **RotatingFileHandler ist Standard:** Sollte immer verwendet werden fÃ¼r produktive Anwendungen
-2. **Debug vs Release:** Debug-Logs gehÃ¶ren nicht ins Release (via `#if DEBUG`)
-3. **Release-Hygiene:** Logs mÃ¼ssen vor ZIP-Erstellung entfernt werden
+1. **RotatingFileHandler ist Standard:** Sollte immer verwendet werden für produktive Anwendungen
+2. **Debug vs Release:** Debug-Logs gehören nicht ins Release (via `#if DEBUG`)
+3. **Release-Hygiene:** Logs müssen vor ZIP-Erstellung entfernt werden
 4. **Gitignore:** Logs sollten nie committed werden
-5. **FrÃ¼herkennung:** User-Feedback Ã¼ber groÃŸe ZIP-Dateien war wichtiger Hinweis
+5. **Früherkennung:** User-Feedback über große ZIP-Dateien war wichtiger Hinweis
 6. **Backup-Count:** 3 Backups sind guter Balance zwischen Historie und Speicherplatz
-7. **Encoding:** UTF-8 fÃ¼r Log-Dateien ist wichtig (Sonderzeichen)
+7. **Encoding:** UTF-8 für Log-Dateien ist wichtig (Sonderzeichen)
 
-### ðŸ”„ **Build-Status:**
+### 🔄 **Build-Status:**
 
-- âœ… Backend mit Log-Rotation neu gebaut
-- âœ… Frontend kompiliert mit Log-Rotation
-- âœ… Debug-Build getestet
-- âœ… `.gitignore` aktualisiert
-- âœ… `RELEASE_GUIDE.md` dokumentiert
-- âœ… Keine Breaking Changes
+- ✅ Backend mit Log-Rotation neu gebaut
+- ✅ App kompiliert mit Log-Rotation
+- ✅ Debug-Build getestet
+- ✅ `.gitignore` aktualisiert
+- ✅ `RELEASE_GUIDE.md` dokumentiert
+- ✅ Keine Breaking Changes
 
-### ðŸŽ¨ **Code-QualitÃ¤t:**
+### 🎨 **Code-Qualität:**
 
 **Vorher:**
-- âŒ Unbegrenzt wachsende Log-Dateien
-- âŒ 10 GB Log-Datei mÃ¶glich
-- âŒ Release-ZIP mit Logs verschmutzt
-- âŒ Logs im Git-Repository
+- ❌ Unbegrenzt wachsende Log-Dateien
+- ❌ 10 GB Log-Datei möglich
+- ❌ Release-ZIP mit Logs verschmutzt
+- ❌ Logs im Git-Repository
 
 **Nachher:**
-- âœ… Automatische Log-Rotation
-- âœ… Maximal 40-70 MB (je nach Build-Type)
-- âœ… Saubere Release-ZIPs ohne Logs
-- âœ… Logs in `.gitignore`
+- ✅ Automatische Log-Rotation
+- ✅ Maximal 40-70 MB (je nach Build-Type)
+- ✅ Saubere Release-ZIPs ohne Logs
+- ✅ Logs in `.gitignore`
 
-### ðŸ“Š **Code-Umfang:**
+### 📊 **Code-Umfang:**
 
-**Ã„nderungen:**
+**Änderungen:**
 - Backend: ~20 Zeilen (Import + Handler-Konfiguration)
-- Frontend MainWindow: ~25 Zeilen (Rotation-Logik + #if DEBUG)
-- Frontend OSCRBackendService: ~30 Zeilen (Rotation-Logik + #if DEBUG)
+- App MainWindow: ~25 Zeilen (Rotation-Logik + #if DEBUG)
+- App OSCRBackendService: ~30 Zeilen (Rotation-Logik + #if DEBUG)
 - scripts\create_release.ps1: ~10 Zeilen (Log-Cleanup)
 - .gitignore: 6 Zeilen
 - RELEASE_GUIDE.md: ~15 Zeilen
 
-**Gesamt:** ~100 Zeilen fÃ¼r komplettes Log-Management
+**Gesamt:** ~100 Zeilen für komplettes Log-Management
 
-### ðŸŽ¯ **Schutz fÃ¼r Endanwender:**
+### 🎯 **Schutz für Endanwender:**
 
 **Worst-Case-Szenario verhindert:**
-- âœ… Live-Parsing 24/7 Ã¼ber Monate: Max. 40 MB (statt unbegrenzt)
-- âœ… Intensive Combat-Analyse: Max. 40 MB (statt GB)
-- âœ… Debug-Builds: Max. 70 MB (Ã¼berschaubar)
-- âœ… Release-Builds: Nur notwendige Logs (~40 MB)
+- ✅ Live-Parsing 24/7 über Monate: Max. 40 MB (statt unbegrenzt)
+- ✅ Intensive Combat-Analyse: Max. 40 MB (statt GB)
+- ✅ Debug-Builds: Max. 70 MB (überschaubar)
+- ✅ Release-Builds: Nur notwendige Logs (~40 MB)
 
-**Endanwender muss sich nicht kÃ¼mmern:**
-- Keine manuellen Log-LÃ¶schungen erforderlich
+**Endanwender muss sich nicht kümmern:**
+- Keine manuellen Log-Löschungen erforderlich
 - Automatische Rotation im Hintergrund
 - Kein Festplatz-Problem durch Logs
-- Logs bleiben fÃ¼r Debugging verfÃ¼gbar (3 Backups)
+- Logs bleiben für Debugging verfügbar (3 Backups)
 
 ---
-**NÃ¤chste Session:** Release 1.2.3 erstellen, GitHub Pages aktualisieren, Merge in main
+**Nächste Session:** Release 1.2.3 erstellen, GitHub Pages aktualisieren, Merge in main
 
 

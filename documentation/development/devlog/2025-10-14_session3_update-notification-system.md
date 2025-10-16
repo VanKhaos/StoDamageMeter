@@ -64,7 +64,7 @@ Implementierung eines automatischen Update-Benachrichtigungssystems, das:
 
 ### **Resource-Management**
 ```xml
-<!-- frontend.csproj -->
+<!-- App.csproj -->
 <Resource Include="Assets\DPS_Meter_Logo_Green.png" />
 ```
 
@@ -112,14 +112,14 @@ public Version GetCurrentVersion()
 ## 📁 **Datei-Änderungen**
 
 ### **Neue Dateien**
-- `frontend/Services/UpdateCheckService.cs` - Update-Check Service
-- `frontend/Assets/DPS_Meter_Logo_Green.png` - Grünes Logo für Updates
+- `app/Services/UpdateCheckService.cs` - Update-Check Service
+- `app/Assets/DPS_Meter_Logo_Green.png` - Grünes Logo für Updates
 
 ### **Geänderte Dateien**
-- `frontend/Windows/App/App.xaml.cs` - Service Registration
-- `frontend/Windows/LandingWindow/LandingWindow.xaml` - Context-Menü Update
-- `frontend/Windows/LandingWindow/LandingWindow.xaml.cs` - Update-Logic
-- `frontend/frontend.csproj` - Resource-Definition
+- `app/Windows/App/App.xaml.cs` - Service Registration
+- `app/Windows/LandingWindow/LandingWindow.xaml` - Context-Menü Update
+- `app/Windows/LandingWindow/LandingWindow.xaml.cs` - Update-Logic
+- `app/App.csproj` - Resource-Definition
 
 ## 🔄 **Workflow**
 1. **App-Start** → Automatischer Update-Check

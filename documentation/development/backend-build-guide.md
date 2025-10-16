@@ -86,7 +86,7 @@ python build_backend.py
 - ✅ **Dependencies** geändert (`requirements.txt`)
 
 ### Änderungen die KEINEN Rebuild erfordern:
-- ❌ **Frontend-Code** geändert (C#/XAML)
+- ❌ **App-Code** geändert (C#/XAML)
 - ❌ **UI-Layout** geändert
 - ❌ **Styling** geändert
 - ❌ **Dokumentation** geändert
@@ -111,7 +111,7 @@ pip install -r requirements.txt
 2. Teste Backend direkt: `python working_oscr_backend.py`
 3. Prüfe Logs in `backend/logs/`
 
-### Problem: Frontend kann Backend nicht finden
+### Problem: App kann Backend nicht finden
 **Lösung:** Executable in beide Ordner kopieren
 ```bash
 copy dist\OSCRBackend.exe ..\Debug\
@@ -146,7 +146,7 @@ excludes = ['tkinter', 'matplotlib', 'pandas']
 2. **Backend testen:** `python working_oscr_backend.py`
 3. **Backend bauen:** `pyinstaller --onefile --name OSCRBackend working_oscr_backend.py`
 4. **Executable kopieren:** `copy dist\OSCRBackend.exe ..\Debug\`
-5. **Frontend testen:** `dotnet run --project frontend`
+5. **App testen:** `dotnet run --project frontend`
 
 ### Für CI/CD:
 ```bash
@@ -181,7 +181,7 @@ copy dist\OSCRBackend.exe ..\Deploy\
 ### Build-Prozess:
 1. **Clean Build** bei größeren Änderungen
 2. **Beide Deployment-Ordner** aktualisieren
-3. **Frontend testen** nach Backend-Update
+3. **App testen** nach Backend-Update
 4. **Logs prüfen** bei Problemen
 
 ### Versionierung:
@@ -195,7 +195,7 @@ copy dist\OSCRBackend.exe ..\Deploy\
 - **PyInstaller Docs:** https://pyinstaller.readthedocs.io/
 - **Python Packaging:** https://packaging.python.org/
 - **OSCR Backend Code:** `backend/working_oscr_backend.py`
-- **Frontend Integration:** `frontend/Services/OSCRBackendService.cs`
+- **App Integration:** `app/Services/OSCRBackendService.cs`
 
 ---
 **Letzte Aktualisierung:** 2025-10-14  
